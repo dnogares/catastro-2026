@@ -15,9 +15,15 @@ from afecciones.vector_analyzer import VectorAnalyzer
 from afecciones.pdf_generator import AfeccionesPDF
 from analisisurbano import AnalizadorUrbanistico
 
+from config.paths import CAPAS_DIR, OUTPUTS_DIR
+
 app = FastAPI(title="Suite Tasación ", version="3.1")
 
-# Configuración CORS
+# Crear directorios base SIEMPRE
+OUTPUTS_DIR.mkdir(parents=True, exist_ok=True)
+CAPAS_DIR.mkdir(parents=True, exist_ok=True)
+
+# CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -25,16 +31,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Montar carpeta estática
+# Static files
 app.mount("/static", StaticFiles(directory="static"), name="static")
-
-# Montar outputs solo si existe (evitar errores en desarrollo)
-if OUTPUTS_DIR.exists():
-    app.mount("/outputs", StaticFiles(directory=str(OUTPUTS_DIR)), name="outputs")
-else:
-    print(f"⚠️ Advertencia: Directorio outputs no encontrado en {OUTPUTS_DIR}")
-    print("   Los archivos de descarga no estarán disponibles hasta que se procese una referencia")
-
+app.mount("/outputs", StaticFiles(directory=str(OUTPUTS_DIR)), name="outputs")
 # Inicialización de Clases
 downloader = CatastroDownloader(output_dir=str(OUTPUTS_DIR))
 analyzer = VectorAnalyzer(capas_dir=str(CAPAS_DIR))
