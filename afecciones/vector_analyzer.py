@@ -56,7 +56,13 @@ class VectorAnalyzer:
             # Verificar que existe la parcela
             if not parcela_path.exists():
                 logger.error(f"No existe la parcela: {parcela_path}")
-                return {"total": 0.0, "detalle": {}, "error": "Parcela no encontrada"}
+                return {
+                    "total": 0.0, 
+                    "detalle": {}, 
+                    "area_parcela_m2": 0.0,
+                    "area_afectada_m2": 0.0,
+                    "error": "Parcela no encontrada"
+                }
 
             # Verificar que existe el GPKG
             # Intentar primero en subcarpeta gpkg y luego en raíz
@@ -76,6 +82,8 @@ class VectorAnalyzer:
                 return {
                     "total": 0.0, 
                     "detalle": {},
+                    "area_parcela_m2": 0.0,
+                    "area_afectada_m2": 0.0,
                     "mensaje": f"No se encontró la capa {gpkg_name}"
                 }
 
@@ -106,7 +114,13 @@ class VectorAnalyzer:
 
             if area_total == 0:
                 logger.error("Área de parcela es 0")
-                return {"total": 0.0, "detalle": {}, "error": "Área de parcela inválida"}
+                return {
+                    "total": 0.0, 
+                    "detalle": {}, 
+                    "area_parcela_m2": 0.0,
+                    "area_afectada_m2": 0.0,
+                    "error": "Área de parcela inválida"
+                }
 
             # Filtrar elementos que intersectan
             capa = capa[capa.intersects(geom_parcela)]
@@ -116,6 +130,8 @@ class VectorAnalyzer:
                 return {
                     "total": 0.0, 
                     "detalle": {},
+                    "area_parcela_m2": round(area_total, 2),
+                    "area_afectada_m2": 0.0,
                     "mensaje": "Sin afecciones detectadas"
                 }
 
@@ -153,6 +169,8 @@ class VectorAnalyzer:
             return {
                 "total": 0.0,
                 "detalle": {},
+                "area_parcela_m2": 0.0,
+                "area_afectada_m2": 0.0,
                 "error": str(e)
             }
 

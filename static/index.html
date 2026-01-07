@@ -1705,8 +1705,9 @@
                             html += `<p class="error">❌ Error: ${res.error}</p>`;
                         } else {
                             html += `
-                                <p><strong>Afectación Total:</strong> ${res.total.toFixed(1)}%</p>
-                                <p><strong>Área afectada:</strong> ${res.area_afectada_m2.toFixed(2)} m²</p>
+                                <p><strong>Afectación Total:</strong> ${(res.total || 0).toFixed(1)}%</p>
+                                <p><strong>Área afectada:</strong> ${(res.area_afectada_m2 || 0).toFixed(2)} m²</p>
+                                ${res.mensaje ? `<p style="color: #666; font-style: italic;">ℹ️ ${res.mensaje}</p>` : ''}
                             `;
                             if (res.detalle && Object.keys(res.detalle).length > 0) {
                                 html += `<ul style="font-size: 0.85em; color: #555;">`;
