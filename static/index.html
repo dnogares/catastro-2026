@@ -1,0 +1,1440 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Suite Tasación dnogares - Datos Catastrales</title>
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            color: #667eea;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 15px;
+            background: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: bold;
+            transition: all 0.3s;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .tab:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .tab.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .panel {
+            display: none;
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            animation: fadeIn 0.3s;
+        }
+
+        .panel.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #333;
+        }
+
+        input[type="text"],
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border 0.3s;
+        }
+
+        input[type="text"]:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .file-upload {
+            border: 3px dashed #667eea;
+            border-radius: 8px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #f8f9ff;
+        }
+
+        .file-upload:hover {
+            background: #eef1ff;
+            border-color: #764ba2;
+        }
+
+        .file-upload input {
+            display: none;
+        }
+
+        .btn {
+            padding: 15px 30px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 6px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn:hover {
+            background: #764ba2;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: #48bb78;
+        }
+
+        .btn-secondary:hover {
+            background: #38a169;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .results {
+            display: none;
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9ff;
+            border-radius: 10px;
+            border-left: 5px solid #667eea;
+        }
+
+        .results.active {
+            display: block;
+        }
+
+        .results h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+
+        .result-item {
+            background: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .result-item strong {
+            color: #667eea;
+        }
+
+        .success {
+            color: #48bb78;
+            font-weight: bold;
+        }
+
+        .error {
+            color: #f56565;
+            font-weight: bold;
+        }
+
+        .file-list {
+            margin-top: 15px;
+        }
+
+        .file-link {
+            display: inline-block;
+            padding: 8px 15px;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 5px;
+            transition: all 0.3s;
+        }
+
+        .file-link:hover {
+            background: #764ba2;
+            transform: scale(1.05);
+        }
+
+        .checkbox-group {
+            display: flex;
+            gap: 20px;
+            margin: 15px 0;
+        }
+
+        .checkbox-group label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: normal;
+            cursor: pointer;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-number {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-label {
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .preview-image {
+            max-width: 100%;
+            border-radius: 10px;
+            margin-top: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .info-box {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+        }
+
+        .info-box strong {
+            color: #856404;
+        }
+
+        /* GIS Viewer Styles */
+        #map {
+            height: 600px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin: 20px 0;
+            z-index: 1;
+        }
+
+        .gis-search {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .gis-search input {
+            flex: 1;
+        }
+
+        .layer-controls {
+            background: #f8f9ff;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+
+        .layer-controls h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+
+        .layer-control-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 15px 0;
+            padding: 10px;
+            background: white;
+            border-radius: 8px;
+        }
+
+        .layer-control-item label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 0;
+            flex: 1;
+        }
+
+        .layer-control-item input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+        }
+
+        .layer-control-item input[type="range"] {
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .opacity-value {
+            min-width: 40px;
+            text-align: right;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .map-tools {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .tool-btn {
+            padding: 10px 20px;
+            background: #48bb78;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.9em;
+        }
+
+        .tool-btn:hover {
+            background: #38a169;
+            transform: translateY(-2px);
+        }
+
+        .tool-btn.active {
+            background: #764ba2;
+        }
+
+        .measurement-result {
+            background: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-top: 10px;
+            display: none;
+        }
+
+        .measurement-result.active {
+            display: block;
+        }
+
+        .measurement-result strong {
+            color: #667eea;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🏢 Suite Tasación dnogares</h1>
+            <p>Sistema de Descarga y Análisis de Datos Catastrales</p>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('referencia')">📋 Referencia Única</button>
+            <button class="tab" onclick="switchTab('lote')">📦 Lote Múltiple</button>
+            <button class="tab" onclick="switchTab('pdf')">📄 Generar PDF</button>
+            <button class="tab" onclick="switchTab('visor')">🗺️ Visor GIS</button>
+            <button class="tab" onclick="switchTab('afecciones')">⚠️ Análisis Afecciones</button>
+        </div>
+
+        <!-- Panel 1: Referencia Única -->
+        <div id="panel-referencia" class="panel active">
+            <h2>🔍 Analizar Referencia Catastral</h2>
+            <p style="color: #666; margin-bottom: 20px;">
+                Introduce una referencia catastral para obtener todos los datos disponibles
+            </p>
+
+            <div class="info-box">
+                <strong>💡 Ejemplo:</strong> 1234567VK1234S0001WX (14-20 caracteres)
+            </div>
+
+            <form id="form-referencia" onsubmit="procesarReferencia(event)">
+                <div class="form-group">
+                    <label for="referencia">Referencia Catastral:</label>
+                    <input type="text" id="referencia" placeholder="1234567VK1234S0001WX" required>
+                </div>
+
+                <button type="submit" class="btn">🚀 Analizar Referencia</button>
+            </form>
+
+            <div id="loading-ref" class="loading">
+                <div class="spinner"></div>
+                <p>Descargando datos catastrales... Esto puede tardar 30-60 segundos</p>
+            </div>
+
+            <div id="results-ref" class="results">
+                <h3>✅ Resultados</h3>
+                <div id="results-ref-content"></div>
+            </div>
+        </div>
+
+        <!-- Panel 2: Lote Múltiple -->
+        <div id="panel-lote" class="panel">
+            <h2>📦 Procesar Lote de Referencias</h2>
+            <p style="color: #666; margin-bottom: 20px;">
+                Sube un archivo .txt con una referencia catastral por línea
+            </p>
+
+            <div class="info-box">
+                <strong>📝 Formato del archivo:</strong><br>
+                1234567VK1234S0001WX<br>
+                9876543AB9876N0001YZ<br>
+                5555555CD5555M0001AB
+            </div>
+
+            <form id="form-lote" onsubmit="procesarLote(event)">
+                <div class="form-group">
+                    <label class="file-upload" for="archivo-lote">
+                        <input type="file" id="archivo-lote" accept=".txt" required>
+                        <div>
+                            📁 <strong>Arrastra un archivo o haz clic para seleccionar</strong><br>
+                            <small>Formato: .txt (una referencia por línea)</small>
+                        </div>
+                    </label>
+                    <div id="file-name" style="margin-top: 10px; color: #667eea; font-weight: bold;"></div>
+                </div>
+
+                <button type="submit" class="btn">📦 Procesar Lote</button>
+                <button type="button" class="btn btn-secondary" onclick="consultarEstado()" style="margin-left: 10px;">
+                    🔄 Consultar Estado
+                </button>
+            </form>
+
+            <div id="loading-lote" class="loading">
+                <div class="spinner"></div>
+                <p>Procesando lote en segundo plano...</p>
+            </div>
+
+            <div id="results-lote" class="results">
+                <h3>📊 Estado del Lote</h3>
+                <div id="results-lote-content"></div>
+            </div>
+        </div>
+
+        <!-- Panel 3: Generar PDF -->
+        <div id="panel-pdf" class="panel">
+            <h2>📄 Generar Informe PDF</h2>
+            <p style="color: #666; margin-bottom: 20px;">
+                Genera un PDF con mapas y análisis de afecciones
+            </p>
+
+            <form id="form-pdf" onsubmit="generarPDF(event)">
+                <div class="form-group">
+                    <label for="referencia-pdf">Referencia Catastral:</label>
+                    <input type="text" id="referencia-pdf" placeholder="1234567VK1234S0001WX" required>
+                </div>
+
+                <div class="checkbox-group">
+                    <label>
+                        <input type="checkbox" id="incluir-mapa" checked>
+                        Incluir mapas
+                    </label>
+                    <label>
+                        <input type="checkbox" id="incluir-afecciones" checked>
+                        Incluir análisis de afecciones
+                    </label>
+                </div>
+
+                <button type="submit" class="btn">📄 Generar PDF</button>
+            </form>
+
+            <div id="loading-pdf" class="loading">
+                <div class="spinner"></div>
+                <p>Generando PDF...</p>
+            </div>
+
+            <div id="results-pdf" class="results">
+                <h3>✅ PDF Generado</h3>
+                <div id="results-pdf-content"></div>
+            </div>
+        </div>
+
+        <!-- Panel 4: Visor GIS -->
+        <div id="panel-visor" class="panel">
+            <h2>🗺️ Visor GIS Interactivo</h2>
+            <p style="color: #666; margin-bottom: 20px;">
+                Visualiza parcelas catastrales con capas del Catastro e IGN
+            </p>
+
+            <!-- Barra de búsqueda -->
+            <div class="gis-search">
+                <input type="text" id="gis-referencia" placeholder="Referencia catastral (ej: 1234567VK1234S0001WX)">
+                <button class="btn" onclick="buscarParcela()">🔍 Buscar Parcela</button>
+            </div>
+
+            <!-- Herramientas del mapa -->
+            <div class="map-tools">
+                <button class="tool-btn" onclick="toggleMeasureDistance()">📏 Medir Distancia</button>
+                <button class="tool-btn" onclick="toggleMeasureArea()">📐 Medir Área</button>
+                <button class="tool-btn" onclick="clearMeasurements()">🗑️ Limpiar Mediciones</button>
+                <button class="tool-btn" onclick="exportMapImage()">📸 Exportar Imagen</button>
+                <button class="tool-btn" id="btn-descargar-kml" onclick="descargarKML()"
+                    style="background: #3182ce; display: none;">📥 Descargar KML</button>
+            </div>
+
+            <!-- Resultado de mediciones -->
+            <div id="measurement-result" class="measurement-result">
+                <strong>Resultado:</strong> <span id="measurement-value"></span>
+            </div>
+
+            <!-- Mapa -->
+            <div id="map"></div>
+
+            <!-- Controles de capas -->
+            <div class="layer-controls">
+                <h3>🗂️ Capas Disponibles</h3>
+
+                <div class="layer-control-item">
+                    <label>
+                        <input type="checkbox" id="layer-catastro" checked onchange="toggleLayer('catastro')">
+                        🏘️ Catastro
+                    </label>
+                    <input type="range" id="opacity-catastro" min="0" max="100" value="80"
+                        oninput="updateOpacity('catastro', this.value)">
+                    <span class="opacity-value" id="opacity-catastro-value">80%</span>
+                </div>
+
+                <div class="layer-control-item">
+                    <label>
+                        <input type="checkbox" id="layer-ortofoto" checked onchange="toggleLayer('ortofoto')">
+                        🛰️ Ortofoto (PNOA)
+                    </label>
+                    <input type="range" id="opacity-ortofoto" min="0" max="100" value="70"
+                        oninput="updateOpacity('ortofoto', this.value)">
+                    <span class="opacity-value" id="opacity-ortofoto-value">70%</span>
+                </div>
+
+                <div class="layer-control-item">
+                    <label>
+                        <input type="checkbox" id="layer-parcela" onchange="toggleLayer('parcela')">
+                        📍 Parcela Seleccionada
+                    </label>
+                    <input type="range" id="opacity-parcela" min="0" max="100" value="100"
+                        oninput="updateOpacity('parcela', this.value)">
+                    <span class="opacity-value" id="opacity-parcela-value">100%</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Panel 5: Análisis de Afecciones (Personalizado) -->
+        <div id="panel-afecciones" class="panel">
+            <h2>⚠️ Análisis de Afecciones Personalizado</h2>
+            <p style="color: #666; margin-bottom: 20px;">
+                Sube un archivo KML o GeoJSON para analizarlo contra las capas de afecciones
+            </p>
+
+            <div class="form-group">
+                <label class="file-upload" for="archivo-afeccion">
+                    <input type="file" id="archivo-afeccion" accept=".kml,.geojson,.json"
+                        onchange="mostrarNombreArchivoAfeccion()">
+                    <div>
+                        📁 <strong>Sube tu KML o GeoJSON</strong><br>
+                        <small>Formatos aceptados: .kml, .geojson, .json</small>
+                    </div>
+                </label>
+                <div id="file-name-afeccion" style="margin-top: 10px; color: #764ba2; font-weight: bold;"></div>
+            </div>
+
+            <div class="form-group">
+                <label>Capas a analizar:</label>
+                <div class="checkbox-group">
+                    <label><input type="checkbox" class="capa-afeccion-chk" value="afecciones_totales.gpkg" checked>
+                        Afecciones Totales</label>
+                    <label><input type="checkbox" class="capa-afeccion-chk" value="espacios_naturales.gpkg"> Espacios
+                        Naturales</label>
+                    <label><input type="checkbox" class="capa-afeccion-chk" value="zonas_inundables.gpkg"> Zonas
+                        Inundables</label>
+                </div>
+            </div>
+
+            <button class="btn" onclick="analizarAfeccionesManual()">🔍 Analizar Archivo</button>
+
+            <div id="loading-afeccion" class="loading">
+                <div class="spinner"></div>
+                <p>Calculando intersecciones geográficas...</p>
+            </div>
+
+            <div id="results-afeccion" class="results">
+                <h3>📊 Resultados del Análisis</h3>
+                <div id="results-afeccion-content"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentLoteId = null;
+
+        // Variables del visor GIS
+        let map = null;
+        let layers = {
+            catastro: null,
+            ortofoto: null,
+            parcela: null
+        };
+        let measurementLayer = null;
+        let measurementMode = null;
+        let measurementPoints = [];
+
+        // Cambiar tabs
+        function switchTab(tab) {
+            // Desactivar todos
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+
+            // Activar seleccionado
+            event.target.classList.add('active');
+            document.getElementById('panel-' + tab).classList.add('active');
+
+            // Inicializar mapa si se abre el visor GIS
+            if (tab === 'visor' && !map) {
+                setTimeout(initMap, 100); // Pequeño delay para que el DOM esté listo
+            }
+        }
+
+        // Mostrar nombre de archivo seleccionado
+        document.getElementById('archivo-lote').addEventListener('change', function (e) {
+            const fileName = e.target.files[0]?.name || '';
+            document.getElementById('file-name').textContent = fileName ? `📄 ${fileName}` : '';
+        });
+
+        // Procesar referencia única
+        async function procesarReferencia(event) {
+            event.preventDefault();
+
+            const referencia = document.getElementById('referencia').value.trim();
+            const loading = document.getElementById('loading-ref');
+            const results = document.getElementById('results-ref');
+            const content = document.getElementById('results-ref-content');
+
+            // Mostrar loading
+            loading.classList.add('active');
+            results.classList.remove('active');
+
+            try {
+                const formData = new FormData();
+                formData.append('referencia', referencia);
+
+                const response = await fetch('/api/v1/analizar-parcela', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                loading.classList.remove('active');
+                results.classList.add('active');
+
+                if (data.status === 'success') {
+                    let html = `
+                        <div class="result-item">
+                            <p><strong>Referencia:</strong> ${data.referencia}</p>
+                            <p class="success">✅ Datos descargados correctamente</p>
+                        </div>
+                    `;
+
+                    if (data.url_mapa_web) {
+                        html += `
+                            <div class="result-item">
+                                <strong>🗺️ Vista de Parcela:</strong>
+                                <img src="${data.url_mapa_web}" class="preview-image" alt="Mapa">
+                            </div>
+                        `;
+                    }
+
+                    if (data.archivos_generados) {
+                        html += `
+                            <div class="result-item">
+                                <strong>📁 Archivos Generados:</strong>
+                                <div class="file-list">
+                                    ${data.archivos_generados.zip ?
+                                `<a href="${data.archivos_generados.zip}" class="file-link" download>📦 Descargar ZIP Completo</a>`
+                                : ''}
+                                </div>
+                            </div>
+                        `;
+                    }
+
+                    content.innerHTML = html;
+                } else {
+                    content.innerHTML = `
+                        <div class="result-item">
+                            <p class="error">❌ Error: ${data.error || data.detail || 'Error desconocido'}</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                loading.classList.remove('active');
+                results.classList.add('active');
+                content.innerHTML = `
+                    <div class="result-item">
+                        <p class="error">❌ Error de conexión: ${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Procesar lote
+        async function procesarLote(event) {
+            event.preventDefault();
+
+            const fileInput = document.getElementById('archivo-lote');
+            const file = fileInput.files[0];
+
+            if (!file) {
+                alert('Por favor selecciona un archivo');
+                return;
+            }
+
+            const loading = document.getElementById('loading-lote');
+            const results = document.getElementById('results-lote');
+            const content = document.getElementById('results-lote-content');
+
+            loading.classList.add('active');
+            results.classList.remove('active');
+
+            try {
+                const formData = new FormData();
+                formData.append('file', file);
+
+                const response = await fetch('/api/v1/lote', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                loading.classList.remove('active');
+                results.classList.add('active');
+
+                if (data.status === 'processing') {
+                    currentLoteId = data.lote_id;
+
+                    content.innerHTML = `
+                        <div class="result-item">
+                            <p class="success">✅ Lote iniciado correctamente</p>
+                            <p><strong>ID del Lote:</strong> ${data.lote_id}</p>
+                            <p><strong>Referencias:</strong> ${data.mensaje}</p>
+                            <p style="margin-top: 15px;">
+                                El procesamiento continúa en segundo plano. 
+                                Usa el botón "Consultar Estado" para ver el progreso.
+                            </p>
+                        </div>
+                    `;
+                } else {
+                    content.innerHTML = `
+                        <div class="result-item">
+                            <p class="error">❌ Error: ${data.error || 'Error desconocido'}</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                loading.classList.remove('active');
+                results.classList.add('active');
+                content.innerHTML = `
+                    <div class="result-item">
+                        <p class="error">❌ Error: ${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Consultar estado del lote
+        async function consultarEstado() {
+            if (!currentLoteId) {
+                const loteId = prompt('Introduce el ID del lote:');
+                if (!loteId) return;
+                currentLoteId = loteId;
+            }
+
+            const results = document.getElementById('results-lote');
+            const content = document.getElementById('results-lote-content');
+
+            try {
+                const response = await fetch(`/api/v1/lote/${currentLoteId}/status`);
+                const data = await response.json();
+
+                results.classList.add('active');
+
+                let html = `
+                    <div class="stats">
+                        <div class="stat-card">
+                            <div class="stat-number">${data.total_referencias || 0}</div>
+                            <div class="stat-label">Total</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number">${data.procesadas || 0}</div>
+                            <div class="stat-label">Procesadas</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" style="color: #48bb78;">${data.exitosas || 0}</div>
+                            <div class="stat-label">Exitosas</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" style="color: #f56565;">${data.fallidas || 0}</div>
+                            <div class="stat-label">Fallidas</div>
+                        </div>
+                    </div>
+                `;
+
+                if (data.estado === 'completado') {
+                    html += `
+                        <div class="result-item">
+                            <p class="success">✅ Lote completado</p>
+                            <a href="/api/v1/lote/${currentLoteId}/resumen" target="_blank" class="file-link">
+                                📊 Ver Resumen Completo
+                            </a>
+                        </div>
+                    `;
+                } else {
+                    html += `
+                        <div class="result-item">
+                            <p>⏳ Procesamiento en curso...</p>
+                        </div>
+                    `;
+                }
+
+                content.innerHTML = html;
+            } catch (error) {
+                content.innerHTML = `
+                    <div class="result-item">
+                        <p class="error">❌ Error consultando estado: ${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Generar PDF
+        async function generarPDF(event) {
+            event.preventDefault();
+
+            const referencia = document.getElementById('referencia-pdf').value.trim();
+            const incluirMapa = document.getElementById('incluir-mapa').checked;
+            const incluirAfecciones = document.getElementById('incluir-afecciones').checked;
+
+            const loading = document.getElementById('loading-pdf');
+            const results = document.getElementById('results-pdf');
+            const content = document.getElementById('results-pdf-content');
+
+            loading.classList.add('active');
+            results.classList.remove('active');
+
+            try {
+                const response = await fetch('/api/v1/generar-pdf', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        referencia: referencia,
+                        incluir_mapa: incluirMapa,
+                        incluir_afecciones: incluirAfecciones
+                    })
+                });
+
+                const data = await response.json();
+
+                loading.classList.remove('active');
+                results.classList.add('active');
+
+                if (data.status === 'created') {
+                    content.innerHTML = `
+                        <div class="result-item">
+                            <p class="success">✅ PDF generado correctamente</p>
+                            <a href="${data.pdf_url}" class="file-link" download>
+                                📄 Descargar PDF
+                            </a>
+                        </div>
+                    `;
+                } else {
+                    content.innerHTML = `
+                        <div class="result-item">
+                            <p class="error">❌ Error: ${data.error || data.detail || 'Error generando PDF'}</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                loading.classList.remove('active');
+                results.classList.add('active');
+                content.innerHTML = `
+                    <div class="result-item">
+                        <p class="error">❌ Error: ${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        // ========== FUNCIONES DEL VISOR GIS ==========
+
+        // Inicializar mapa
+        function initMap() {
+            if (map) return; // Ya inicializado
+
+            console.log('🗺️ Inicializando visor GIS...');
+
+            // Crear mapa centrado en España
+            map = L.map('map').setView([40.4168, -3.7038], 6);
+
+            // Capa base OpenStreetMap
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors',
+                maxZoom: 20
+            }).addTo(map);
+
+            // Añadir capas WMS
+            addWMSLayers();
+
+            // Capa para mediciones
+            measurementLayer = L.layerGroup().addTo(map);
+
+            // Event listeners para mediciones
+            map.on('click', handleMapClick);
+
+            console.log('✅ Mapa inicializado');
+        }
+
+        // Añadir capas WMS del Catastro e IGN
+        function addWMSLayers() {
+            // Capa Catastro
+            layers.catastro = L.tileLayer.wms(
+                'http://ovc.catastro.meh.es/Cartografia/WMS/ServidorWMS.aspx',
+                {
+                    layers: 'Catastro',
+                    format: 'image/png',
+                    transparent: true,
+                    attribution: 'Catastro',
+                    opacity: 0.8
+                }
+            ).addTo(map);
+
+            // Capa PNOA (Ortofotos)
+            layers.ortofoto = L.tileLayer.wms(
+                'http://www.ign.es/wms-inspire/pnoa-ma',
+                {
+                    layers: 'OI.OrthoimageCoverage',
+                    format: 'image/png',
+                    transparent: true,
+                    attribution: 'IGN - PNOA',
+                    opacity: 0.7
+                }
+            ).addTo(map);
+
+            console.log('✅ Capas WMS añadidas');
+        }
+
+        // Buscar parcela por referencia catastral
+        async function buscarParcela() {
+            const ref = document.getElementById('gis-referencia').value.trim();
+
+            if (!ref || ref.length < 14) {
+                alert('Por favor introduce una referencia catastral válida (mínimo 14 caracteres)');
+                return;
+            }
+
+            try {
+                console.log(`🔍 Buscando parcela: ${ref}`);
+
+                // Obtener datos de la parcela
+                const response = await fetch(`/api/v1/referencia/${ref}`);
+
+                if (!response.ok) {
+                    throw new Error('Parcela no encontrada');
+                }
+
+                const data = await response.json();
+
+                // Si existe GML de parcela, intentar cargarla
+                if (data.archivos?.gml_parcela) {
+                    await cargarGMLParcela(data.archivos.gml_parcela, ref);
+                } else {
+                    alert('No se encontró el archivo GML de la parcela. Procesa primero la referencia en la pestaña "Referencia Única".');
+                }
+
+            } catch (error) {
+                console.error('❌ Error buscando parcela:', error);
+                alert(`Error: ${error.message}`);
+            }
+        }
+
+        // Cargar GML de parcela y centrar mapa
+        async function cargarGMLParcela(gmlUrl, ref) {
+            try {
+                console.log(`📥 Cargando GML: ${gmlUrl}`);
+
+                // Descargar GML
+                const response = await fetch(gmlUrl);
+                const gmlText = await response.text();
+
+                // Parsear coordenadas del GML (simplificado)
+                const coords = extraerCoordenadasGML(gmlText);
+
+                if (coords.length > 0) {
+                    // Remover capa anterior si existe
+                    if (layers.parcela) {
+                        map.removeLayer(layers.parcela);
+                    }
+
+                    // Crear polígono
+                    layers.parcela = L.polygon(coords, {
+                        color: '#ff0000',
+                        fillColor: '#ff0000',
+                        fillOpacity: 0.3,
+                        weight: 3
+                    }).addTo(map);
+
+                    // Centrar mapa en la parcela
+                    map.fitBounds(layers.parcela.getBounds());
+
+                    // Activar checkbox de parcela
+                    document.getElementById('layer-parcela').checked = true;
+
+                    console.log(`✅ Parcela ${ref} cargada y centrada`);
+                } else {
+                    throw new Error('No se pudieron extraer coordenadas del GML');
+                }
+
+            } catch (error) {
+                console.error('❌ Error cargando GML:', error);
+                alert('Error cargando la geometría de la parcela');
+            }
+        }
+
+        // Extraer coordenadas de GML (parser simplificado)
+        function extraerCoordenadasGML(gmlText) {
+            const coords = [];
+
+            // Buscar tag posList o coordinates
+            const posListMatch = gmlText.match(/<gml:posList[^>]*>([^<]+)<\/gml:posList>/i);
+
+            if (posListMatch) {
+                const numbers = posListMatch[1].trim().split(/\s+/).map(parseFloat);
+
+                // Convertir pares de coordenadas (asumiendo formato X Y)
+                for (let i = 0; i < numbers.length; i += 2) {
+                    if (i + 1 < numbers.length) {
+                        // Convertir de UTM a lat/lng (aproximación simple)
+                        // Para producción, usar librería de proyección como proj4
+                        const lat = numbers[i + 1] / 111320; // Aproximación
+                        const lng = numbers[i] / (111320 * Math.cos(lat * Math.PI / 180));
+                        coords.push([lat, lng]);
+                    }
+                }
+            }
+
+            return coords;
+        }
+
+        // Toggle visibilidad de capa
+        function toggleLayer(layerName) {
+            const checkbox = document.getElementById(`layer-${layerName}`);
+            const layer = layers[layerName];
+
+            if (!layer) return;
+
+            if (checkbox.checked) {
+                map.addLayer(layer);
+            } else {
+                map.removeLayer(layer);
+            }
+        }
+
+        // Actualizar opacidad de capa
+        function updateOpacity(layerName, value) {
+            const layer = layers[layerName];
+            const valueSpan = document.getElementById(`opacity-${layerName}-value`);
+
+            if (layer) {
+                layer.setOpacity(value / 100);
+            }
+
+            if (valueSpan) {
+                valueSpan.textContent = `${value}%`;
+            }
+        }
+
+        // Medir distancia
+        function toggleMeasureDistance() {
+            if (measurementMode === 'distance') {
+                // Desactivar
+                measurementMode = null;
+                measurementPoints = [];
+                document.querySelector('.tool-btn').classList.remove('active');
+            } else {
+                // Activar
+                measurementMode = 'distance';
+                measurementPoints = [];
+                clearMeasurements();
+                event.target.classList.add('active');
+                alert('Haz clic en el mapa para marcar puntos. Haz doble clic para terminar.');
+            }
+        }
+
+        // Medir área
+        function toggleMeasureArea() {
+            if (measurementMode === 'area') {
+                // Desactivar
+                measurementMode = null;
+                measurementPoints = [];
+                document.querySelectorAll('.tool-btn')[1].classList.remove('active');
+            } else {
+                // Activar
+                measurementMode = 'area';
+                measurementPoints = [];
+                clearMeasurements();
+                event.target.classList.add('active');
+                alert('Haz clic en el mapa para marcar vértices del polígono. Haz doble clic para terminar.');
+            }
+        }
+
+        // Manejar clics en el mapa para mediciones
+        function handleMapClick(e) {
+            if (!measurementMode) return;
+
+            measurementPoints.push([e.latlng.lat, e.latlng.lng]);
+
+            // Añadir marcador
+            L.circleMarker([e.latlng.lat, e.latlng.lng], {
+                radius: 5,
+                color: '#667eea',
+                fillColor: '#667eea',
+                fillOpacity: 1
+            }).addTo(measurementLayer);
+
+            // Si hay al menos 2 puntos, dibujar línea/polígono
+            if (measurementPoints.length >= 2) {
+                if (measurementMode === 'distance') {
+                    // Dibujar línea
+                    L.polyline(measurementPoints, {
+                        color: '#667eea',
+                        weight: 3
+                    }).addTo(measurementLayer);
+
+                    // Calcular distancia total
+                    const distance = calcularDistanciaTotal(measurementPoints);
+                    mostrarResultadoMedicion(`${distance.toFixed(2)} metros`);
+                } else if (measurementMode === 'area') {
+                    // Dibujar polígono temporal
+                    measurementLayer.clearLayers();
+                    L.polygon(measurementPoints, {
+                        color: '#667eea',
+                        fillColor: '#667eea',
+                        fillOpacity: 0.3
+                    }).addTo(measurementLayer);
+
+                    // Calcular área
+                    const area = calcularArea(measurementPoints);
+                    mostrarResultadoMedicion(`${area.toFixed(2)} m²`);
+                }
+            }
+        }
+
+        // Calcular distancia total entre puntos
+        function calcularDistanciaTotal(points) {
+            let total = 0;
+            for (let i = 1; i < points.length; i++) {
+                total += map.distance(points[i - 1], points[i]);
+            }
+            return total;
+        }
+
+        // Calcular área de polígono (fórmula de Shoelace)
+        function calcularArea(points) {
+            if (points.length < 3) return 0;
+
+            // Convertir a metros usando proyección aproximada
+            const latToMeters = 111320;
+            const avgLat = points.reduce((sum, p) => sum + p[0], 0) / points.length;
+            const lngToMeters = latToMeters * Math.cos(avgLat * Math.PI / 180);
+
+            let area = 0;
+            for (let i = 0; i < points.length; i++) {
+                const j = (i + 1) % points.length;
+                const xi = points[i][1] * lngToMeters;
+                const yi = points[i][0] * latToMeters;
+                const xj = points[j][1] * lngToMeters;
+                const yj = points[j][0] * latToMeters;
+                area += xi * yj - xj * yi;
+            }
+
+            return Math.abs(area / 2);
+        }
+
+        // Mostrar resultado de medición
+        function mostrarResultadoMedicion(texto) {
+            const resultDiv = document.getElementById('measurement-result');
+            const valueSpan = document.getElementById('measurement-value');
+
+            valueSpan.textContent = texto;
+            resultDiv.classList.add('active');
+        }
+
+        // Limpiar mediciones
+        function clearMeasurements() {
+            if (measurementLayer) {
+                measurementLayer.clearLayers();
+            }
+            measurementPoints = [];
+            measurementMode = null;
+
+            document.querySelectorAll('.tool-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            document.getElementById('measurement-result').classList.remove('active');
+        }
+
+        // Exportar mapa como imagen
+        async function exportMapImage() {
+            try {
+                // Usar leaflet-image o html2canvas
+                alert('Función de exportación: Para implementar esta funcionalidad completa, se necesita la librería leaflet-image o html2canvas.\n\nPor ahora, puedes usar la captura de pantalla de tu navegador.');
+
+                // TODO: Implementar con leaflet-image
+                // leafletImage(map, function(err, canvas) {
+                //     const img = canvas.toDataURL();
+                //     const link = document.createElement('a');
+                //     link.download = 'mapa.png';
+                //     link.href = img;
+                //     link.click();
+                // });
+
+            } catch (error) {
+                console.error('Error exportando imagen:', error);
+                alert('Error al exportar la imagen del mapa');
+            }
+        }
+
+        // --- FUNCIONES ANÁLISIS AFECCIONES Y KML ---
+
+        function mostrarNombreArchivoAfeccion() {
+            const input = document.getElementById('archivo-afeccion');
+            const fileName = input.files[0]?.name || '';
+            document.getElementById('file-name-afeccion').textContent = fileName ? `📄 ${fileName}` : '';
+        }
+
+        async function analizarAfeccionesManual() {
+            const fileInput = document.getElementById('archivo-afeccion');
+            const file = fileInput.files[0];
+
+            if (!file) {
+                alert('Por favor selecciona un archivo KML o GeoJSON');
+                return;
+            }
+
+            const checkboxes = document.querySelectorAll('.capa-afeccion-chk:checked');
+            const capas = Array.from(checkboxes).map(cb => cb.value);
+
+            const loading = document.getElementById('loading-afeccion');
+            const results = document.getElementById('results-afeccion');
+            const content = document.getElementById('results-afeccion-content');
+
+            loading.classList.add('active');
+            results.classList.remove('active');
+
+            try {
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('capas', JSON.stringify(capas));
+
+                const response = await fetch('/api/v1/analizar-afecciones', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                loading.classList.remove('active');
+                results.classList.add('active');
+
+                let html = `
+                    <div class="result-item">
+                        <p><strong>Archivo:</strong> ${data.archivo}</p>
+                        <p><strong>Capas analizadas:</strong> ${data.capas_analizadas}</p>
+                    </div>
+                `;
+
+                for (const [capa, res] of Object.entries(data.resultados)) {
+                    html += `<div class="result-item"><h4>${capa}</h4>`;
+                    if (res.error) {
+                        html += `<p class="error">❌ Error: ${res.error}</p>`;
+                    } else {
+                        html += `
+                            <p><strong>Afectación Total:</strong> ${res.total || 0}%</p>
+                            <p><strong>Área afectada:</strong> ${res.area_afectada_m2 || 0} m²</p>
+                            ${res.detalle ? `<p><small>${JSON.stringify(res.detalle)}</small></p>` : ''}
+                        `;
+                    }
+                    html += `</div>`;
+                }
+
+                content.innerHTML = html;
+
+            } catch (error) {
+                loading.classList.remove('active');
+                alert(`Error al analizar: ${error.message}`);
+            }
+        }
+
+        let currentGISReferencia = null;
+
+        function descargarKML() {
+            if (!currentGISReferencia) return;
+            window.open(`/api/v1/referencia/${currentGISReferencia}/kml?tipo=parcela`, '_blank');
+        }
+
+        // Sobrescribir buscarParcela para manejar el botón KML
+        const originalBuscarParcela = buscarParcela;
+        buscarParcela = async function () {
+            const refInput = document.getElementById('gis-referencia');
+            const ref = refInput.value.trim();
+            if (!ref) {
+                alert('Introduce una referencia catastral');
+                return;
+            }
+
+            currentGISReferencia = ref;
+            const btnKml = document.getElementById('btn-descargar-kml');
+            btnKml.style.display = 'none';
+
+            await originalBuscarParcela();
+
+            // Si el visor cargó la parcela (tendría una capa activa)
+            if (layers.parcela) {
+                btnKml.style.display = 'inline-block';
+            }
+        };
+    </script>
+</body>
+
+</html>
