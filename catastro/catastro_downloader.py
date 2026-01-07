@@ -131,17 +131,33 @@ class CatastroDownloader:
         if not GEOTOOLS_AVAILABLE: return False
         try:
             import fiona
-            if 'KML' not in fiona.drvsupport.supported_drivers:
-                fiona.drvsupport.supported_drivers['KML'] = 'rw'
             gdf = gpd.read_file(str(gml_path))
-            if gdf.empty: return False
+            if gdf.empty:
+                logger.warning(f"    ⚠️ GML vacío, no se puede generar KML: {gml_path.name}")
+                return False
             if gdf.crs and gdf.crs.to_string() != "EPSG:4326":
                 gdf = gdf.to_crs("EPSG:4326")
-            gdf.to_file(str(kml_path), driver='KML')
-            logger.info(f"    ✅ KML generado: {kml_path.name}")
-            return True
+            
+            try:
+                # Activar driver KML en fiona si está disponible
+                if 'KML' not in fiona.drvsupport.supported_drivers:
+                    fiona.drvsupport.supported_drivers['KML'] = 'rw'
+                
+                gdf.to_file(str(kml_path), driver='KML')
+                logger.info(f"    ✅ KML generado: {kml_path.name}")
+                return True
+            except Exception as e:
+                logger.error(f"Error convirtiendo GML a KML: {e}")
+                # Intentar guardar como GeoJSON si KML falla (como fallback de emergencia)
+                try:
+                    geojson_path = kml_path.with_suffix('.geojson')
+                    gdf.to_file(str(geojson_path), driver='GeoJSON')
+                    logger.info(f"    ⚠️ KML falló, generado GeoJSON: {geojson_path.name}")
+                except Exception as geojson_e:
+                    logger.error(f"    ❌ Fallo al generar GeoJSON como fallback: {geojson_e}")
+                return False
         except Exception as e:
-            logger.error(f"Error convirtiendo GML a KML: {e}")
+            logger.error(f"Error leyendo GML para conversión a KML: {e}")
             return False
 
     def obtener_coordenadas(self, referencia: str, gml_parcela_path=None):

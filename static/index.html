@@ -1073,9 +1073,9 @@
 
         // Añadir capas WMS del Catastro e IGN
         function addWMSLayers() {
-            // Capa Catastro
+            // Capa Catastro (HTTPS)
             layers.catastro = L.tileLayer.wms(
-                'http://ovc.catastro.meh.es/Cartografia/WMS/ServidorWMS.aspx',
+                'https://ovc.catastro.meh.es/Cartografia/WMS/ServidorWMS.aspx',
                 {
                     layers: 'Catastro',
                     format: 'image/png',
@@ -1085,9 +1085,9 @@
                 }
             ).addTo(map);
 
-            // Capa PNOA (Ortofotos)
+            // Capa PNOA (Ortofotos) (HTTPS)
             layers.ortofoto = L.tileLayer.wms(
-                'http://www.ign.es/wms-inspire/pnoa-ma',
+                'https://www.ign.es/wms-inspire/pnoa-ma',
                 {
                     layers: 'OI.OrthoimageCoverage',
                     format: 'image/png',
@@ -1103,7 +1103,7 @@
                 layers.catastro
             ]).addTo(map);
 
-            console.log('✅ Capas WMS añadidas');
+            console.log('✅ Capas WMS añadidas (HTTPS)');
         }
 
         // Buscar parcela por referencia catastral
@@ -1121,8 +1121,17 @@
                 // Obtener datos de la parcela
                 const response = await fetch(`/api/v1/referencia/${ref}`);
 
+                if (response.status === 404) {
+                    const confirmProcess = confirm(`La referencia ${ref} no ha sido procesada todavía. Solo se pueden visualizar parcelas que hayan sido analizadas previamente.\n\n¿Quieres ir a la pestaña "Análisis Individual" para procesarla ahora?`);
+                    if (confirmProcess) {
+                        showPanel('panel-search');
+                        document.getElementById('referencia-input').value = ref;
+                    }
+                    return;
+                }
+
                 if (!response.ok) {
-                    throw new Error('Parcela no encontrada');
+                    throw new Error(`Error del servidor: ${response.status}`);
                 }
 
                 const data = await response.json();
@@ -1472,11 +1481,13 @@
         // Cargar capas vectoriales disponibles
         async function cargarCapasVectoriales() {
             try {
+                console.log('📡 Cargando lista de capas vectoriales...');
                 const response = await fetch('/api/v1/capas-disponibles');
                 const data = await response.json();
 
                 const container = document.getElementById('capas-vectoriales-lista');
                 if (data.status === 'success' && data.capas && data.capas.capas_vectoriales) {
+                    console.log(`✅ Se encontraron ${data.capas.capas_vectoriales.length} capas vectoriales`);
                     let html = '';
                     data.capas.capas_vectoriales.forEach(capa => {
                         const id = `layer-v-${capa.nombre.replace(/\s+/g, '-')}`;
@@ -1491,10 +1502,11 @@
                     });
                     container.innerHTML = html;
                 } else {
+                    console.log('⚠️ No se encontraron capas vectoriales en el volumen');
                     container.innerHTML = '<p>No se encontraron capas vectoriales en el volumen.</p>';
                 }
             } catch (error) {
-                console.error('Error cargando capas:', error);
+                console.error('❌ Error cargando capas:', error);
                 document.getElementById('capas-vectoriales-lista').innerHTML = '<p class="error">Error al cargar capas.</p>';
             }
         }

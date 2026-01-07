@@ -47,6 +47,27 @@ class PdfRequest(BaseModel):
     incluir_mapa: bool = True
     incluir_afecciones: bool = True
 
+@app.on_event("startup")
+async def startup_event():
+    """Ejecuta logs y validaciones al iniciar el servidor"""
+    print("\n" + "="*50)
+    print("🚀 Iniciando servidor Suite Tasación...")
+    print(f"📁 Root Dir: {Path('.').absolute()}")
+    print(f"📁 Outputs: {OUTPUTS_DIR.absolute()} (Existe: {OUTPUTS_DIR.exists()})")
+    print(f"📁 Capas: {CAPAS_DIR.absolute()} (Existe: {CAPAS_DIR.exists()})")
+    
+    # Listar contenido de capas para depuración
+    if CAPAS_DIR.exists():
+        capas_encontradas = list(CAPAS_DIR.rglob("*.gpkg"))
+        print(f"📂 Capas detectadas: {len(capas_encontradas)}")
+        for c in capas_encontradas[:5]:
+            print(f"  - {c.relative_to(CAPAS_DIR)}")
+    else:
+        print("⚠️ ADVERTENCIA: La carpeta de capas no existe o no es accesible")
+    
+    print("="*50 + "\n")
+    print(f"🌐 Accede a: http://localhost:8090")
+
 # --- RUTA PRINCIPAL ---
 @app.get("/")
 async def read_index():
@@ -581,7 +602,7 @@ async def obtener_kml(referencia: str, tipo: str = "parcela"):
 
 @app.post("/api/v1/analizar-afecciones")
 async def analizar_afecciones_manual(
-    files: List[UploadFile] = File(...),
+    archivos: List[UploadFile] = File(...),
     capas: str = Form("[\"afecciones_totales.gpkg\"]")
 ):
     """
@@ -595,7 +616,7 @@ async def analizar_afecciones_manual(
         capas_list = json.loads(capas)
         resultados_por_archivo = {}
 
-        for file in files:
+        for file in archivos:
             # Guardar archivo temporal
             suffix = Path(file.filename).suffix
             with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
@@ -697,18 +718,13 @@ async def obtener_capas_disponibles():
 if __name__ == "__main__":
     import uvicorn
     
-    # Crear directorios necesarios
+    # Asegurar carpetas base
     OUTPUTS_DIR.mkdir(parents=True, exist_ok=True)
     CAPAS_DIR.mkdir(parents=True, exist_ok=True)
     
-    print("🚀 Iniciando servidor Suite Tasación...")
-    print(f"📁 Outputs: {OUTPUTS_DIR}")
-    print(f"📁 Capas: {CAPAS_DIR}")
-    print(f"🌐 Accede a: http://localhost:8090")
-    
     uvicorn.run(
-        app, 
+        "main:app", 
         host="0.0.0.0", 
-        port=8090,
-        log_level="info"
+        port=8090, 
+        reload=True
     )

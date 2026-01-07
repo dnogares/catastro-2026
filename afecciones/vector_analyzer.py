@@ -59,9 +59,20 @@ class VectorAnalyzer:
                 return {"total": 0.0, "detalle": {}, "error": "Parcela no encontrada"}
 
             # Verificar que existe el GPKG
-            gpkg_path = self.capas_dir / "gpkg" / gpkg_name
-            if not gpkg_path.exists():
-                logger.warning(f"No existe el GPKG: {gpkg_path}")
+            # Intentar primero en subcarpeta gpkg y luego en raíz
+            posibles_rutas = [
+                self.capas_dir / "gpkg" / gpkg_name,
+                self.capas_dir / gpkg_name
+            ]
+            
+            gpkg_path = None
+            for ruta in posibles_rutas:
+                if ruta.exists():
+                    gpkg_path = ruta
+                    break
+                    
+            if not gpkg_path:
+                logger.warning(f"No existe el GPKG: {gpkg_name} en {self.capas_dir}")
                 return {
                     "total": 0.0, 
                     "detalle": {},
