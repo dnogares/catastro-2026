@@ -57,14 +57,31 @@ class CatastroDownloader:
         self.output_dir.mkdir(parents=True, exist_ok=True)
         self.base_catastro = "https://ovc.catastro.meh.es"
 
-        # Capas WMS del Catastro y Afecciones
+        # Capas WMS del Catastro y Afecciones (Actualizado según solicitud)
         self.wms_urls = {
-            "catastro": "https://ovc.catastro.meh.es/Cartografia/WMS/ServidorWMS.aspx",
+            # ✅ Cartografía base
+            "catastro": "http://ovc.catastro.meh.es/cartografia/INSPIRE/spadgcwms.aspx",  # ⚠️ HTTP (sin S)
+            "catastro_https": "https://ovc.catastro.meh.es/Cartografia/WMS/ServidorWMS.aspx", # Backup HTTPS
             "pnoa": "https://www.ign.es/wms-inspire/pnoa-ma",
-            "inundabilidad": "https://wms.mapa.gob.es/snczi/wms",
-            "afecciones": "https://wms.mapa.gob.es/sig/Biodiversidad/Servicios_WMS_Medio_Ambiente/wms.aspx",
-            "vias_pecuarias": "https://wms.mapa.gob.es/sig/Biodiversidad/ViasPecuarias/wms.aspx",
-            "montes": "https://wms.mapa.gob.es/sig/Biodiversidad/Montes/wms.aspx"
+            
+            # ✅ Riesgos hídricos
+            "inundabilidad_10años": "https://wms.mapama.gob.es/sig/agua/ZI_LaminasQ10/wms.aspx",
+            "inundabilidad_100años": "https://wms.mapama.gob.es/sig/agua/ZI_LaminasQ100/wms.aspx",
+            "inundabilidad_500años": "https://wms.mapama.gob.es/sig/agua/ZI_LaminasQ500/wms.aspx",
+            
+            # ✅ Biodiversidad y protección
+            "red_natura": "https://wms.mapama.gob.es/sig/Biodiversidad/RedNatura/wms.aspx",
+            "espacios_protegidos": "https://wms.mapama.gob.es/sig/Biodiversidad/ENP/wms.aspx",
+            "vias_pecuarias": "https://wms.mapama.gob.es/sig/Biodiversidad/ViasPecuarias/wms.aspx",
+            
+            # ✅ Montes y forestal
+            "montes_utilidad_publica": "https://wms.mapama.gob.es/sig/Biodiversidad/PropiedadMontes_UP/wms.aspx",
+            "titularidad_montes": "https://wms.mapama.gob.es/sig/Biodiversidad/PropiedadMontes/wms.aspx",
+            "mapa_forestal": "https://wms.mapama.gob.es/sig/Biodiversidad/MFE/wms.aspx",
+            
+            # ✅ Otros servicios útiles
+            "erosion_laminar": "https://wms.mapama.gob.es/sig/Biodiversidad/INESErosionLaminarRaster/wms.aspx",
+            "incendios_forestales": "https://wms.mapama.gob.es/sig/Biodiversidad/Incendios/2006_2015/wms.aspx"
         }
 
     def limpiar_referencia(self, ref: str) -> str:
@@ -315,11 +332,12 @@ class CatastroDownloader:
         
         niveles = {1: "España", 2: "Regional", 3: "Local", 4: "Parcela"}
         capas_afeccion = [
-            (self.wms_urls["inundabilidad"], "T100_INUNDACION", 100, "ZONA INUNDABLE (T100)"),
-            (self.wms_urls["afecciones"], "RedNatura2000", 90, "RED NATURA 2000"),
+            (self.wms_urls["inundabilidad_100años"], "NZ.RiskZone", 100, "ZONA INUNDABLE (T100)"),
+            (self.wms_urls["red_natura"], "PS.ProtectedSite", 90, "RED NATURA 2000"),
             (self.wms_urls["vias_pecuarias"], "Vias_Pecuarias", 130, "VÍA PECUARIA"),
-            (self.wms_urls["montes"], "MUP", 110, "MONTE PÚBLICO"),
-            (self.wms_urls["catastro"], "Catastro", 140, None)
+            (self.wms_urls["montes_utilidad_publica"], "MUP", 110, "MONTE PÚBLICO"),
+            (self.wms_urls["espacios_protegidos"], "PS.ProtectedSite", 100, "ESPACIO PROTEGIDO"),
+            (self.wms_urls["catastro_https"], "Catastro", 140, None)
         ]
         
         resumen = []

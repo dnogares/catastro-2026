@@ -642,14 +642,105 @@
                 <div class="layer-control-item">
                     <label>
                         <input type="checkbox" id="layer-compuesta" checked onchange="toggleLayer('compuesta')">
-                        🗺️ Ortofoto + Catastro (Compuesta)
+                        🗺️ Ortofoto + Catastro
                     </label>
                     <input type="range" id="opacity-compuesta" min="0" max="100" value="90"
                         oninput="updateOpacity('compuesta', this.value)">
                     <span class="opacity-value" id="opacity-compuesta-value">90%</span>
                 </div>
 
+                <!-- Riesgos Hídricos -->
+                <div style="margin: 10px 0; font-weight: bold; color: #718096; border-bottom: 1px solid #e2e8f0;">🌊
+                    Riesgos Hídricos</div>
                 <div class="layer-control-item">
+                    <label><input type="checkbox" id="layer-inundabilidad_10"
+                            onchange="toggleLayer('inundabilidad_10')"> T10 (10 años)</label>
+                    <input type="range" min="0" max="100" value="60"
+                        oninput="updateOpacity('inundabilidad_10', this.value)">
+                    <span class="opacity-value" id="opacity-inundabilidad_10-value">60%</span>
+                </div>
+                <div class="layer-control-item">
+                    <label><input type="checkbox" id="layer-inundabilidad_100"
+                            onchange="toggleLayer('inundabilidad_100')"> T100 (100 años)</label>
+                    <input type="range" min="0" max="100" value="60"
+                        oninput="updateOpacity('inundabilidad_100', this.value)">
+                    <span class="opacity-value" id="opacity-inundabilidad_100-value">60%</span>
+                </div>
+                <div class="layer-control-item">
+                    <label><input type="checkbox" id="layer-inundabilidad_500"
+                            onchange="toggleLayer('inundabilidad_500')"> T500 (500 años)</label>
+                    <input type="range" min="0" max="100" value="60"
+                        oninput="updateOpacity('inundabilidad_500', this.value)">
+                    <span class="opacity-value" id="opacity-inundabilidad_500-value">60%</span>
+                </div>
+
+                <!-- Biodiversidad -->
+                <div style="margin: 10px 0; font-weight: bold; color: #718096; border-bottom: 1px solid #e2e8f0;">🌿
+                    Biodiversidad y Protección</div>
+                <div class="layer-control-item">
+                    <label><input type="checkbox" id="layer-red_natura" onchange="toggleLayer('red_natura')"> Red Natura
+                        2000</label>
+                    <input type="range" min="0" max="100" value="60" oninput="updateOpacity('red_natura', this.value)">
+                    <span class="opacity-value" id="opacity-red_natura-value">60%</span>
+                </div>
+                <div class="layer-control-item">
+                    <label><input type="checkbox" id="layer-espacios_protegidos"
+                            onchange="toggleLayer('espacios_protegidos')"> Espacios Protegidos</label>
+                    <input type="range" min="0" max="100" value="60"
+                        oninput="updateOpacity('espacios_protegidos', this.value)">
+                    <span class="opacity-value" id="opacity-espacios_protegidos-value">60%</span>
+                </div>
+                <div class="layer-control-item">
+                    <label><input type="checkbox" id="layer-vias_pecuarias" onchange="toggleLayer('vias_pecuarias')">
+                        Vías Pecuarias</label>
+                    <input type="range" min="0" max="100" value="60"
+                        oninput="updateOpacity('vias_pecuarias', this.value)">
+                    <span class="opacity-value" id="opacity-vias_pecuarias-value">60%</span>
+                </div>
+
+                <!-- Montes -->
+                <div style="margin: 10px 0; font-weight: bold; color: #718096; border-bottom: 1px solid #e2e8f0;">🌲
+                    Montes y Forestal</div>
+                <div class="layer-control-item">
+                    <label><input type="checkbox" id="layer-montes_up" onchange="toggleLayer('montes_up')"> Montes
+                        Utilidad Pública</label>
+                    <input type="range" min="0" max="100" value="60" oninput="updateOpacity('montes_up', this.value)">
+                    <span class="opacity-value" id="opacity-montes_up-value">60%</span>
+                </div>
+                <div class="layer-control-item">
+                    <label><input type="checkbox" id="layer-montes_titularidad"
+                            onchange="toggleLayer('montes_titularidad')"> Titularidad Montes</label>
+                    <input type="range" min="0" max="100" value="60"
+                        oninput="updateOpacity('montes_titularidad', this.value)">
+                    <span class="opacity-value" id="opacity-montes_titularidad-value">60%</span>
+                </div>
+                <div class="layer-control-item">
+                    <label><input type="checkbox" id="layer-mapa_forestal" onchange="toggleLayer('mapa_forestal')"> Mapa
+                        Forestal (MFE)</label>
+                    <input type="range" min="0" max="100" value="60"
+                        oninput="updateOpacity('mapa_forestal', this.value)">
+                    <span class="opacity-value" id="opacity-mapa_forestal-value">60%</span>
+                </div>
+
+                <!-- Otros -->
+                <div style="margin: 10px 0; font-weight: bold; color: #718096; border-bottom: 1px solid #e2e8f0;">🔥
+                    Otros Riesgos</div>
+                <div class="layer-control-item">
+                    <label><input type="checkbox" id="layer-erosion_laminar" onchange="toggleLayer('erosion_laminar')">
+                        Erosión Laminar</label>
+                    <input type="range" min="0" max="100" value="60"
+                        oninput="updateOpacity('erosion_laminar', this.value)">
+                    <span class="opacity-value" id="opacity-erosion_laminar-value">60%</span>
+                </div>
+                <div class="layer-control-item">
+                    <label><input type="checkbox" id="layer-incendios" onchange="toggleLayer('incendios')"> Incendios
+                        Forestales</label>
+                    <input type="range" min="0" max="100" value="60" oninput="updateOpacity('incendios', this.value)">
+                    <span class="opacity-value" id="opacity-incendios-value">60%</span>
+                </div>
+
+                <div class="layer-control-item"
+                    style="border-top: 2px solid #667eea; margin-top: 15px; padding-top: 15px;">
                     <label>
                         <input type="checkbox" id="layer-parcela" onchange="toggleLayer('parcela')">
                         📍 Parcela Seleccionada
@@ -728,7 +819,22 @@
             catastro: null,
             ortofoto: null,
             compuesta: null,
-            parcela: null
+            parcela: null,
+            // Riesgos hídricos
+            inundabilidad_10: null,
+            inundabilidad_100: null,
+            inundabilidad_500: null,
+            // Biodiversidad
+            red_natura: null,
+            espacios_protegidos: null,
+            vias_pecuarias: null,
+            // Montes
+            montes_up: null,
+            montes_titularidad: null,
+            mapa_forestal: null,
+            // Otros
+            erosion_laminar: null,
+            incendios: null
         };
         let measurementLayer = null;
         let measurementMode = null;
@@ -1073,11 +1179,12 @@
 
         // Añadir capas WMS del Catastro e IGN
         function addWMSLayers() {
-            // Capa Catastro (HTTPS)
+            // --- CARTOGRAFÍA BASE ---
+            // Capa Catastro (HTTP según petición, fallback HTTPS)
             layers.catastro = L.tileLayer.wms(
-                'https://ovc.catastro.meh.es/Cartografia/WMS/ServidorWMS.aspx',
+                'http://ovc.catastro.meh.es/cartografia/INSPIRE/spadgcwms.aspx',
                 {
-                    layers: 'Catastro',
+                    layers: 'CP.CadastralParcel',
                     format: 'image/png',
                     transparent: true,
                     attribution: 'Catastro',
@@ -1085,7 +1192,7 @@
                 }
             ).addTo(map);
 
-            // Capa PNOA (Ortofotos) (HTTPS)
+            // Capa PNOA
             layers.ortofoto = L.tileLayer.wms(
                 'https://www.ign.es/wms-inspire/pnoa-ma',
                 {
@@ -1097,13 +1204,68 @@
                 }
             ).addTo(map);
 
+            // --- RIESGOS HÍDRICOS ---
+            layers.inundabilidad_10 = L.tileLayer.wms('https://wms.mapama.gob.es/sig/agua/ZI_LaminasQ10/wms.aspx', {
+                layers: 'NZ.RiskZone', format: 'image/png', transparent: true, opacity: 0.6
+            });
+            layers.inundabilidad_100 = L.tileLayer.wms('https://wms.mapama.gob.es/sig/agua/ZI_LaminasQ100/wms.aspx', {
+                layers: 'NZ.RiskZone', format: 'image/png', transparent: true, opacity: 0.6
+            });
+            layers.inundabilidad_500 = L.tileLayer.wms('https://wms.mapama.gob.es/sig/agua/ZI_LaminasQ500/wms.aspx', {
+                layers: 'NZ.RiskZone', format: 'image/png', transparent: true, opacity: 0.6
+            });
+
+            // --- BIODIVERSIDAD ---
+            layers.red_natura = L.tileLayer.wms('https://wms.mapama.gob.es/sig/Biodiversidad/RedNatura/wms.aspx', {
+                layers: 'PS.ProtectedSite', format: 'image/png', transparent: true, opacity: 0.6
+            });
+            layers.espacios_protegidos = L.tileLayer.wms('https://wms.mapama.gob.es/sig/Biodiversidad/ENP/wms.aspx', {
+                layers: 'PS.ProtectedSite', format: 'image/png', transparent: true, opacity: 0.6
+            });
+            layers.vias_pecuarias = L.tileLayer.wms('https://wms.mapama.gob.es/sig/Biodiversidad/ViasPecuarias/wms.aspx', {
+                layers: 'Vias_Pecuarias', format: 'image/png', transparent: true, opacity: 0.6
+            });
+
+            // --- MONTES ---
+            layers.montes_up = L.tileLayer.wms('https://wms.mapama.gob.es/sig/Biodiversidad/PropiedadMontes_UP/wms.aspx', {
+                layers: 'MUP', format: 'image/png', transparent: true, opacity: 0.6
+            });
+            layers.montes_titularidad = L.tileLayer.wms('https://wms.mapama.gob.es/sig/Biodiversidad/PropiedadMontes/wms.aspx', {
+                layers: 'PropiedadMontes', format: 'image/png', transparent: true, opacity: 0.6
+            });
+            layers.mapa_forestal = L.tileLayer.wms('https://wms.mapama.gob.es/sig/Biodiversidad/MFE/wms.aspx', {
+                layers: 'MFE', format: 'image/png', transparent: true, opacity: 0.6
+            });
+
+            // --- OTROS ---
+            layers.erosion_laminar = L.tileLayer.wms('https://wms.mapama.gob.es/sig/Biodiversidad/INESErosionLaminarRaster/wms.aspx', {
+                layers: 'ErosionLaminar', format: 'image/png', transparent: true, opacity: 0.6
+            });
+            layers.incendios = L.tileLayer.wms('https://wms.mapama.gob.es/sig/Biodiversidad/Incendios/2006_2015/wms.aspx', {
+                layers: 'Incendios', format: 'image/png', transparent: true, opacity: 0.6
+            });
+
             // Capa compuesta: Ortofoto + Catastro
             layers.compuesta = L.layerGroup([
                 layers.ortofoto,
                 layers.catastro
             ]).addTo(map);
 
-            console.log('✅ Capas WMS añadidas (HTTPS)');
+            console.log('✅ Capas WMS añadidas');
+        }
+
+        function updateOpacity(layerName, value) {
+            const layer = layers[layerName];
+            if (layer) {
+                const opacity = value / 100;
+                if (layer.setOpacity) {
+                    layer.setOpacity(opacity);
+                } else if (layer.eachLayer) {
+                    layer.eachLayer(l => l.setOpacity && l.setOpacity(opacity));
+                }
+                const display = document.getElementById(`opacity-${layerName}-value`);
+                if (display) display.textContent = `${value}%`;
+            }
         }
 
         // Buscar parcela por referencia catastral
