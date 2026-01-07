@@ -534,11 +534,11 @@ async def obtener_kml(referencia: str, tipo: str = "parcela"):
 
 @app.post("/api/v1/analizar-afecciones")
 async def analizar_afecciones_manual(
-    file: UploadFile = File(...),
+    files: List[UploadFile] = File(...),
     capas: str = Form("[\"afecciones_totales.gpkg\"]")
 ):
     """
-    Endpoint para análisis manual de afecciones subiendo un KML/GeoJSON
+    Endpoint para análisis manual de afecciones subiendo varios KML/GeoJSON
     """
     import tempfile
     import json
@@ -546,35 +546,38 @@ async def analizar_afecciones_manual(
     try:
         # Parsear capas solicitadas
         capas_list = json.loads(capas)
-        
-        # Guardar archivo temporal
-        with tempfile.NamedTemporaryFile(delete=False, suffix=Path(file.filename).suffix) as tmp:
-            content = await file.read()
-            tmp.write(content)
-            tmp_path = Path(tmp.name)
-        
-        resultados = {}
-        
-        # Analizar contra cada capa
-        for capa_name in capas_list:
-            try:
-                res = analyzer.analizar(
-                    parcela_path=tmp_path,
-                    gpkg_name=capa_name,
-                    campo_clasificacion="tipo"
-                )
-                resultados[capa_name] = res
-            except Exception as e:
-                resultados[capa_name] = {"error": str(e)}
-        
-        # Limpiar temporal
-        tmp_path.unlink()
+        resultados_por_archivo = {}
+
+        for file in files:
+            # Guardar archivo temporal
+            suffix = Path(file.filename).suffix
+            with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
+                content = await file.read()
+                tmp.write(content)
+                tmp_path = Path(tmp.name)
+            
+            resultados_capas = {}
+            # Analizar contra cada capa
+            for capa_name in capas_list:
+                try:
+                    res = analyzer.analizar(
+                        parcela_path=tmp_path,
+                        gpkg_name=capa_name,
+                        campo_clasificacion="tipo"
+                    )
+                    resultados_capas[capa_name] = res
+                except Exception as e:
+                    resultados_capas[capa_name] = {"error": str(e)}
+            
+            resultados_por_archivo[file.filename] = resultados_capas
+            # Limpiar temporal
+            tmp_path.unlink()
         
         return {
             "status": "success",
-            "archivo": file.filename,
+            "archivos_procesados": len(files),
             "capas_analizadas": len(capas_list),
-            "resultados": resultados
+            "resultados": resultados_por_archivo
         }
         
     except Exception as e:
