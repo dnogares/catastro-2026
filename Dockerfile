@@ -25,4 +25,4 @@ RUN mkdir -p outputs/gml outputs/pdfs outputs/imagenes outputs/html outputs/zips
 EXPOSE 8080
 
 # Comando para ejecutar la aplicación
-CMD ["uvicorn", "main.py:app", "--host", "0.0.0.0", "--port", "8080"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8080"]
