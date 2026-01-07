@@ -73,8 +73,8 @@ class AnalizadorUrbanistico:
                 "referencia": ref,
                 "status": "success",
                 "folder": str(ref_dir),
-                "kml": str(kml_path),
-                "zip": str(zip_path) if zip_path else None,
+                "kml": f"/outputs/{ref}/gml/{kml_path.name}" if kml_path.exists() else None,
+                "zip": f"/outputs/{ref}_completo.zip" if zip_path else None,
                 "wms_layers": wms_layers,
                 "resumen": {
                     "total_capas": len(wms_layers),

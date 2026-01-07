@@ -25,9 +25,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Montar carpetas estáticas
-app.mount("/outputs", StaticFiles(directory=str(OUTPUTS_DIR)), name="outputs")
+# Montar carpeta estática
 app.mount("/static", StaticFiles(directory="static"), name="static")
+
+# Montar outputs solo si existe (evitar errores en desarrollo)
+if OUTPUTS_DIR.exists():
+    app.mount("/outputs", StaticFiles(directory=str(OUTPUTS_DIR)), name="outputs")
+else:
+    print(f"⚠️ Advertencia: Directorio outputs no encontrado en {OUTPUTS_DIR}")
+    print("   Los archivos de descarga no estarán disponibles hasta que se procese una referencia")
 
 # Inicialización de Clases
 downloader = CatastroDownloader(output_dir=str(OUTPUTS_DIR))
@@ -575,6 +581,68 @@ async def analizar_afecciones_manual(
     except Exception as e:
         print(f"❌ Error analizando afecciones manuales: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/v1/capas-disponibles")
+async def obtener_capas_disponibles():
+    """
+    Obtiene la lista de capas vectoriales disponibles en el volumen
+    """
+    try:
+        capas_info = {
+            "capas_vectoriales": [],
+            "capas_wms": {
+                "catastro": {
+                    "nombre": "Catastro",
+                    "descripcion": "Cartografía catastral",
+                    "disponible": True
+                },
+                "pnoa": {
+                    "nombre": "Ortofoto PNOA", 
+                    "descripcion": "Ortofotografía de alta resolución",
+                    "disponible": True
+                }
+            }
+        }
+        
+        # Buscar capas vectoriales en el volumen
+        if CAPAS_DIR.exists():
+            for capa_file in CAPAS_DIR.rglob("*.gpkg"):
+                if capa_file.is_file():
+                    capas_info["capas_vectoriales"].append({
+                        "nombre": capa_file.stem,
+                        "archivo": capa_file.name,
+                        "ruta": str(capa_file.relative_to(CAPAS_DIR)),
+                        "tamano": capa_file.stat().st_size,
+                        "tipo": "vectorial"
+                    })
+            
+            # Buscar en subdirectorios
+            for subdir in ["ambiental", "riesgos", "infraestructuras"]:
+                subdir_path = CAPAS_DIR / subdir
+                if subdir_path.exists():
+                    for capa_file in subdir_path.rglob("*.gpkg"):
+                        if capa_file.is_file():
+                            capas_info["capas_vectoriales"].append({
+                                "nombre": capa_file.stem,
+                                "archivo": str(subdir_path / capa_file.name),
+                                "ruta": str(subdir_path / capa_file.relative_to(subdir_path)),
+                                "tamano": capa_file.stat().st_size,
+                                "tipo": "vectorial",
+                                "categoria": subdir
+                            })
+        
+        return {
+            "status": "success",
+            "total_capas": len(capas_info["capas_vectoriales"]),
+            "capas": capas_info
+        }
+        
+    except Exception as e:
+        print(f"❌ Error obteniendo capas disponibles: {e}")
+        return JSONResponse(
+            status_code=500,
+            content={"status": "error", "error": str(e)}
+        )
 
 # --- SERVIDOR ---
 if __name__ == "__main__":

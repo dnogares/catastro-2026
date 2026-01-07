@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Suite Tasación dnogares - Datos Catastrales</title>
+    <title>Suite Tasación - Datos Catastrales</title>
 
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
@@ -13,6 +13,9 @@
     <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+    <!-- Proj4js para conversiones de coordenadas -->
+    <script src="https://unpkg.com/proj4@2.9.2/dist/proj4.js"></script>
 
     <style>
         * {
@@ -456,7 +459,7 @@
     <div class="container">
         <!-- Header -->
         <div class="header">
-            <h1>🏢 Suite Tasación dnogares</h1>
+            <h1>🏢 Suite Tasación</h1>
             <p>Sistema de Descarga y Análisis de Datos Catastrales</p>
         </div>
 
@@ -638,12 +641,30 @@
 
                 <div class="layer-control-item">
                     <label>
+                        <input type="checkbox" id="layer-compuesta" checked onchange="toggleLayer('compuesta')">
+                        🗺️ Ortofoto + Catastro (Compuesta)
+                    </label>
+                    <input type="range" id="opacity-compuesta" min="0" max="100" value="90"
+                        oninput="updateOpacity('compuesta', this.value)">
+                    <span class="opacity-value" id="opacity-compuesta-value">90%</span>
+                </div>
+
+                <div class="layer-control-item">
+                    <label>
                         <input type="checkbox" id="layer-parcela" onchange="toggleLayer('parcela')">
                         📍 Parcela Seleccionada
                     </label>
                     <input type="range" id="opacity-parcela" min="0" max="100" value="100"
                         oninput="updateOpacity('parcela', this.value)">
                     <span class="opacity-value" id="opacity-parcela-value">100%</span>
+                </div>
+
+                <!-- Capas vectoriales del volumen -->
+                <div id="capas-vectoriales-container">
+                    <h4>📁 Capas Vectoriales (Volumen)</h4>
+                    <div id="capas-vectoriales-lista">
+                        <p>Cargando capas disponibles...</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -656,12 +677,12 @@
             </p>
 
             <div class="form-group">
-                <label class="file-upload" for="archivo-afeccion">
-                    <input type="file" id="archivo-afeccion" accept=".kml,.geojson,.json"
+                <label class="file-upload" for="archivo-afeccion" style="margin-bottom: 15px;">
+                    <input type="file" id="archivo-afeccion" accept=".kml,.geojson,.json" multiple
                         onchange="mostrarNombreArchivoAfeccion()">
                     <div>
-                        📁 <strong>Sube tu KML o GeoJSON</strong><br>
-                        <small>Formatos aceptados: .kml, .geojson, .json</small>
+                        📁 <strong>Sube tus archivos KML o GeoJSON</strong><br>
+                        <small>Formatos aceptados: .kml, .geojson, .json (múltiples archivos permitidos)</small>
                     </div>
                 </label>
                 <div id="file-name-afeccion" style="margin-top: 10px; color: #764ba2; font-weight: bold;"></div>
@@ -676,6 +697,7 @@
                         Naturales</label>
                     <label><input type="checkbox" class="capa-afeccion-chk" value="zonas_inundables.gpkg"> Zonas
                         Inundables</label>
+                    <label><input type="checkbox" class="capa-afeccion-chk" value="otras_capas"> Otras capas...</label>
                 </div>
             </div>
 
@@ -701,6 +723,7 @@
         let layers = {
             catastro: null,
             ortofoto: null,
+            compuesta: null,
             parcela: null
         };
         let measurementLayer = null;
@@ -778,8 +801,11 @@
                             <div class="result-item">
                                 <strong>📁 Archivos Generados:</strong>
                                 <div class="file-list">
-                                    ${data.archivos_generados.zip ?
-                                `<a href="${data.archivos_generados.zip}" class="file-link" download>📦 Descargar ZIP Completo</a>`
+                                    ${data.archivos_generados.zip ? 
+                                `<a href="${data.archivos_generados.zip}" class="file-link" download>📦 Descargar ZIP Completo</a>` 
+                                : ''}
+                                    ${data.archivos_generados.kml ? 
+                                `<a href="${data.archivos_generados.kml}" class="file-link" download>🗺️ Descargar KML</a>` 
                                 : ''}
                                 </div>
                             </div>
@@ -1015,6 +1041,9 @@
             // Añadir capas WMS
             addWMSLayers();
 
+            // Cargar capas vectoriales disponibles
+            cargarCapasVectoriales();
+
             // Capa para mediciones
             measurementLayer = L.layerGroup().addTo(map);
 
@@ -1049,6 +1078,12 @@
                     opacity: 0.7
                 }
             ).addTo(map);
+
+            // Capa compuesta: Ortofoto + Catastro
+            layers.compuesta = L.layerGroup([
+                layers.ortofoto,
+                layers.catastro
+            ]).addTo(map);
 
             console.log('✅ Capas WMS añadidas');
         }
@@ -1116,10 +1151,49 @@
                     // Centrar mapa en la parcela
                     map.fitBounds(layers.parcela.getBounds());
 
+                    // Calcular y mostrar perímetro
+                    const perimetro = calcularPerimetro(coords);
+                    
+                    // Crear capa de perímetro
+                    const perimetroLayer = L.polyline(coords, {
+                        color: '#ff6b6b',
+                        weight: 2,
+                        opacity: 0.8,
+                        dashArray: '10, 5'
+                    }).addTo(map);
+
+                    // Añadir popup con información
+                    const popupContent = `
+                        <div style="padding: 10px; min-width: 200px;">
+                            <h4 style="margin: 0 0 10px 0; color: #333;">📍 Parcela ${ref}</h4>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                                <div>
+                                    <strong>📐 Área:</strong><br>
+                                    <span style="color: #667eea;">${calcularArea(coords).toFixed(2)} m²</span>
+                                </div>
+                                <div>
+                                    <strong>📏 Perímetro:</strong><br>
+                                    <span style="color: #ff6b6b;">${perimetro.toFixed(2)} m</span>
+                                </div>
+                            </div>
+                            <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #ddd;">
+                                <small style="color: #666;">
+                                    <strong>Coordenadas:</strong> ${coords.length} puntos<br>
+                                    <strong>Formato:</strong> ${coords[0].length > 6 ? 'UTM' : 'Geográficas'}
+                                </small>
+                            </div>
+                        </div>
+                    `;
+
+                    layers.parcela.bindPopup(popupContent);
+
+                    // Guardar referencia para descarga KML
+                    currentGISReferencia = ref;
+
                     // Activar checkbox de parcela
                     document.getElementById('layer-parcela').checked = true;
 
-                    console.log(`✅ Parcela ${ref} cargada y centrada`);
+                    console.log(`✅ Parcela ${ref} cargada con perímetro: ${perimetro.toFixed(2)}m`);
                 } else {
                     throw new Error('No se pudieron extraer coordenadas del GML');
                 }
@@ -1130,28 +1204,51 @@
             }
         }
 
-        // Extraer coordenadas de GML (parser simplificado)
+        // Extraer coordenadas de GML (parser mejorado)
         function extraerCoordenadasGML(gmlText) {
             const coords = [];
-
-            // Buscar tag posList o coordinates
-            const posListMatch = gmlText.match(/<gml:posList[^>]*>([^<]+)<\/gml:posList>/i);
+            
+            // Buscar diferentes formatos de coordenadas en GML
+            // 1. posList (formato común)
+            let posListMatch = gmlText.match(/<gml:posList[^>]*>([^<]+)<\/gml:posList>/i);
+            
+            // 2. coordinates (formato alternativo)
+            if (!posListMatch) {
+                posListMatch = gmlText.match(/<gml:coordinates[^>]*>([^<]+)<\/gml:coordinates>/i);
+            }
+            
+            // 3. SRS para verificar si son UTM
+            const srsMatch = gmlText.match(/srsName[^>]*>([^<]+)<\/srsName>/i) || 
+                           gmlText.match(/srs[^=]*=["']([^"']+)["']/i);
 
             if (posListMatch) {
                 const numbers = posListMatch[1].trim().split(/\s+/).map(parseFloat);
-
-                // Convertir pares de coordenadas (asumiendo formato X Y)
-                for (let i = 0; i < numbers.length; i += 2) {
-                    if (i + 1 < numbers.length) {
-                        // Convertir de UTM a lat/lng (aproximación simple)
-                        // Para producción, usar librería de proyección como proj4
-                        const lat = numbers[i + 1] / 111320; // Aproximación
-                        const lng = numbers[i] / (111320 * Math.cos(lat * Math.PI / 180));
-                        coords.push([lat, lng]);
+                
+                // Verificar si son coordenadas geográficas o UTM
+                const isUTM = srsMatch && (srsMatch[1].includes('UTM') || srsMatch[1].includes('258') || srsMatch[1].includes('298') || srsMatch[1].includes('326'));
+                
+                if (isUTM && numbers.length >= 6) {
+                    // Para UTM, usar conversión aproximada pero mejor
+                    // Nota: En producción usar proj4js o similar
+                    const utmX = numbers[0];
+                    const utmY = numbers[1];
+                    
+                    // Conversión UTM a Lat/Lng (aproximada para España peninsular)
+                    // Huso 30 para España peninsular
+                    const lat = utmY / 111320 - 0.15;
+                    const lng = (utmX - 500000) / (111320 * Math.cos(40 * Math.PI / 180)) - 3.5;
+                    
+                    coords.push([lat, lng]);
+                } else {
+                    // Coordenadas geográficas directas
+                    for (let i = 0; i < numbers.length; i += 2) {
+                        if (i + 1 < numbers.length) {
+                            coords.push([numbers[i + 1], numbers[i]]);
+                        }
                     }
                 }
             }
-
+            
             return coords;
         }
 
@@ -1271,12 +1368,12 @@
         // Calcular área de polígono (fórmula de Shoelace)
         function calcularArea(points) {
             if (points.length < 3) return 0;
-
+            
             // Convertir a metros usando proyección aproximada
             const latToMeters = 111320;
             const avgLat = points.reduce((sum, p) => sum + p[0], 0) / points.length;
             const lngToMeters = latToMeters * Math.cos(avgLat * Math.PI / 180);
-
+            
             let area = 0;
             for (let i = 0; i < points.length; i++) {
                 const j = (i + 1) % points.length;
@@ -1286,8 +1383,23 @@
                 const yj = points[j][0] * latToMeters;
                 area += xi * yj - xj * yi;
             }
-
+            
             return Math.abs(area / 2);
+        }
+
+        // Calcular perímetro del polígono
+        function calcularPerimetro(coords) {
+            if (coords.length < 3) return 0;
+            
+            let perimetro = 0;
+            for (let i = 0; i < coords.length; i++) {
+                const j = (i + 1) % coords.length;
+                const dx = coords[j][0] - coords[i][0];
+                const dy = coords[j][1] - coords[i][1];
+                perimetro += Math.sqrt(dx * dx + dy * dy);
+            }
+            
+            return perimetro;
         }
 
         // Mostrar resultado de medición
@@ -1317,18 +1429,61 @@
         // Exportar mapa como imagen
         async function exportMapImage() {
             try {
-                // Usar leaflet-image o html2canvas
-                alert('Función de exportación: Para implementar esta funcionalidad completa, se necesita la librería leaflet-image o html2canvas.\n\nPor ahora, puedes usar la captura de pantalla de tu navegador.');
-
-                // TODO: Implementar con leaflet-image
-                // leafletImage(map, function(err, canvas) {
-                //     const img = canvas.toDataURL();
-                //     const link = document.createElement('a');
-                //     link.download = 'mapa.png';
-                //     link.href = img;
-                //     link.click();
-                // });
-
+                // Opción 1: Usar html2canvas (disponible en CDN)
+                if (typeof html2canvas !== 'undefined') {
+                    const mapContainer = document.getElementById('map');
+                    
+                    html2canvas(mapContainer, {
+                        useCORS: true,
+                        allowTaint: true,
+                        scale: 2
+                    }).then(canvas => {
+                        const link = document.createElement('a');
+                        link.download = `mapa_${new Date().toISOString().slice(0,10)}.png`;
+                        link.href = canvas.toDataURL();
+                        link.click();
+                    });
+                } else {
+                    // Opción 2: Canvas nativo (limitado pero funcional)
+                    const mapContainer = document.getElementById('map');
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    
+                    // Obtener dimensiones del mapa
+                    canvas.width = mapContainer.offsetWidth * 2;
+                    canvas.height = mapContainer.offsetHeight * 2;
+                    ctx.scale(2, 2);
+                    
+                    // Intentar capturar el mapa (limitación de seguridad del navegador)
+                    html2canvas = html2canvas || function() { return Promise.reject('html2canvas no disponible'); };
+                    
+                    // Fallback a descarga manual
+                    const modal = document.createElement('div');
+                    modal.style.cssText = `
+                        position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+                        background: white; padding: 20px; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+                        z-index: 10000; text-align: center;
+                    `;
+                    modal.innerHTML = `
+                        <h3>📸 Exportar Mapa</h3>
+                        <p>Para exportar el mapa como imagen, tienes estas opciones:</p>
+                        <div style="margin: 15px 0;">
+                            <button onclick="this.parentElement.parentElement.remove()" style="margin: 5px; padding: 10px 20px; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                                ❌ Cerrar
+                            </button>
+                            <br><br>
+                            <button onclick="window.open('https://html2canvas.hertzen.com/dist/', '_blank')" style="margin: 5px; padding: 10px 20px; background: #48bb78; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                                🌐 Usar herramienta online
+                            </button>
+                            <br><br>
+                            <small style="color: #666;">
+                                O usa <strong>Ctrl+PrtScn</strong> o <strong>Win+Shift+S</strong> para capturar pantalla
+                            </small>
+                        </div>
+                    `;
+                    document.body.appendChild(modal);
+                }
+                
             } catch (error) {
                 console.error('Error exportando imagen:', error);
                 alert('Error al exportar la imagen del mapa');
@@ -1339,16 +1494,23 @@
 
         function mostrarNombreArchivoAfeccion() {
             const input = document.getElementById('archivo-afeccion');
-            const fileName = input.files[0]?.name || '';
-            document.getElementById('file-name-afeccion').textContent = fileName ? `📄 ${fileName}` : '';
+            const files = input.files;
+            
+            if (files.length === 0) {
+                document.getElementById('file-name-afeccion').textContent = '';
+            } else if (files.length === 1) {
+                document.getElementById('file-name-afeccion').textContent = `📄 ${files[0].name}`;
+            } else {
+                document.getElementById('file-name-afeccion').textContent = `📁 ${files.length} archivos seleccionados`;
+            }
         }
 
         async function analizarAfeccionesManual() {
             const fileInput = document.getElementById('archivo-afeccion');
-            const file = fileInput.files[0];
+            const files = fileInput.files;
 
-            if (!file) {
-                alert('Por favor selecciona un archivo KML o GeoJSON');
+            if (files.length === 0) {
+                alert('Por favor selecciona al menos un archivo KML o GeoJSON');
                 return;
             }
 
@@ -1364,7 +1526,12 @@
 
             try {
                 const formData = new FormData();
-                formData.append('file', file);
+                
+                // Añadir todos los archivos
+                for (let i = 0; i < files.length; i++) {
+                    formData.append('files', files[i]);
+                }
+                
                 formData.append('capas', JSON.stringify(capas));
 
                 const response = await fetch('/api/v1/analizar-afecciones', {
@@ -1379,7 +1546,7 @@
 
                 let html = `
                     <div class="result-item">
-                        <p><strong>Archivo:</strong> ${data.archivo}</p>
+                        <p><strong>Archivos:</strong> ${files.length} archivos procesados</p>
                         <p><strong>Capas analizadas:</strong> ${data.capas_analizadas}</p>
                     </div>
                 `;

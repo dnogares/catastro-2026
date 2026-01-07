@@ -715,7 +715,7 @@ class CatastroDownloader:
                 "wms_layers": {
                     "composicion": str(composicion_path) if composicion_path and composicion_path.exists() else None
                 },
-                "zip_path": str(zip_path) if zip_path else None,
+                "zip_path": f"/outputs/{ref}_completo.zip" if zip_path else None,
                 "directorio": str(ref_dir)
             }
             
