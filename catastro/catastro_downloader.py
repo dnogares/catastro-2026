@@ -326,7 +326,7 @@ class CatastroDownloader:
         metadata_images = {}
         for n, nombre in niveles.items():
             bbox_str = self.calcular_bbox(lon, lat, n)
-            img_final = self._get_wms_layer(self.wms_urls["pnoa"], bbox_str, "PNOA", False)
+            img_final = self._get_wms_layer(self.wms_urls["pnoa"], bbox_str, "OI.OrthoimageCoverage", False)
             if not img_final: continue
 
             avisos_detectados = []

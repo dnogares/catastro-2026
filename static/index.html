@@ -1053,7 +1053,7 @@
             // Capa base OpenStreetMap
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '© OpenStreetMap contributors',
-                maxZoom: 20
+                maxZoom: 19
             }).addTo(map);
 
             // Añadir capas WMS
@@ -1461,9 +1461,7 @@
             let perimetro = 0;
             for (let i = 0; i < coords.length; i++) {
                 const j = (i + 1) % coords.length;
-                const dx = coords[j][0] - coords[i][0];
-                const dy = coords[j][1] - coords[i][1];
-                perimetro += Math.sqrt(dx * dx + dy * dy);
+                perimetro += map.distance(coords[i], coords[j]);
             }
 
             return perimetro;
@@ -1676,7 +1674,7 @@
 
                 // Añadir todos los archivos
                 for (let i = 0; i < files.length; i++) {
-                    formData.append('files', files[i]);
+                    formData.append('archivos', files[i]);
                 }
 
                 formData.append('capas', JSON.stringify(capas));
