@@ -438,11 +438,21 @@ async def obtener_info_referencia(referencia: str):
                 if "ficha_catastral" in pdf_file.name:
                     info["archivos"]["ficha_catastral"] = f"/outputs/{ref_limpia}/pdf/{pdf_file.name}"
 
-        # Imágenes
+        # Imágenes y Metadata
         images_dir = ref_dir / "images"
         if images_dir.exists():
             for img_file in images_dir.glob("*.png"):
                 info["archivos"]["imagenes"].append(f"/outputs/{ref_limpia}/images/{img_file.name}")
+            
+            # Cargar metadata.json si existe
+            metadata_path = images_dir / "metadata.json"
+            if metadata_path.exists():
+                try:
+                    with open(metadata_path, 'r', encoding='utf-8') as f:
+                        info["metadata_imagenes"] = json.load(f)
+                except Exception as e:
+                    print(f"⚠️ Error cargando metadata: {e}")
+                    info["metadata_imagenes"] = {}
 
         # JSON
         json_dir = ref_dir / "json"
@@ -455,6 +465,43 @@ async def obtener_info_referencia(referencia: str):
     except HTTPException:
         raise
     except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"status": "error", "error": str(e)}
+        )
+
+@app.get("/api/v1/capas/geojson")
+async def obtener_capa_vectorial_geojson(ruta: str):
+    """
+    Convierte una capa GPKG del volumen a GeoJSON para el visor
+    """
+    try:
+        import json
+        import geopandas as gpd
+        
+        # Seguridad: evitar path traversal
+        if ".." in ruta or ruta.startswith("/"):
+            raise HTTPException(status_code=400, detail="Ruta de capa inválida")
+            
+        capa_path = CAPAS_DIR / ruta
+        
+        if not capa_path.exists():
+            raise HTTPException(
+                status_code=404,
+                detail=f"Capa no encontrada en {ruta}"
+            )
+        
+        # Leer GPKG y limitar a 5000 entidades por rendimiento
+        gdf = gpd.read_file(capa_path, rows=5000)
+        
+        # Reproyectar a WGS84
+        if gdf.crs and gdf.crs != "EPSG:4326":
+            gdf = gdf.to_crs("EPSG:4326")
+        
+        return json.loads(gdf.to_json())
+        
+    except Exception as e:
+        print(f"❌ Error convirtiendo capa {ruta} a GeoJSON: {e}")
         return JSONResponse(
             status_code=500,
             content={"status": "error", "error": str(e)}

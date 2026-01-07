@@ -306,14 +306,15 @@ class CatastroDownloader:
         ]
         
         resumen = []
+        metadata_images = {}
         for n, nombre in niveles.items():
-            bbox = self.calcular_bbox(lon, lat, n)
-            img_final = self._get_wms_layer(self.wms_urls["catastro"], bbox, "PNOA", False)
+            bbox_str = self.calcular_bbox(lon, lat, n)
+            img_final = self._get_wms_layer(self.wms_urls["catastro"], bbox_str, "PNOA", False)
             if not img_final: continue
 
             avisos_detectados = []
             for url, layer, alpha, alerta in capas_afeccion:
-                overlay = self._get_wms_layer(url, bbox, layer)
+                overlay = self._get_wms_layer(url, bbox_str, layer)
                 if overlay:
                     overlay.putalpha(alpha)
                     img_final.alpha_composite(overlay)
@@ -321,7 +322,7 @@ class CatastroDownloader:
                         avisos_detectados.append(alerta)
 
             if gml_path.exists():
-                silueta = self._generar_silueta_roja(gml_path, bbox)
+                silueta = self._generar_silueta_roja(gml_path, bbox_str)
                 if silueta: img_final.alpha_composite(silueta)
 
             draw = ImageDraw.Draw(img_final)
@@ -333,17 +334,35 @@ class CatastroDownloader:
                 draw.rectangle([0, 1140, 1200, 1200], fill=(200, 0, 0, 230))
                 draw.text((20, 1160), f"ALERTA: {txt_alerta}", fill="white")
 
-            path_img = img_dir / f"{ref}_Catastro_zoom{n}_{nombre}.png"
+            filename = f"{ref}_Catastro_zoom{n}_{nombre}.png"
+            path_img = img_dir / filename
             img_final.save(path_img)
             
+            # Guardar BBOX en metadatos (en formato [[lat_min, lon_min], [lat_max, lon_max]] para Leaflet)
+            # bbox_str es "lon-r,lat-r,lon+r,lat+r"
+            b = [float(x) for x in bbox_str.split(',')]
+            leaflet_bbox = [[b[1], b[0]], [b[3], b[2]]]
+            metadata_images[filename] = {
+                "bbox": leaflet_bbox,
+                "zoom": n,
+                "nombre": nombre,
+                "avisos": avisos_detectados
+            }
+
             # Alias para compatibilidad con main.py (composicion)
             if n == 4:
-                comp_path = img_dir / f"{ref}_composicion.png"
+                comp_filename = f"{ref}_composicion.png"
+                comp_path = img_dir / comp_filename
                 img_final.save(comp_path)
+                metadata_images[comp_filename] = metadata_images[filename]
                 resumen.append({"nivel": "composicion", "path": str(comp_path), "avisos": avisos_detectados})
 
             resumen.append({"nivel": nombre, "path": str(path_img), "avisos": avisos_detectados})
             logger.info(f"    📷 Generado Zoom {n}: {nombre}")
+
+        # Guardar metadata.json
+        with open(img_dir / "metadata.json", "w", encoding='utf-8') as f:
+            json.dump(metadata_images, f, indent=2, ensure_ascii=False)
 
         return resumen
 

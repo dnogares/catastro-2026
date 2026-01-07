@@ -659,11 +659,15 @@
                     <span class="opacity-value" id="opacity-parcela-value">100%</span>
                 </div>
 
-                <!-- Capas vectoriales del volumen -->
-                <div id="capas-vectoriales-container">
-                    <h4>📁 Capas Vectoriales (Volumen)</h4>
+                <div id="capas-generadas-lista"
+                    style="margin-top: 20px; border-top: 1px solid #eee; padding-top: 10px;">
+                    <!-- Se rellena dinámicamente con mapas generados -->
+                </div>
+
+                <div style="margin-top: 20px; border-top: 1px solid #eee; padding-top: 10px;">
+                    <h3>📂 Capas Vectoriales (Volumen)</h3>
                     <div id="capas-vectoriales-lista">
-                        <p>Cargando capas disponibles...</p>
+                        <p style="color: #888;">Cargando capas...</p>
                     </div>
                 </div>
             </div>
@@ -806,6 +810,22 @@
                                     `).join('')}
                                 </ul>
                                 <p style="margin-top: 5px;"><strong>Total afectación:</strong> ${data.afecciones.total.toFixed(1)}%</p>
+                            </div>
+                        `;
+                    }
+
+                    if (data.archivos_generados) {
+                        html += `
+                            <div class="result-item">
+                                <strong>📁 Archivos Generados:</strong>
+                                <div class="file-list">
+                                    ${data.archivos_generados.zip ?
+                                `<a href="${data.archivos_generados.zip}" class="file-link" download>📦 Descargar ZIP Completo</a>`
+                                : ''}
+                                    ${data.archivos_generados.kml ?
+                                `<a href="${data.archivos_generados.kml}" class="file-link" download>🗺️ Descargar KML</a>`
+                                : ''}
+                                </div>
                             </div>
                         `;
                     }
@@ -1114,9 +1134,63 @@
                     alert('No se encontró el archivo GML de la parcela. Procesa primero la referencia en la pestaña "Referencia Única".');
                 }
 
+                // Si hay metadata de imágenes, cargar controles de superposición
+                if (data.metadata_imagenes) {
+                    mostrarControlesOverlays(data.metadata_imagenes, ref);
+                }
+
             } catch (error) {
                 console.error('❌ Error buscando parcela:', error);
                 alert(`Error: ${error.message}`);
+            }
+        }
+
+        let activeImageOverlays = {};
+
+        // Mostrar controles para superponer imágenes generadas
+        function mostrarControlesOverlays(metadata, ref) {
+            const container = document.getElementById('capas-generadas-lista'); // Necesitamos este ID en el HTML
+            if (!container) return;
+
+            let html = `<h4>🖼️ Mapas Generados (${ref})</h4>`;
+            for (const [filename, info] of Object.entries(metadata)) {
+                if (filename.includes('metadata.json')) continue;
+
+                const id = `overlay-${filename.replace(/\./g, '-')}`;
+                const url = `/outputs/${ref}/images/${filename}`;
+
+                html += `
+                    <div class="layer-control-item">
+                        <label>
+                            <input type="checkbox" id="${id}" onchange="toggleImageOverlay('${url}', ${JSON.stringify(info.bbox)}, this.checked, '${filename}')">
+                            📸 ${info.nombre || filename}
+                        </label>
+                    </div>
+                `;
+            }
+            container.innerHTML = html;
+        }
+
+        // Toggle superposición de imagen
+        function toggleImageOverlay(url, bbox, checked, key) {
+            if (checked) {
+                if (activeImageOverlays[key]) {
+                    map.removeLayer(activeImageOverlays[key]);
+                }
+                activeImageOverlays[key] = L.imageOverlay(url, bbox, {
+                    opacity: 0.8,
+                    interactive: true
+                }).addTo(map);
+
+                // Opcional: Centrar en el overlay si es el primero o zoom 4
+                if (key.includes('zoom4') || key.includes('composicion')) {
+                    map.fitBounds(bbox);
+                }
+            } else {
+                if (activeImageOverlays[key]) {
+                    map.removeLayer(activeImageOverlays[key]);
+                    delete activeImageOverlays[key];
+                }
             }
         }
 
@@ -1402,14 +1476,14 @@
                 const data = await response.json();
 
                 const container = document.getElementById('capas-vectoriales-lista');
-                if (data.status === 'success' && data.capas.capas_vectoriales.length > 0) {
+                if (data.status === 'success' && data.capas && data.capas.capas_vectoriales) {
                     let html = '';
                     data.capas.capas_vectoriales.forEach(capa => {
                         const id = `layer-v-${capa.nombre.replace(/\s+/g, '-')}`;
                         html += `
                             <div class="layer-control-item">
                                 <label>
-                                    <input type="checkbox" id="${id}" onchange="toggleVectorLayer('${capa.archivo}', this.checked)">
+                                    <input type="checkbox" id="${id}" onchange="toggleVectorLayer('${capa.archivo}', this.checked, '${capa.ruta}')">
                                     📁 ${capa.nombre}
                                 </label>
                             </div>
@@ -1417,7 +1491,7 @@
                     });
                     container.innerHTML = html;
                 } else {
-                    container.innerHTML = '<p>No se encontraron capas vectoriales.</p>';
+                    container.innerHTML = '<p>No se encontraron capas vectoriales en el volumen.</p>';
                 }
             } catch (error) {
                 console.error('Error cargando capas:', error);
@@ -1429,15 +1503,40 @@
         let activeVectorLayers = {};
 
         // Toggle capa vectorial
-        async function toggleVectorLayer(capaArchivo, checked) {
+        async function toggleVectorLayer(capaArchivo, checked, capaRuta) {
             if (checked) {
                 try {
-                    // Para simplificar, asumimos que el backend puede devolver GeoJSON de cualquier capa
-                    // pero como no hay un endpoint genérico para eso aún, esto es un placeholder funcional
-                    // En una versión real, esto llamaría a un servicio WFS o similar
-                    console.log(`Capa ${capaArchivo} activada (funcionalidad pendiente de endpoint GeoJSON genérico)`);
+                    console.log(`📡 Solicitando GeoJSON para: ${capaRuta}`);
+                    const response = await fetch(`/api/v1/capas/geojson?ruta=${encodeURIComponent(capaRuta)}`);
+                    if (!response.ok) throw new Error('Error al obtener la capa');
+
+                    const data = await response.json();
+
+                    // Crear capa Leaflet
+                    activeVectorLayers[capaArchivo] = L.geoJSON(data, {
+                        style: {
+                            color: '#4a5568',
+                            weight: 2,
+                            opacity: 0.6,
+                            fillColor: '#805ad5',
+                            fillOpacity: 0.2
+                        },
+                        onEachFeature: (feature, layer) => {
+                            if (feature.properties) {
+                                let popup = '<div style="max-height: 200px; overflow-y: auto;"><strong>Capa: ' + capaArchivo + '</strong><br><hr>';
+                                for (const [k, v] of Object.entries(feature.properties)) {
+                                    popup += `<strong>${k}:</strong> ${v}<br>`;
+                                }
+                                popup += '</div>';
+                                layer.bindPopup(popup);
+                            }
+                        }
+                    }).addTo(map);
+
+                    console.log(`✅ Capa ${capaArchivo} cargada en el mapa`);
                 } catch (error) {
-                    console.error('Error cargando capa vectorial:', error);
+                    console.error('❌ Error cargando capa vectorial:', error);
+                    alert(`No se pudo cargar la capa: ${error.message}`);
                 }
             } else {
                 if (activeVectorLayers[capaArchivo]) {
