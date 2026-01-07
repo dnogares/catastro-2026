@@ -1247,53 +1247,222 @@
                         }
                     }
                 }
+        }
+
+    } catch (error) {
+        console.error(' Error buscando parcela:', error);
+        alert(`Error: ${error.message}`);
+    }
+}
+
+// Cargar GML de parcela y centrar mapa
+async function cargarGMLParcela(gmlUrl, ref) {
+    try {
+        console.log(` Cargando GML: ${gmlUrl}`);
+
+        // Descargar GML
+        const response = await fetch(gmlUrl);
+        const gmlText = await response.text();
+
+        // Parsear coordenadas del GML (simplificado)
+        const coords = extraerCoordenadasGML(gmlText);
+
+        if (coords.length > 0) {
+            // Remover capa anterior si existe
+            if (layers.parcela) {
+                map.removeLayer(layers.parcela);
             }
+
+            // Crear polígono
+            layers.parcela = L.polygon(coords, {
+                color: '#ff0000',
+                fillColor: '#ff0000',
+                fillOpacity: 0.3,
+                weight: 3
+            }).addTo(map);
+
+            // Centrar mapa en la parcela
+            map.fitBounds(layers.parcela.getBounds());
+
+            // Calcular y mostrar perímetro
+            const perimetro = calcularPerimetro(coords);
             
-            return coords;
+            // Crear capa de perímetro
+            const perimetroLayer = L.polyline(coords, {
+                color: '#ff6b6b',
+                weight: 2,
+                opacity: 0.8,
+                dashArray: '10, 5'
+            }).addTo(map);
+
+            // Añadir popup con información
+            const popupContent = `
+                <div style="padding: 10px; min-width: 200px;">
+                    <h4 style="margin: 0 0 10px 0; color: #333;"> Parcela ${ref}</h4>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <div>
+                            <strong> Área:</strong><br>
+                            <span style="color: #667eea;">${calcularArea(coords).toFixed(2)} m²</span>
+                        </div>
+                        <div>
+                            <strong> Perímetro:</strong><br>
+                            <span style="color: #ff6b6b;">${perimetro.toFixed(2)} m</span>
+                        </div>
+                    </div>
+                    <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #ddd;">
+                        <small style="color: #666;">
+                            <strong>Coordenadas:</strong> ${coords.length} puntos<br>
+                            <strong>Formato:</strong> ${coords[0].length > 6 ? 'UTM' : 'Geográficas'}
+                        </small>
+                    </div>
+                </div>
+            `;
+
+            layers.parcela.bindPopup(popupContent);
+
+            // Guardar referencia para descarga KML
+            currentGISReferencia = ref;
+
+            // Activar checkbox de parcela
+            document.getElementById('layer-parcela').checked = true;
+
+            console.log(` Parcela ${ref} cargada con perímetro: ${perimetro.toFixed(2)}m`);
+        } else {
+            throw new Error('No se pudieron extraer coordenadas del GML');
         }
 
-        // Toggle visibilidad de capa
-        function toggleLayer(layerName) {
-            const checkbox = document.getElementById(`layer-${layerName}`);
-            const layer = layers[layerName];
+    } catch (error) {
+        console.error(' Error cargando GML:', error);
+        alert('Error cargando la geometría de la parcela');
+    }
+}
 
-            if (!layer) return;
+// Extraer coordenadas de GML (parser mejorado)
+function extraerCoordenadasGML(gmlText) {
+    const coords = [];
+    
+    // Buscar diferentes formatos de coordenadas en GML
+    // 1. posList (formato común)
+    let posListMatch = gmlText.match(/<gml:posList[^>]*>([^<]+)<\/gml:posList>/i);
+    
+    // 2. coordinates (formato alternativo)
+    if (!posListMatch) {
+        posListMatch = gmlText.match(/<gml:coordinates[^>]*>([^<]+)<\/gml:coordinates>/i);
+    }
+    
+    // 3. SRS para verificar si son UTM
+    const srsMatch = gmlText.match(/srsName[^>]*>([^<]+)<\/srsName>/i) || 
+                   gmlText.match(/srs[^=]*=["']([^"']+)["']/i);
 
-            if (checkbox.checked) {
-                map.addLayer(layer);
-            } else {
-                map.removeLayer(layer);
+    if (posListMatch) {
+        const numbers = posListMatch[1].trim().split(/\s+/).map(parseFloat);
+        
+        // Verificar si son coordenadas geográficas o UTM
+        const isUTM = srsMatch && (srsMatch[1].includes('UTM') || srsMatch[1].includes('258') || srsMatch[1].includes('298') || srsMatch[1].includes('326'));
+        
+        if (isUTM && numbers.length >= 6) {
+            // Para UTM, usar conversión aproximada pero mejor
+            // Nota: En producción usar proj4js o similar
+            const utmX = numbers[0];
+            const utmY = numbers[1];
+            
+            // Conversión UTM a Lat/Lng (aproximada para España peninsular)
+            // Huso 30 para España peninsular
+            const lat = utmY / 111320 - 0.15;
+            const lng = (utmX - 500000) / (111320 * Math.cos(40 * Math.PI / 180)) - 3.5;
+            
+            coords.push([lat, lng]);
+        } else {
+            // Coordenadas geográficas directas
+            for (let i = 0; i < numbers.length; i += 2) {
+                if (i + 1 < numbers.length) {
+                    coords.push([numbers[i + 1], numbers[i]]);
+                }
             }
         }
+    }
+    
+    return coords;
+}
 
-        // Actualizar opacidad de capa
-        function updateOpacity(layerName, value) {
-            const layer = layers[layerName];
-            const valueSpan = document.getElementById(`opacity-${layerName}-value`);
+// Toggle visibilidad de capa
+function toggleLayer(layerName) {
+    const checkbox = document.getElementById(`layer-${layerName}`);
+    const layer = layers[layerName];
 
-            if (layer) {
-                layer.setOpacity(value / 100);
-            }
+    if (!layer) return;
 
-            if (valueSpan) {
-                valueSpan.textContent = `${value}%`;
-            }
-        }
+    if (checkbox.checked) {
+        map.addLayer(layer);
+    } else {
+        map.removeLayer(layer);
+    }
+}
 
-        // Medir distancia
-        function toggleMeasureDistance() {
-            if (measurementMode === 'distance') {
-                // Desactivar
-                measurementMode = null;
-                measurementPoints = [];
-                document.querySelector('.tool-btn').classList.remove('active');
-            } else {
-                // Activar
-                measurementMode = 'distance';
-                measurementPoints = [];
-                clearMeasurements();
-                event.target.classList.add('active');
-                alert('Haz clic en el mapa para marcar puntos. Haz doble clic para terminar.');
+// Medir distancia
+function toggleMeasureDistance() {
+    if (measurementMode === 'distance') {
+        // Desactivar
+        measurementMode = null;
+        measurementPoints = [];
+        document.querySelector('.tool-btn').classList.remove('active');
+    } else {
+        // Activar
+        measurementMode = 'distance';
+        measurementPoints = [];
+        clearMeasurements();
+        event.target.classList.add('active');
+        alert('Haz clic en el mapa para marcar puntos. Haz doble clic para terminar.');
+    }
+}
+
+// Medir área
+function toggleMeasureArea() {
+    if (measurementMode === 'area') {
+        // Desactivar
+        measurementMode = null;
+        measurementPoints = [];
+        document.querySelectorAll('.tool-btn')[1].classList.remove('active');
+    } else {
+        // Activar
+        measurementMode = 'area';
+        measurementPoints = [];
+        clearMeasurements();
+        event.target.classList.add('active');
+        alert('Haz clic en el mapa para marcar vértices del polígono. Haz doble clic para terminar.');
+    }
+}
+
+// Manejar clics en el mapa para mediciones
+function handleMapClick(e) {
+    if (!measurementMode) return;
+
+    measurementPoints.push([e.latlng.lat, e.latlng.lng]);
+
+    // Añadir marcador
+    L.circleMarker([e.latlng.lat, e.latlng.lng], {
+        radius: 5,
+        color: '#667eea',
+        fillColor: '#667eea',
+        fillOpacity: 1
+    }).addTo(measurementLayer);
+
+    // Si hay al menos 2 puntos, dibujar línea/polígono
+    if (measurementPoints.length >= 2) {
+        if (measurementMode === 'distance') {
+            // Dibujar línea
+            L.polyline(measurementPoints, {
+                color: '#667eea',
+                weight: 3
+            }).addTo(measurementLayer);
+
+            // Calcular distancia total
+            const distance = calcularDistanciaTotal(measurementPoints);
+            mostrarResultadoMedicion(`${distance.toFixed(2)} metros`);
+        } else if (measurementMode === 'area') {
+            // Dibujar polígono temporal
+            measurementLayer.clearLayers();
+            L.polygon(measurementPoints, {
             }
         }
 
