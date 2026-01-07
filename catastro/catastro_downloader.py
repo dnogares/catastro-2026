@@ -60,6 +60,7 @@ class CatastroDownloader:
         # Capas WMS del Catastro y Afecciones
         self.wms_urls = {
             "catastro": "https://ovc.catastro.meh.es/Cartografia/WMS/ServidorWMS.aspx",
+            "pnoa": "https://www.ign.es/wms-inspire/pnoa-ma",
             "inundabilidad": "https://wms.mapa.gob.es/snczi/wms",
             "afecciones": "https://wms.mapa.gob.es/sig/Biodiversidad/Servicios_WMS_Medio_Ambiente/wms.aspx",
             "vias_pecuarias": "https://wms.mapa.gob.es/sig/Biodiversidad/ViasPecuarias/wms.aspx",
@@ -325,7 +326,7 @@ class CatastroDownloader:
         metadata_images = {}
         for n, nombre in niveles.items():
             bbox_str = self.calcular_bbox(lon, lat, n)
-            img_final = self._get_wms_layer(self.wms_urls["catastro"], bbox_str, "PNOA", False)
+            img_final = self._get_wms_layer(self.wms_urls["pnoa"], bbox_str, "PNOA", False)
             if not img_final: continue
 
             avisos_detectados = []

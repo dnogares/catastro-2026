@@ -1,3 +1,4 @@
+import json
 import os
 from pathlib import Path
 from typing import List, Optional
@@ -643,7 +644,7 @@ async def analizar_afecciones_manual(
         
         return {
             "status": "success",
-            "archivos_procesados": len(files),
+            "archivos_procesados": len(archivos),
             "capas_analizadas": len(capas_list),
             "resultados": resultados_por_archivo
         }
