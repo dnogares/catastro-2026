@@ -101,7 +101,9 @@ class AfeccionesPDF:
             
             # PÁGINAS DE MAPAS
             if mapas:
-                for idx, mapa_path in enumerate(mapas, 1):
+                # Priorizar "plano_perfecto" si existe
+                mapas_ordenados = sorted(mapas, key=lambda x: "plano_perfecto" not in str(x))
+                for idx, mapa_path in enumerate(mapas_ordenados, 1):
                     mapa_path = Path(mapa_path)
                     
                     if not mapa_path.exists():
@@ -208,8 +210,9 @@ class AfeccionesPDF:
             if detalles:
                 for nombre, porcentaje in detalles.items():
                     area = (porcentaje / 100) * area_total if area_total else 0
+                    # Si el nombre es muy largo, truncar o ajustar (ReportLab lo hace en wrap)
                     data.append([
-                        nombre, 
+                        str(nombre), 
                         f"{porcentaje:.2f}%",
                         f"{area:.2f}"
                     ])

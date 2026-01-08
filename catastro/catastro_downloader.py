@@ -17,11 +17,14 @@ logger = logging.getLogger(__name__)
 try:
     import geopandas as gpd
     import matplotlib.pyplot as plt
+    import contextily as cx
     from shapely.geometry import mapping, Point
     from PIL import Image, ImageDraw, ImageFont
+    from matplotlib.lines import Line2D
+    from matplotlib.patches import Patch
     GEOTOOLS_AVAILABLE = True
 except ImportError:
-    logger.warning("Faltan dependencias (geopandas, matplotlib, pillow). Funcionalidad limitada.")
+    logger.warning("Faltan dependencias (geopandas, matplotlib, pillow, contextily). Funcionalidad limitada.")
     GEOTOOLS_AVAILABLE = False
 
 def safe_get(url, params=None, headers=None, timeout=30, max_retries=2, method='get', json_body=None):
@@ -355,6 +358,68 @@ class CatastroDownloader:
             plt.close(fig)
             return Image.open(buf).convert("RGBA")
         except: return None
+
+    def generar_plano_perfecto(self, gml_path: Path, output_path: Path, ref: str, info_afecciones: Dict[str, Any] = None):
+        """Genera un mapa de alta calidad tipo 'Plano Perfecto' usando Matplotlib e IGN."""
+        if not GEOTOOLS_AVAILABLE:
+            logger.error("No se puede generar plano perfecto: Geotools no disponible")
+            return False
+            
+        try:
+            # 1. Cargar parcela y proyectar
+            parcela = gpd.read_file(gml_path).to_crs(epsg=3857)
+            
+            # 2. Configurar figura
+            fig, ax = plt.subplots(1, 1, figsize=(10, 8), dpi=150)
+            
+            # Límites con margen del 50%
+            minx, miny, maxx, maxy = parcela.total_bounds
+            margin = (maxx - minx) * 0.50
+            ax.set_xlim(minx - margin, maxx + margin)
+            ax.set_ylim(miny - margin, maxy + margin)
+            
+            # 3. Añadir mapa base del IGN
+            url_ign_base = "https://www.ign.es/wmts/ign-base?layer=IGNBaseTodo&style=default&tilematrixset=GoogleMapsCompatible&Service=WMTS&Request=GetTile&Version=1.0.0&Format=image/jpeg&TileMatrix={z}&TileCol={x}&TileRow={y}"
+            
+            try:
+                cx.add_basemap(ax, source=url_ign_base, crs=3857, attribution="IGN - Base")
+            except Exception as e:
+                logger.warning(f"Error añadiendo basemap: {e}. Usando fondo blanco.")
+                
+            # 4. Dibujar parcela (borde rojo grueso)
+            parcela.plot(ax=ax, color="none", edgecolor="red", linewidth=3, zorder=10)
+            
+            # 5. Título y Detalles
+            titulo = f"MAPA: Intersección Parcela {ref}"
+            plt.title(titulo, loc='left', pad=20, fontsize=12, fontweight='bold')
+            
+            if info_afecciones:
+                total = info_afecciones.get('total', 0)
+                detalle = info_afecciones.get('detalle', {})
+                
+                txt_secundario = f"Afección Total: {total:.2f}%"
+                if detalle:
+                    # Mostrar primeros 3 detalles
+                    det_str = ", ".join([f"{k}: {v:.2f}%" for k, v in list(detalle.items())[:3]])
+                    if det_str: txt_secundario += f" | Detalle: {det_str}"
+                
+                fig.text(0.02, 0.93, txt_secundario, fontsize=9, color='darkred')
+
+            # 6. Limpieza final y guardado
+            ax.axis("off")
+            plt.tight_layout(pad=2)
+            
+            # Crear directorio si no existe
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+            plt.savefig(str(output_path), dpi=150, bbox_inches='tight', pad_inches=0.3)
+            plt.close(fig)
+            
+            logger.info(f"✅ Plano perfecto generado: {output_path}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"❌ Error generando plano perfecto: {e}")
+            return False
 
     def descargar_set_capas_completo(self, referencia, coords, output_dir: Path):
         """Descarga set de mapas multiescala con afecciones integradas"""

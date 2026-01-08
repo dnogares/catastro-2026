@@ -1,12 +1,9 @@
-#!/usr/bin/env python3
-"""
-afecciones/vector_analyzer.py
-Analizador de afecciones vectoriales sobre parcelas
-"""
-
 import geopandas as gpd
+import pandas as pd
+import sqlite3
+import os
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 import logging
 
 logger = logging.getLogger(__name__)
@@ -29,9 +26,56 @@ class VectorAnalyzer:
         self.capas_dir = Path(capas_dir)
         self.crs_calculo = crs_calculo
         
-        # Asegurar que existe el directorio de capas
+        # Asegurar que existe el directorio de capas y config
         self.capas_dir.mkdir(parents=True, exist_ok=True)
         (self.capas_dir / "gpkg").mkdir(exist_ok=True)
+        (self.capas_dir / "config").mkdir(exist_ok=True)
+
+    def _get_styling(self, gpkg_name: str) -> Dict[str, Any]:
+        """Obtiene el estilo (campo de clasificación y etiquetas) para la capa."""
+        capa_nombre = Path(gpkg_name).stem
+        # Buscar en capas/config/leyenda_[nombre].csv
+        csv_path = self.capas_dir / "config" / f"leyenda_{capa_nombre.lower()}.csv"
+        
+        styling = {'field': None, 'labels': {}, 'colors': {}}
+        
+        if csv_path.exists():
+            try:
+                df = pd.read_csv(csv_path, encoding="utf-8")
+                
+                # Buscar el campo de clasificación: CAMPO_GPKG
+                if 'CAMPO_GPKG' in df.columns:
+                    styling['field'] = df['CAMPO_GPKG'].iloc[0]
+                    
+                    # Mapeo de etiquetas
+                    clasif_cols = [col for col in df.columns if col.lower() in ['clasificacion', 'clase', 'clave', 'id']]
+                    if clasif_cols and 'etiqueta' in df.columns:
+                        campo_clasif = clasif_cols[0]
+                        styling['labels'] = dict(zip(df[campo_clasif].astype(str), df['etiqueta']))
+                    
+                    # Mapeo de colores si existen
+                    if clasif_cols and 'color' in df.columns:
+                        campo_clasif = clasif_cols[0]
+                        styling['colors'] = dict(zip(df[campo_clasif].astype(str), df['color']))
+                        
+                return styling
+            except Exception as e:
+                logger.warning(f"Error procesando CSV de leyenda para {capa_nombre}: {e}")
+        
+        return styling
+
+    def _nombre_bonito_gpkg(self, ruta: Path) -> str:
+        """Extrae el identificador del GPKG usando metadata de SQLite."""
+        try:
+            con = sqlite3.connect(ruta)
+            cur = con.cursor()
+            cur.execute("SELECT identifier FROM gpkg_contents LIMIT 1")
+            row = cur.fetchone()
+            con.close()
+            if row and row[0]: return row[0]
+        except Exception:
+            pass
+        return ruta.stem
 
     def analizar(
         self,
@@ -140,25 +184,31 @@ class VectorAnalyzer:
             inter = gpd.overlay(parcela, capa, how="intersection", keep_geom_type=False)
             inter["area"] = inter.geometry.area
 
-            # Calcular porcentaje total
-            area_afectada = inter["area"].sum()
-            porcentaje_total = (area_afectada / area_total) * 100
-
-            # Detalle por clasificación
-            detalle = {}
-            if campo_clasificacion and campo_clasificacion in inter.columns:
-                agrupado = inter.groupby(campo_clasificacion)["area"].sum()
-                for clave, area in agrupado.items():
-                    etiqueta = etiquetas.get(str(clave), str(clave)) if etiquetas else str(clave)
-                    porcentaje = (area / area_total) * 100
-                    detalle[etiqueta] = round(porcentaje, 2)
+            # Lógica de clasificación detallada (Plano Perfecto)
+            porcentaje_detalle = {}
+            styling = self._get_styling(gpkg_name)
+            
+            # Priorizar campo del CSV sobre el argumento
+            field = styling['field'] or campo_clasificacion
+            labels = styling['labels'] or (etiquetas or {})
+            
+            if field and field in inter.columns:
+                # Agrupar por la clasificación y sumar áreas
+                detalle_area = inter.groupby(field)['area'].sum()
+                for clasif, area_sum in detalle_area.items():
+                    porcentaje_clasif = (area_sum / area_total) * 100
+                    # Solo incluir si es significativo (> 0.01%)
+                    if porcentaje_clasif > 0.01:
+                        etiqueta = labels.get(str(clasif), str(clasif))
+                        porcentaje_detalle[etiqueta] = round(porcentaje_clasif, 2)
 
             resultado = {
                 "total": round(porcentaje_total, 2),
-                "detalle": detalle,
+                "detalle": porcentaje_detalle if porcentaje_detalle else detalle,
                 "area_parcela_m2": round(area_total, 2),
                 "area_afectada_m2": round(area_afectada, 2),
-                "elementos_afectantes": len(inter)
+                "elementos_afectantes": len(inter),
+                "capa_nombre": self._nombre_bonito_gpkg(gpkg_path)
             }
 
             logger.info(f"Análisis completado: {porcentaje_total:.2f}% afectado")

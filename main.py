@@ -124,10 +124,20 @@ async def paso1_analizar(referencia: str = Form(...)):
             campo_clasificacion="tipo" 
         )
 
-        # 3. Localizar mapa para el frontend
+        # 3. Generar "Plano Perfecto" para el informe
+        plano_path = images_dir / f"{ref_limpia}_plano_perfecto.jpg"
+        if gml_path.exists():
+            downloader.generar_plano_perfecto(
+                gml_path=gml_path,
+                output_path=plano_path,
+                ref=ref_limpia,
+                info_afecciones=res_afecciones
+            )
+
+        # 4. Localizar mapa para el frontend
         mapa_disponible = None
-        images_dir = OUTPUTS_DIR / ref_limpia / "images"
         posibles_mapas = [
+            plano_path,
             images_dir / f"{ref_limpia}_Catastro_zoom4_Parcela.png",
             images_dir / f"{ref_limpia}_composicion.png",
         ]
