@@ -7,7 +7,10 @@ import logging
 from pathlib import Path
 from io import BytesIO
 import xml.etree.ElementTree as ET
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
+from shapely.geometry import shape
+from shapely.ops import transform
+from pyproj import Transformer
 
 # Configurar logging
 logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
