@@ -16,8 +16,6 @@ from afecciones.vector_analyzer import VectorAnalyzer
 from afecciones.pdf_generator import AfeccionesPDF
 from analisisurbano import AnalizadorUrbanistico
 
-from config.paths import CAPAS_DIR, OUTPUTS_DIR
-
 app = FastAPI(title="Suite Tasación ", version="3.1")
 
 # Crear directorios base SIEMPRE
@@ -117,7 +115,10 @@ async def paso1_analizar(referencia: str = Form(...)):
 
         # 2. Análisis de afecciones específico (Capa base)
         # Nota: Podríamos mover esto a AnalizadorUrbanistico más adelante
-        gml_path = OUTPUTS_DIR / ref_limpia / "gml" / f"{ref_limpia}_parcela.gml"
+        ref_dir = OUTPUTS_DIR / ref_limpia
+        images_dir = ref_dir / "images"
+        gml_path = ref_dir / "gml" / f"{ref_limpia}_parcela.gml"
+        
         res_afecciones = analyzer.analizar(
             parcela_path=gml_path,
             gpkg_name="afecciones_totales.gpkg", 
