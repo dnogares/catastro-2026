@@ -14,7 +14,7 @@ from catastro.catastro_downloader import CatastroDownloader
 from catastro.lote_manager import LoteManager
 from afecciones.vector_analyzer import VectorAnalyzer
 from afecciones.pdf_generator import AfeccionesPDF
-from analisisurbano import AnalizadorUrbanistico
+from urbanismo import UrbanismoService
 
 app = FastAPI(title="Suite Tasación ", version="3.1")
 
@@ -38,7 +38,7 @@ downloader = CatastroDownloader(output_dir=str(OUTPUTS_DIR))
 analyzer = VectorAnalyzer(capas_dir=str(CAPAS_DIR))
 pdf_gen = AfeccionesPDF(output_dir=str(OUTPUTS_DIR))
 lote_manager = LoteManager(output_dir=str(OUTPUTS_DIR))
-urban_analyzer = AnalizadorUrbanistico(output_base_dir=OUTPUTS_DIR)
+urbanismo_service = UrbanismoService(output_base_dir=str(OUTPUTS_DIR))
 
 # --- MODELOS DE DATOS ---
 class PdfRequest(BaseModel):
@@ -104,20 +104,31 @@ async def paso1_analizar(referencia: str = Form(...)):
                 detail="Referencia catastral inválida (mínimo 14 caracteres)"
             )
 
-        # 1. Ejecutar análisis completo a través del módulo unificado
-        result_urban = urban_analyzer.obtener_datos_catastrales(ref_limpia)
+        # 1. Descargar datos catastrales
+        exito, zip_path = downloader.descargar_todo_completo(ref_limpia)
         
-        if result_urban.get("status") == "error":
+        if not exito:
             raise HTTPException(
                 status_code=404, 
-                detail=result_urban.get("message", "Error procesando referencia")
+                detail=f"No se pudieron descargar datos catastrales para {ref_limpia}"
             )
+        
+        # 2. Análisis urbanístico si hay GML disponible
+        result_urban = {}
+        ref_dir = OUTPUTS_DIR / ref_limpia
+        gml_path = ref_dir / "gml" / f"{ref_limpia}_parcela.gml"
+        
+        if gml_path.exists():
+            try:
+                result_urban = urbanismo_service.analizar_parcela(str(gml_path), ref_limpia)
+            except Exception as e:
+                print(f"⚠️ Error en análisis urbanístico: {e}")
+                result_urban = {"error": str(e), "urbanismo": False}
+        else:
+            result_urban = {"error": "GML no disponible", "urbanismo": False}
 
         # 2. Análisis de afecciones específico (Capa base)
-        # Nota: Podríamos mover esto a AnalizadorUrbanistico más adelante
-        ref_dir = OUTPUTS_DIR / ref_limpia
         images_dir = ref_dir / "images"
-        gml_path = ref_dir / "gml" / f"{ref_limpia}_parcela.gml"
         
         res_afecciones = analyzer.analizar(
             parcela_path=gml_path,

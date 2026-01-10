@@ -358,12 +358,15 @@ class LoteManager:
 if __name__ == "__main__":
     import sys
     
-    # Simulación
-    referencias = [
-        "1234567VK1234S0001WX",
-        "9876543AB9876N0001YZ"
-    ]
+    # Simulación - sin referencias de prueba
+    referencias = []  # Agrega aquí tus referencias reales
     
     manager = LoteManager()
     print(f"📦 Lote ID: {manager.generar_lote_id()}")
     print(f"📁 Directorio lotes: {manager.lotes_dir}")
+    
+    if referencias:
+        print(f"📋 Procesando {len(referencias)} referencias...")
+        # Aquí iría el procesamiento real
+    else:
+        print("📝 No hay referencias configuradas. Agrega tus referencias reales.")
