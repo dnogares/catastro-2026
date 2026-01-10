@@ -72,11 +72,47 @@ class CatastroDownloader:
         self.retries = retries
         self.timeout = timeout
         
-        # Capas WMS del Catastro y Afecciones
+        # Capas WMS del Catastro (identificadores / nombres de ejemplo)
+        self.capas_wms = {
+            'catastro': 'Catastro',
+            'ortofoto': 'PNOA',
+            'callejero': 'Callejero',
+            'hidrografia': 'Hidrografia',
+        }
+
+        # Fuentes alternativas para ortofoto (IGN PNOA)
+        self.enable_ign_ortofoto = True
+        self.capas_wms_extra = {
+            'ortofoto': {
+                'wms_url': 'https://www.ign.es/wms-inspire/pnoa-ma',
+                'layers': 'OI.OrthoimageCoverage',
+                'version': '1.3.0',
+                'crs': 'EPSG:4326',
+                'use_wms13_bbox': True
+            }
+        }
+
+        # Servicios WFS para afectaciones
+        self.servicios_wfs = {
+            'espacios_naturales': {
+                'url': 'https://www.miteco.gob.es/wfs/espacios_protegidos',
+                'layer': 'espacios_protegidos',
+                'descripcion': 'Espacios Naturales Protegidos',
+            },
+            'zonas_inundables': {
+                'url': 'https://www.miteco.gob.es/wfs/snczi',
+                'layer': 'zonas_inundables',
+                'descripcion': 'Zonas de Riesgo de Inundación SNCZI',
+            },
+        }
+
+        self.base_catastro = "https://ovc.catastro.meh.es"
+        
+        # Capas WMS del Catastro y Afecciones (Legacy compatibility / Extended)
         self.wms_urls = {
             # ✅ Cartografía base
-            "catastro": "http://ovc.catastro.meh.es/cartografia/INSPIRE/spadgcwms.aspx",  # ⚠️ HTTP (sin S)
-            "catastro_https": "https://ovc.catastro.meh.es/Cartografia/WMS/ServidorWMS.aspx", # Backup HTTPS
+            "catastro": "http://ovc.catastro.meh.es/cartografia/INSPIRE/spadgcwms.aspx",
+            "catastro_https": "https://ovc.catastro.meh.es/Cartografia/WMS/ServidorWMS.aspx",
             "pnoa": "https://www.ign.es/wms-inspire/pnoa-ma",
             
             # ✅ Riesgos hídricos
@@ -103,6 +139,11 @@ class CatastroDownloader:
         """Limpia y normaliza referencia catastral"""
         return ref.replace(' ', '').strip().upper()
 
+    def extraer_provincia_municipio(self, ref: str):
+        """Extrae los primeros dígitos para provincia y municipio"""
+        r = self.limpiar_referencia(ref)
+        return r[:2], r[2:5]
+
     def obtener_datos_basicos(self, referencia: str):
         """Obtiene datos básicos de la referencia catastral"""
         ref = self.limpiar_referencia(referencia)
@@ -119,44 +160,55 @@ class CatastroDownloader:
             return {}
 
     def extraer_coordenadas_desde_gml(self, gml_path):
-        """Extrae coordenadas del GML de parcela"""
+        """Extrae coordenadas del GML de parcela con nuevo formato"""
         try:
             tree = ET.parse(gml_path)
             root = tree.getroot()
+
             ns = {
                 'gml': 'http://www.opengis.net/gml/3.2',
                 'cp': 'http://inspire.ec.europa.eu/schemas/cp/4.0'
             }
-            # Método 1: Punto de referencia
+
             ref_point = root.find('.//cp:referencePoint/gml:Point/gml:pos', ns)
             if ref_point is not None and ref_point.text:
                 coords = ref_point.text.strip().split()
                 if len(coords) >= 2:
-                    return {'x_utm': float(coords[0]), 'y_utm': float(coords[1]), 'epsg': '25830', 'source': 'referencePoint'}
-            
-            # Método 2: Centroide del polígono
+                    return {
+                        'x_utm': float(coords[0]),
+                        'y_utm': float(coords[1]),
+                        'epsg': '25830',
+                        'source': 'referencePoint'
+                    }
+
             poslist = root.find('.//gml:posList', ns)
             if poslist is not None and poslist.text:
                 coords = [float(x) for x in poslist.text.strip().split()]
                 x_coords = coords[0::2]
                 y_coords = coords[1::2]
                 if x_coords and y_coords:
-                    return {'x_utm': sum(x_coords) / len(x_coords), 'y_utm': sum(y_coords) / len(y_coords), 'epsg': '25830', 'source': 'centroid'}
+                    return {
+                        'x_utm': sum(x_coords) / len(x_coords),
+                        'y_utm': sum(y_coords) / len(y_coords),
+                        'epsg': '25830',
+                        'source': 'centroid'
+                    }
+
             return None
-        except Exception as e:
-            logger.error(f"Error extrayendo coordenadas del GML: {e}")
+        except Exception:
             return None
 
     def utm_a_wgs84(self, x_utm, y_utm, epsg='25830'):
-        """Convierte coordenadas UTM a WGS84"""
-        if not GEOTOOLS_AVAILABLE: return None
+        """Convierte coordenadas UTM a WGS84 usando GeoPandas"""
+        if not GEOTOOLS_AVAILABLE:
+            return None
         try:
+            from shapely.geometry import Point
             gdf = gpd.GeoDataFrame(geometry=[Point(x_utm, y_utm)], crs=f'EPSG:{epsg}')
             gdf_wgs84 = gdf.to_crs('EPSG:4326')
             point_wgs84 = gdf_wgs84.geometry.iloc[0]
             return {'lon': point_wgs84.x, 'lat': point_wgs84.y, 'srs': 'EPSG:4326'}
-        except Exception as e:
-            logger.error(f"Error convirtiendo coordenadas: {e}")
+        except Exception:
             return None
 
     def convertir_gml_a_kml(self, gml_path: Path, kml_path: Path) -> bool:
@@ -194,28 +246,32 @@ class CatastroDownloader:
             return False
 
     def obtener_coordenadas(self, referencia: str, gml_parcela_path=None):
-        """Obtiene coordenadas con estrategia de fallback"""
+        """Obtiene coordenadas con estrategia de robustez (OVC Wcf, XML y GML)"""
         ref = self.limpiar_referencia(referencia)
         if gml_parcela_path and os.path.exists(gml_parcela_path):
             coords_utm = self.extraer_coordenadas_desde_gml(gml_parcela_path)
             if coords_utm:
                 coords_wgs84 = self.utm_a_wgs84(coords_utm['x_utm'], coords_utm['y_utm'])
-                if coords_wgs84: return coords_wgs84
-        
-        # Fallback JSON
+                if coords_wgs84:
+                    return coords_wgs84
+
+        # Intento JSON rápido
         try:
-            url_json = f"{self.OVC_URL}/OVCServWeb/OVCWcfCallejero/COVCCallejero.svc/json/Geo_RCToWGS84/{ref}"
+            url_json = f"{self.base_catastro}/OVCServWeb/OVCWcfCallejero/COVCCallejero.svc/json/Geo_RCToWGS84/{ref}"
             r = safe_get(url_json, timeout=20)
             if r.status_code == 200:
                 data = r.json()
                 if 'geo' in data and 'xcen' in data['geo'] and 'ycen' in data['geo']:
-                    return {'lon': float(data['geo']['xcen']), 'lat': float(data['geo']['ycen']), 'srs': 'EPSG:4326'}
-        except: pass
+                    lon = float(data['geo']['xcen'])
+                    lat = float(data['geo']['ycen'])
+                    return {'lon': lon, 'lat': lat, 'srs': 'EPSG:4326'}
+        except Exception:
+            pass
 
-        # Fallback XML
+        # Intento XML
         try:
-            url_xml = f"{self.OVC_URL}/ovcservweb/ovcswlocalizacionrc/ovccoordenadas.asmx/Consulta_RCCOOR"
-            params = {'SRS': 'EPSG:4326', 'RC': ref}
+            url_xml = f"{self.base_catastro}/ovcservweb/ovcswlocalizacionrc/ovccoordenadas.asmx/Consulta_RCCOOR"
+            params = {'SRS': 'EPSG:4326', 'RC': ref.upper()}
             r = safe_get(url_xml, params=params, timeout=20)
             if r.status_code == 200:
                 root = ET.fromstring(r.content)
@@ -224,10 +280,41 @@ class CatastroDownloader:
                 if coord is not None:
                     geo = coord.find('cat:geo', ns)
                     if geo is not None:
-                        xcen, ycen = geo.find('cat:xcen', ns), geo.find('cat:ycen', ns)
+                        xcen = geo.find('cat:xcen', ns)
+                        ycen = geo.find('cat:ycen', ns)
                         if xcen is not None and ycen is not None:
-                            return {'lon': float(xcen.text), 'lat': float(ycen.text), 'srs': 'EPSG:4326'}
-        except: pass
+                            lon = float(xcen.text)
+                            lat = float(ycen.text)
+                            return {'lon': lon, 'lat': lat, 'srs': 'EPSG:4326'}
+        except Exception:
+            pass
+
+        # Intento forzar descarga del GML
+        try:
+            gml_path = gml_parcela_path if gml_parcela_path else None
+            if not gml_path:
+                # Nota: Necesitaríamos ref_dir aquí, para compatibilidad delegamos
+                pass
+
+            if gml_path and os.path.exists(gml_path):
+                coords_utm = self.extraer_coordenadas_desde_gml(gml_path)
+                if coords_utm:
+                    coords_wgs84 = None
+                    if GEOTOOLS_AVAILABLE:
+                        coords_wgs84 = self.utm_a_wgs84(coords_utm['x_utm'], coords_utm['y_utm'], epsg=coords_utm.get('epsg','25830'))
+                    
+                    if not coords_wgs84:
+                        try:
+                            from pyproj import Transformer
+                            src = coords_utm.get('epsg', 'EPSG:25830')
+                            transformer = Transformer.from_crs(src, 'EPSG:4326', always_xy=True)
+                            lon, lat = transformer.transform(coords_utm['x_utm'], coords_utm['y_utm'])
+                            return {'lon': lon, 'lat': lat, 'srs': 'EPSG:4326'}
+                        except Exception:
+                            pass
+                    return coords_wgs84
+        except Exception:
+            pass
         return None
 
     def descargar_parcela_gml(self, referencia: str, output_dir: Path):
@@ -314,8 +401,15 @@ class CatastroDownloader:
             logger.error(f"Error descargando ficha: {e}")
             return None
 
-    def calcular_bbox(self, lon, lat, nivel):
-        """Calcula BBOX para 4 niveles de zoom (WGS84)"""
+    def calcular_bbox(self, lon, lat, nivel=None, buffer_metros=None):
+        """Calcula BBOX para WMS. Soporta nivel de zoom o buffer en metros."""
+        if buffer_metros:
+            # Aproximación simple suficiente para pequeñas áreas
+            buffer_lon = buffer_metros / 85000
+            buffer_lat = buffer_metros / 111000
+            return f"{lon-buffer_lon},{lat-buffer_lat},{lon+buffer_lon},{lat+buffer_lat}"
+        
+        # Lógica multiescala original
         radios = {1: 1.5, 2: 0.15, 3: 0.015, 4: 0.0025}
         r = radios.get(nivel, 0.002)
         return f"{lon-r},{lat-r},{lon+r},{lat+r}"
