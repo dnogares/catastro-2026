@@ -32,14 +32,14 @@ Herramienta avanzada para la descarga de datos catastrales, visualización GIS y
    ```
    O usando uvicorn:
    ```bash
-   uvicorn main:app --reload --port 8080
+   uvicorn main:app --reload --port 8090
    ```
 
 ## 🐳 Docker (Recomendado)
 
 ```bash
 docker build -t catastro-tool .
-docker run -p 8080:8080 -v $(pwd)/outputs:/app/outputs -v $(pwd)/capas:/app/capas catastro-tool
+docker run -p 8090:8090 -v $(pwd)/outputs:/app/outputs -v $(pwd)/capas:/app/capas catastro-tool
 ```
 
 ## 📂 Estructura del Proyecto
