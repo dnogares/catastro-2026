@@ -1,7 +1,6 @@
 import os
 import time
 import geopandas
-import PILLOW
 import matplotlib
 import contextily
 import json
