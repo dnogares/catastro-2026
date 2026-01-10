@@ -8,7 +8,8 @@ from pathlib import Path
 from io import BytesIO
 import xml.etree.ElementTree as ET
 from typing import Dict, List, Optional, Any, Tuple
-from shapely.geometry import shape
+import numpy as np
+from shapely.geometry import shape, Polygon, MultiPolygon, Point
 from shapely.ops import transform
 from pyproj import Transformer
 
@@ -132,7 +133,12 @@ class CatastroDownloader:
             
             # ✅ Otros servicios útiles
             "erosion_laminar": "https://wms.mapama.gob.es/sig/Biodiversidad/INESErosionLaminarRaster/wms.aspx",
-            "incendios_forestales": "https://wms.mapama.gob.es/sig/Biodiversidad/Incendios/2006_2015/wms.aspx"
+            "incendios_forestales": "https://wms.mapama.gob.es/sig/Biodiversidad/Incendios/2006_2015/wms.aspx",
+            
+            # ✅ Nuevos servicios sugeridos
+            "planeamiento": "https://www.idee.es/wms/IDEE-Planeamiento/IDEE-Planeamiento",
+            "dominio_maritimo": "https://ideihm.covam.es/wms-c/mapas/Demarcaciones",
+            "zonas_valor": "http://ovc.catastro.meh.es/Cartografia/WMS/ServidorWMS.aspx"
         }
 
     def limpiar_referencia(self, ref: str) -> str:
@@ -143,6 +149,86 @@ class CatastroDownloader:
         """Extrae los primeros dígitos para provincia y municipio"""
         r = self.limpiar_referencia(ref)
         return r[:2], r[2:5]
+
+    def _coords_to_shapely_polygon(self, coords_utm: List[Tuple[float, float]]) -> Optional[Polygon]:
+        """Convierte coordenadas UTM de GML a un polígono de Shapely"""
+        try:
+            if not coords_utm or len(coords_utm) < 3:
+                return None
+            return Polygon(coords_utm)
+        except Exception as e:
+            logger.error(f"Error creando polígono shapely: {e}")
+            return None
+
+    def calcular_porcentaje_pixeles(self, parcela_geom: Polygon, capa_img: Any, bbox_wgs84: str, umbral: int = 250) -> float:
+        """Calcula el porcentaje de píxeles de la parcela intersectados por la capa WMS (análisis matricial)"""
+        if not parcela_geom:
+            return 0.0
+            
+        try:
+            width, height = capa_img.size
+            lon_min, lat_min, lon_max, lat_max = [float(x) for x in bbox_wgs84.split(",")]
+            
+            # Crear malla de coordenadas WGS84 para cada píxel
+            xs = np.linspace(lon_min, lon_max, width)
+            ys = np.linspace(lat_max, lat_min, height) # Invertido para imagen
+            X, Y = np.meshgrid(xs, ys)
+            
+            # Transformar parcela_geom a WGS84 si no lo está (asumimos que viene en UTM 25830 si es del GML original)
+            # PERO para el cálculo de píxeles en BBOX WGS84, necesitamos la geometría en WGS84
+            # Nota: calcular_bbox_dinamico ya maneja la proyección si es necesario
+            
+            # Crear máscara de pertenencia a la parcela
+            # Optimizamos: Comprobar primero si el punto está dentro del BBOX de la parcela
+            p_minx, p_miny, p_maxx, p_maxy = parcela_geom.bounds
+            
+            mask = np.zeros((height, width), dtype=bool)
+            for i in range(height):
+                for j in range(width):
+                    px, py = X[i, j], Y[i, j]
+                    # Filtro rápido de BBOX
+                    if p_minx <= px <= p_maxx and p_miny <= py <= p_maxy:
+                        if parcela_geom.contains(Point(px, py)):
+                            mask[i, j] = True
+            
+            # Analizar imagen
+            arr = np.array(capa_img.convert("L")) # Escala de grises
+            arr_masked = arr[mask]
+            
+            if arr_masked.size == 0:
+                return 0.0
+                
+            # Píxeles "coloreados" (con información de afección) suelen tener valores bajos (< 255)
+            # Un umbral de 250 filtra el fondo casi blanco
+            afectados = np.sum(arr_masked < umbral)
+            return (afectados / arr_masked.size) * 100
+            
+        except Exception as e:
+            logger.error(f"Error en calcular_porcentaje_pixeles: {e}")
+            return 0.0
+
+    def calcular_bbox_dinamico(self, coords_wgs84: List[Tuple[float, float]], zoom_factor: float = 1.2) -> str:
+        """Calcula un BBOX WGS84 dinámico que envuelve la parcela con un margen visual"""
+        if not coords_wgs84:
+            return ""
+            
+        lons = [c[0] for c in coords_wgs84]
+        lats = [c[1] for c in coords_wgs84]
+        
+        lon_min, lon_max = min(lons), max(lons)
+        lat_min, lat_max = min(lats), max(lats)
+        
+        lon_center = (lon_max + lon_min) / 2
+        lat_center = (lat_max + lat_min) / 2
+        
+        lon_size = (lon_max - lon_min) * zoom_factor
+        lat_size = (lat_max - lat_min) * zoom_factor
+        
+        # Buffer mínimo si es una parcela muy pequeña o punto
+        lon_size = max(lon_size, 0.002)
+        lat_size = max(lat_size, 0.0015)
+        
+        return f"{lon_center - lon_size/2},{lat_center - lat_size/2},{lon_center + lon_size/2},{lat_center + lat_size/2}"
 
     def obtener_datos_basicos(self, referencia: str):
         """Obtiene datos básicos de la referencia catastral"""
@@ -519,7 +605,7 @@ class CatastroDownloader:
             return False
 
     def descargar_set_capas_completo(self, referencia, coords, output_dir: Path):
-        """Descarga set de mapas multiescala con afecciones integradas"""
+        """Descarga set de mapas multiescala con afecciones integradas y porcentajes matriciales"""
         if not GEOTOOLS_AVAILABLE: return []
         
         ref = self.limpiar_referencia(referencia)
@@ -529,31 +615,60 @@ class CatastroDownloader:
         gml_path = output_dir / "gml" / f"{ref}_parcela.gml"
         lon, lat = coords['lon'], coords['lat']
         
+        # Preparar geometría para análisis matricial
+        parcela_wgs84 = None
+        if gml_path.exists():
+            try:
+                gdf = gpd.read_file(gml_path)
+                if gdf.crs is None: gdf.set_crs("EPSG:25830", inplace=True)
+                gdf_wgs = gdf.to_crs("EPSG:4326")
+                parcela_wgs84 = gdf_wgs.geometry.iloc[0]
+            except Exception as e:
+                logger.warning(f"No se pudo cargar geometría para análisis matricial: {e}")
+
         niveles = {1: "España", 2: "Regional", 3: "Local", 4: "Parcela"}
-        capas_afeccion = [
+        
+        # Capas a procesar con su config WMS
+        capas_config = [
             (self.wms_urls["inundabilidad_100años"], "NZ.RiskZone", 100, "ZONA INUNDABLE (T100)"),
             (self.wms_urls["red_natura"], "PS.ProtectedSite", 90, "RED NATURA 2000"),
             (self.wms_urls["vias_pecuarias"], "Vias_Pecuarias", 130, "VÍA PECUARIA"),
             (self.wms_urls["montes_utilidad_publica"], "MUP", 110, "MONTE PÚBLICO"),
             (self.wms_urls["espacios_protegidos"], "PS.ProtectedSite", 100, "ESPACIO PROTEGIDO"),
+            (self.wms_urls["planeamiento"], "PlaneamientoGeneral", 120, "PLANEAMIENTO"),
+            (self.wms_urls["dominio_maritimo"], "Demarcaciones", 100, "DOMINIO MARÍTIMO"),
             (self.wms_urls["catastro_https"], "Catastro", 140, None)
         ]
         
         resumen = []
         metadata_images = {}
+        info_porcentajes = {} # Almacenar porcentajes detectados
+
         for n, nombre in niveles.items():
-            bbox_str = self.calcular_bbox(lon, lat, n)
+            # Usar BBOX dinámico para el nivel de parcela (Zoom 4)
+            if n == 4 and parcela_wgs84:
+                bbox_str = self.calcular_bbox_dinamico(list(parcela_wgs84.exterior.coords), zoom_factor=1.3)
+            else:
+                bbox_str = self.calcular_bbox(lon, lat, n)
+                
             img_final = self._get_wms_layer(self.wms_urls["pnoa"], bbox_str, "OI.OrthoimageCoverage", False)
             if not img_final: continue
 
             avisos_detectados = []
-            for url, layer, alpha, alerta in capas_afeccion:
+            for url, layer, alpha, alerta in capas_config:
                 overlay = self._get_wms_layer(url, bbox_str, layer)
                 if overlay:
+                    # Análisis matricial en nivel Local/Parcela
+                    if n >= 3 and alerta and parcela_wgs84:
+                        pct = self.calcular_porcentaje_pixeles(parcela_wgs84, overlay, bbox_str)
+                        if pct > 0:
+                            info_porcentajes[alerta] = max(info_porcentajes.get(alerta, 0), pct)
+                            avisos_detectados.append(f"{alerta} ({pct:.1f}%)")
+                    elif alerta and overlay.getextrema()[3][1] > 0:
+                        avisos_detectados.append(alerta)
+                        
                     overlay.putalpha(alpha)
                     img_final.alpha_composite(overlay)
-                    if alerta and overlay.getextrema()[3][1] > 0:
-                        avisos_detectados.append(alerta)
 
             if gml_path.exists():
                 silueta = self._generar_silueta_roja(gml_path, bbox_str)
@@ -578,7 +693,8 @@ class CatastroDownloader:
                 "bbox": leaflet_bbox,
                 "zoom": n,
                 "nombre": nombre,
-                "avisos": avisos_detectados
+                "avisos": avisos_detectados,
+                "porcentajes": info_porcentajes if n == 4 else None
             }
 
             if n == 4:
@@ -586,7 +702,7 @@ class CatastroDownloader:
                 comp_path = img_dir / comp_filename
                 img_final.save(comp_path)
                 metadata_images[comp_filename] = metadata_images[filename]
-                resumen.append({"nivel": "composicion", "path": str(comp_path), "avisos": avisos_detectados})
+                resumen.append({"nivel": "composicion", "path": str(comp_path), "avisos": avisos_detectados, "porcentajes": info_porcentajes})
 
             resumen.append({"nivel": nombre, "path": str(path_img), "avisos": avisos_detectados})
             logger.info(f"    📷 Generado Zoom {n}: {nombre}")
@@ -605,16 +721,27 @@ class CatastroDownloader:
         logger.info(f"📦 ZIP creado: {zip_path}")
         return zip_path
 
-    def descargar_todo_completo(self, referencia: str) -> Tuple[bool, Optional[Path]]:
-        """Descarga completa con pipeline analítico"""
+    def descargar_todo_completo(self, referencia: str) -> Tuple[bool, Optional[Path], Dict[str, float]]:
+        """Descarga completa con pipeline analítico y porcentajes matriciales"""
         ref = self.limpiar_referencia(referencia)
         ref_dir = self.output_dir / ref
         zip_path = self.output_dir / f"{ref}_completo.zip"
+        pixel_data = {}
 
         # Cache check
         if zip_path.exists():
             logger.info(f"ℹ️ Cache detectada para {ref}")
-            return True, zip_path
+            # Cargar metadata si existe para recuperar porcentajes
+            meta_path = ref_dir / "images" / "metadata.json"
+            if meta_path.exists():
+                try:
+                    with open(meta_path, 'r') as f:
+                        meta = json.load(f)
+                        for k, v in meta.items():
+                            if v.get("porcentajes"):
+                                pixel_data.update(v["porcentajes"])
+                except: pass
+            return True, zip_path, pixel_data
 
         ref_dir.mkdir(parents=True, exist_ok=True)
         for d in ["json", "html", "gml", "images", "pdf"]: (ref_dir / d).mkdir(exist_ok=True)
@@ -628,7 +755,7 @@ class CatastroDownloader:
 
         if not gml_path:
             logger.error(f"❌ No se pudo obtener GML para {ref}")
-            return False, None
+            return False, None, {}
 
         # 2. Coordenadas y Datos
         coords = self.obtener_coordenadas(ref, gml_path)
@@ -637,9 +764,13 @@ class CatastroDownloader:
             with open(ref_dir / "json" / f"{ref}_info.json", "w", encoding='utf-8') as f:
                 json.dump(data, f, indent=2, ensure_ascii=False)
 
-        # 3. Mapas
+        # 3. Mapas con análisis matricial
         if coords:
-            self.descargar_set_capas_completo(ref, coords, ref_dir)
+            resumen_mapas = self.descargar_set_capas_completo(ref, coords, ref_dir)
+            # Extraer porcentajes del resumen de mapas (nivel composicion)
+            for item in resumen_mapas:
+                if item.get("nivel") == "composicion" and item.get("porcentajes"):
+                    pixel_data.update(item["porcentajes"])
 
         # 4. KML conversion
         self.convertir_gml_a_kml(gml_path, ref_dir / "gml" / f"{ref}_parcela.kml")
@@ -650,7 +781,7 @@ class CatastroDownloader:
 
         # 6. Finalizar ZIP
         self._crear_zip(ref_dir, zip_path)
-        return True, zip_path
+        return True, zip_path, pixel_data
 
     def obtener_datos_catastrales(self, referencia: str):
         """Método de compatibilidad para API"""

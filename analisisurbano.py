@@ -46,7 +46,7 @@ class AnalizadorUrbanistico:
             ref = self.downloader.limpiar_referencia(referencia)
             
             # Ejecutar descarga completa
-            exito, zip_path = self.downloader.descargar_todo_completo(ref)
+            exito, zip_path, pixel_data = self.downloader.descargar_todo_completo(ref)
             
             if not exito:
                 raise Exception(f"Fallo en la descarga catastral para {ref}")
@@ -76,10 +76,11 @@ class AnalizadorUrbanistico:
                 "kml": f"/outputs/{ref}/gml/{kml_path.name}" if kml_path.exists() else None,
                 "zip": f"/outputs/{ref}_completo.zip" if zip_path else None,
                 "wms_layers": wms_layers,
+                "pixel_afecciones": pixel_data, # Nueva clave con datos matriciales
                 "resumen": {
                     "total_capas": len(wms_layers),
-                    "capas_afectan": 0,
-                    "superficie_total_afectada": "0.00 m²",
+                    "capas_afectan": len(pixel_data),
+                    "superficie_total_afectada": f"{sum(pixel_data.values()):.2f}%" if pixel_data else "0.00%",
                     "archivos_generados": len(list(ref_dir.rglob('*')))
                 }
             }

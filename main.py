@@ -149,16 +149,17 @@ async def paso1_analizar(referencia: str = Form(...)):
                 break
 
         return {
-            "status": "success",
             "referencia": ref_limpia,
-            "url_mapa_web": mapa_disponible,
+            "status": "success",
+            "datos_urbanos": result_urban,
             "afecciones": res_afecciones,
+            "pixel_afecciones": result_urban.get("pixel_afecciones", {}), # Inyectar datos matriciales
+            "url_mapa_web": mapa_disponible,
             "archivos_generados": {
-                "gml": str(gml_path.exists()),
-                "kml": result_urban.get("kml"),
-                "zip": result_urban.get("zip")
-            },
-            "urban_data": result_urban.get("resumen")
+                "zip": f"/outputs/{ref_limpia}_completo.zip",
+                "kml": f"/outputs/{ref_limpia}/gml/{ref_limpia}_parcela.kml",
+                "pdf_ficha": f"/outputs/{ref_limpia}/pdf/{ref_limpia}_ficha_catastral.pdf"
+            }
         }
 
     except HTTPException:
