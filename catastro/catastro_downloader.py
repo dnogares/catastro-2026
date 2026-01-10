@@ -1,4 +1,3 @@
-from dns.message import _maybe_import_update
 import os
 import time
 import geopandas
