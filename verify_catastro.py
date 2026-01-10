@@ -10,6 +10,9 @@ def test_downloader():
     # Ensure we use the right path if we are running from root
     sys.path.append(os.path.abspath("."))
     
+    import logging
+    logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
+    
     downloader = CatastroDownloader(output_dir=output_dir)
     
     print(f"--- Probando RC: {rc} ---")
