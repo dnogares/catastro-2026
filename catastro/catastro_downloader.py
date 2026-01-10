@@ -1,10 +1,9 @@
 import os
 import time
 import geopandas
-import PILLOW_AVAILABLE
+import PILLOW
 import matplotlib
 import contextily
-
 import json
 import zipfile
 import requests
