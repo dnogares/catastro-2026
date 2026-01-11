@@ -7,12 +7,18 @@ Compatible con Docker / Easypanel
 
 from pathlib import Path
 
-# Raíz de datos persistentes (montar volumen aquí)
-DATA_ROOT = Path("/data")
+import os
+
+# Raíz de datos: Busca variable de entorno o usa 'data' en el directorio actual
+DATA_ROOT = Path(os.getenv("TASACION_DATA_ROOT", Path.cwd() / "data"))
 
 # Directorios principales
 OUTPUTS_DIR = DATA_ROOT / "outputs"
-CAPAS_DIR = DATA_ROOT / "capas"
+
+# Capas: Permite override específico o usa DATA_ROOT/capas
+capas_env = os.getenv("TASACION_CAPAS_DIR")
+CAPAS_DIR = Path(capas_env) if capas_env else DATA_ROOT / "capas"
+
 STATIC_DIR = DATA_ROOT / "static"
 TEMP_DIR = DATA_ROOT / "temp"
 
