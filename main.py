@@ -1,3 +1,4 @@
+import afecciones.vector_analyzer
 import json
 import os
 from pathlib import Path
