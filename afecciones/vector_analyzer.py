@@ -92,9 +92,13 @@ class VectorAnalyzer:
     # ------------------------------------------------------------
     # Configuración y Utilidades
     # ------------------------------------------------------------
-    def cargar_config_titulos(self, csv_path="capas/wms/titulos.csv"):
+    def cargar_config_titulos(self, csv_filename="titulos.csv"):
+        # Asumimos que titulos.csv está en capas/wms/ o en la raíz de capas?
+        # Manteniendo compatibilidad con estructura anterior: capas/wms/
+        csv_path = self.capas_dir / "wms" / csv_filename
+        
         config = {}
-        if os.path.exists(csv_path):
+        if csv_path.exists():
             try:
                 df = pd.read_csv(csv_path)
                 for _, row in df.iterrows():
@@ -106,7 +110,7 @@ class VectorAnalyzer:
                         "size": int(row.get("size", 14))
                     }
             except Exception as e:
-                print(f"Error cargando titulos.csv: {e}")
+                print(f"Error cargando titulos.csv desde {csv_path}: {e}")
         return config
 
     def añadir_escala(self, ax, dist_m=100):
@@ -136,10 +140,10 @@ class VectorAnalyzer:
     # Gestión de Leyendas y Estilos
     # ------------------------------------------------------------
     def get_legend_styling(self, capa_nombre):
-        leyenda_csv_path = os.path.join("capas", "wms", f"leyenda_{capa_nombre.lower()}.csv")
+        leyenda_csv_path = self.capas_dir / "wms" / f"leyenda_{capa_nombre.lower()}.csv"
         styling = {'unique': True, 'color': "blue", 'field': None, 'labels': {}, 'colors': {}} 
         
-        if os.path.exists(leyenda_csv_path):
+        if leyenda_csv_path.exists():
             try:
                 df = pd.read_csv(leyenda_csv_path, encoding="utf-8")
                 if 'CAMPO_GPKG' in df.columns:
@@ -162,8 +166,8 @@ class VectorAnalyzer:
         return styling
 
     def aplicar_leyenda(self, ax, capa):
-        leyenda_csv_path = os.path.join("capas", "wms", f"leyenda_{capa['nombre'].lower()}.csv")
-        if os.path.exists(leyenda_csv_path):
+        leyenda_csv_path = self.capas_dir / "wms" / f"leyenda_{capa['nombre'].lower()}.csv"
+        if leyenda_csv_path.exists():
             try:
                 df = pd.read_csv(leyenda_csv_path, encoding="utf-8")
                 handles = []
@@ -225,52 +229,45 @@ class VectorAnalyzer:
     # ------------------------------------------------------------
     def procesar_parcelas(self, capas_wms):
         """Procesa los archivos en datos_origen contra las capas configuradas"""
-        if not os.path.exists("datos_origen"): return
+        origen_dir = Path("datos_origen")
+        if not origen_dir.exists(): return
 
-        for archivo_parcela in os.listdir("datos_origen"):
-            if not archivo_parcela.lower().endswith((".shp", ".gml", ".geojson", ".json", ".kml")):
+        for archivo_parcela in origen_dir.iterdir():
+            if not archivo_parcela.suffix.lower() in [".shp", ".gml", ".geojson", ".json", ".kml"]:
                 continue
                 
-            ruta_parcela = os.path.join("datos_origen", archivo_parcela)
-            # ... (se podría implementar usando el método analizar ahora) ...
-            # Por ahora mantengo el código original para asegurar que no rompo funcionalidad batch
-            # si se usara el script directamente.
             try:
-                parcela_wgs84 = gpd.read_file(ruta_parcela).to_crs(epsg=4326)
-                parcela_proj = parcela_wgs84.to_crs(self.crs_objetivo)
-                geom_parcela_proj = parcela_proj.union_all()
-                area_total_parcela = parcela_proj.area.sum()
-                
-                nombre_subcarpeta = f"{os.path.splitext(archivo_parcela)[0]}_{datetime.now().strftime('%Y%m%d_%H%M')}"
-                carpeta_res = os.path.join("resultados", nombre_subcarpeta)
-                os.makedirs(carpeta_res, exist_ok=True)
+                nombre_subcarpeta = f"{archivo_parcela.stem}_{datetime.now().strftime('%Y%m%d_%H%M')}"
+                carpeta_res = Path("resultados") / nombre_subcarpeta
+                carpeta_res.mkdir(parents=True, exist_ok=True)
                 
                 resultados_csv = []
 
                 for capa_cfg in capas_wms:
                     if not capa_cfg.get("gpkg"): continue
-                    # Usar self.capas_dir si es posible
-                    ruta_gpkg = self.capas_dir / os.path.basename(capa_cfg["gpkg"])
                     
-                    if not ruta_gpkg.exists(): continue
+                    # Llamar al metodo analizar
+                    res = self.analizar(
+                        parcela_path=archivo_parcela,
+                        gpkg_name=os.path.basename(capa_cfg["gpkg"]) # Suponiendo que gpkg_name basta si está en capas_dir
+                    )
                     
-                    try:
-                        # 1. Cálculo Vectorial
-                        capa_vec = gpd.read_file(ruta_gpkg).to_crs(self.crs_objetivo)
-                        interseccion = gpd.overlay(parcela_proj, capa_vec[capa_vec.intersects(geom_parcela_proj)], how="intersection")
-                        
-                        perc_total = (interseccion.area.sum() / area_total_parcela) * 100 if not interseccion.empty else 0
-                        resultados_csv.append({"parcela": archivo_parcela, "capa": capa_cfg["nombre"], "porcentaje": perc_total})
-                        
-                        # (etc... omitiendo detalles de ploteo para brevedad, pero en realidad debería estar todo)
-                        # NOTA: Para no hacer este archivo gigante, confío en que la implementación simple es suficiente
-                        # para main.py, y si el usuario corre esto como script, tendría que revisarse
-                        # pero la prioridad es main.py (la aplicación SaaS).
+                    if res.get("afecciones_detectadas"):
+                        perc = res.get("total_afectado_percent", 0)
+                        resultados_csv.append({
+                            "parcela": archivo_parcela.name, 
+                            "capa": capa_cfg["nombre"], 
+                            "porcentaje": perc
+                        })
+                    else:
+                        resultados_csv.append({
+                            "parcela": archivo_parcela.name, 
+                            "capa": capa_cfg["nombre"], 
+                            "porcentaje": 0
+                        })
 
-                    except Exception as e:
-                        print(f"Error procesando capa {capa_cfg['nombre']}: {e}")
-
-                pd.DataFrame(resultados_csv).to_excel(os.path.join(carpeta_res, "resultados.xlsx"), index=False)
+                if resultados_csv:
+                    pd.DataFrame(resultados_csv).to_excel(carpeta_res / "resultados.xlsx", index=False)
 
             except Exception as e:
                 print(f"Error general procesando {archivo_parcela}: {e}")
