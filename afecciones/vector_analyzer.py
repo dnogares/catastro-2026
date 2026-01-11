@@ -10,12 +10,17 @@ from io import BytesIO
 from matplotlib.lines import Line2D
 from matplotlib.patches import Patch
 from mpl_toolkits.axes_grid1.anchored_artists import AnchoredSizeBar
+from pydantic import BaseModel
+     capas_dir: str
+
+config = AnalyzerConfig(capas_dir=str(CAPAS_DIR))
+analyzer = VectorAnalyzer(**config.model_dump())
 
 class VectorAnalyzer:
-    def __init__(self, crs_objetivo="EPSG:25830"):
-        self.crs_objetivo = crs_objetivo
-        self.config_titulos = self.cargar_config_titulos()
-
+    def __init__(self, capas_dir: str):
+        if not capas_dir:
+            raise ValueError("capas_dir es obligatorio")
+        self.capas_dir = capas_dir
     # ------------------------------------------------------------
     # Configuración y Utilidades
     # ------------------------------------------------------------
