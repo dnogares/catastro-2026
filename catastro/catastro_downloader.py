@@ -785,21 +785,6 @@ class CatastroDownloader:
             print(f"Error en descargar_todo_completo: {e}")
             return False, None
 
-    def procesar_lista(self, lista_referencias):
-        """Procesa una lista de referencias catastrales"""
-        print(f"\nIniciando descarga de {len(lista_referencias)} referencias...")
-        print(f"Directorio de salida: {self.output_dir}\n")
-        
-        resultados_totales = []
-        
-        for i, ref in enumerate(lista_referencias, 1):
-            print(f"\n[{i}/{len(lista_referencias)}]")
-            resultados = self.descargar_todo(ref)
-            resultados_totales.append({
-                'referencia': ref,
-                'resultados': resultados
-            })
-
     def generar_plano_perfecto(self, gml_path, output_path, ref, info_afecciones=None):
         """
         Genera un plano detallado ('Plano Perfecto') combinando GML, ortofoto y afecciones.
@@ -866,8 +851,22 @@ class CatastroDownloader:
             print(f"  ⚠ Error generando Plano Perfecto: {e}")
             return False
 
+    def procesar_lista(self, lista_referencias):
+        """Procesa una lista de referencias catastrales"""
+        print(f"\\nIniciando descarga de {len(lista_referencias)} referencias...")
+        print(f"Directorio de salida: {self.output_dir}\\n")
         
-        print(f"\n{'='*60}")
+        resultados_totales = []
+        
+        for i, ref in enumerate(lista_referencias, 1):
+            print(f"\\n[{i}/{len(lista_referencias)}]")
+            resultados = self.descargar_todo(ref)
+            resultados_totales.append({
+                'referencia': ref,
+                'resultados': resultados
+            })
+
+        print(f"\\n{'='*60}")
         print("RESUMEN DE DESCARGAS")
         print(f"{'='*60}")
         
@@ -875,7 +874,7 @@ class CatastroDownloader:
             ref = item['referencia']
             res = item['resultados']
             exitos = sum(1 for v in res.values() if v)
-            print(f"\n{ref}: {exitos}/{len(res)} categorías completadas")
+            print(f"\\n{ref}: {exitos}/{len(res)} categorías completadas")
             for doc, exitoso in res.items():
                 estado = "✓" if exitoso else "✗"
                 print(f"  {estado} {doc}")

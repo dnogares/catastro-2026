@@ -37,6 +37,7 @@ app.mount("/outputs", StaticFiles(directory=str(OUTPUTS_DIR)), name="outputs")
 # Inicialización de Clases
 downloader = CatastroDownloader(output_dir=str(OUTPUTS_DIR))
 analyzer = VectorAnalyzer(capas_dir=str(CAPAS_DIR))
+print(f"✅ Analyzer inicializado. Capas en: {CAPAS_DIR}")
 pdf_gen = AfeccionesPDF(output_dir=str(OUTPUTS_DIR))
 lote_manager = LoteManager(output_dir=str(OUTPUTS_DIR))
 urbanismo_service = UrbanismoService(output_base_dir=str(OUTPUTS_DIR))
