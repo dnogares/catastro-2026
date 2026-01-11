@@ -799,6 +799,73 @@ class CatastroDownloader:
                 'referencia': ref,
                 'resultados': resultados
             })
+
+    def generar_plano_perfecto(self, gml_path, output_path, ref, info_afecciones=None):
+        """
+        Genera un plano detallado ('Plano Perfecto') combinando GML, ortofoto y afecciones.
+        Este método es requerido por main.py para la generación de informes.
+        """
+        try:
+            print(f"  🎨 Generando Plano Perfecto para {ref}...")
+            
+            # Si no tenemos tools gráficas, fallamos suavemente copiado la composición si existe
+            if not GEOTOOLS_AVAILABLE:
+                # Intentar copiar la composición existente si existe
+                composicion = self.output_dir / ref / "images" / f"{ref}_plano_con_ortofoto.png"
+                if composicion.exists():
+                     import shutil
+                     shutil.copy(composicion, output_path)
+                     print(f"  ✓ Plano Perfecto (copia simple) generado en: {output_path}")
+                     return True
+                return False
+
+            # Cargar GML
+            gdf = gpd.read_file(gml_path).to_crs(epsg=3857)
+            
+            # Configurar plot
+            fig, ax = plt.subplots(figsize=(12, 12))
+            
+            # Calcular bounds con margen
+            minx, miny, maxx, maxy = gdf.total_bounds
+            margin_x = (maxx - minx) * 0.2
+            margin_y = (maxy - miny) * 0.2
+            
+            ax.set_xlim(minx - margin_x, maxx + margin_x)
+            ax.set_ylim(miny - margin_y, maxy + margin_y)
+            
+            # Añadir mapa base (PNOA)
+            try:
+                cx.add_basemap(ax, crs=gdf.crs.to_string(), source=cx.providers.Ign.PNOA_M, attribution=False)
+            except:
+                # Fallback a OpenStreetMap si PNOA falla
+                cx.add_basemap(ax, crs=gdf.crs.to_string(), source=cx.providers.OpenStreetMap.Mapnik)
+            
+            # Dibujar Parcela
+            gdf.plot(ax=ax, facecolor="none", edgecolor="#FF0000", linewidth=2.5, zorder=10)
+            gdf.plot(ax=ax, facecolor="#FF0000", alpha=0.1, zorder=9) # Relleno sutil
+            
+            # Añadir título y etiquetas
+            plt.title(f"Referencia Catastral: {ref}", fontsize=16, pad=20)
+            
+            if info_afecciones and info_afecciones.get("total_afectado_percent", 0) > 0:
+                ax.text(0.02, 0.98, f"⚠️ AFECCIONES DETECTADAS\n{info_afecciones.get('total_afectado_percent')}% Afectado", 
+                        transform=ax.transAxes, fontsize=12, color='white', 
+                        bbox=dict(facecolor='red', alpha=0.7))
+            
+            # Quitar ejes
+            ax.axis("off")
+            
+            # Guardar
+            plt.savefig(output_path, dpi=150, bbox_inches='tight', pad_inches=0.1)
+            plt.close()
+            
+            print(f"  ✓ Plano Perfecto generado: {output_path}")
+            return True
+
+        except Exception as e:
+            print(f"  ⚠ Error generando Plano Perfecto: {e}")
+            return False
+
         
         print(f"\n{'='*60}")
         print("RESUMEN DE DESCARGAS")
