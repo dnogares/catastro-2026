@@ -3,7 +3,10 @@ import sqlite3
 import pandas as pd
 import geopandas as gpd
 import matplotlib.pyplot as plt
-import contextily as cx
+try:
+    import contextily as cx
+except ImportError:
+    cx = None
 from datetime import datetime
 from PIL import Image
 from io import BytesIO
