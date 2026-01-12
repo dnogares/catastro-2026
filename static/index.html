@@ -2065,59 +2065,118 @@
         // Cargar capas vectoriales disponibles
         async function cargarCapasVectoriales() {
             try {
-                console.log('📡 Cargando capa de análisis consolidada...');
+                console.log('📡 Cargando capas de análisis...');
                 const response = await fetch('/api/v1/capas-disponibles');
                 const data = await response.json();
 
                 const container = document.getElementById('capas-vectoriales-lista');
-                if (data.status === 'success' && data.capas && data.capas.capas_vectoriales) {
-                    console.log(`✅ Se encontró ${data.capas.capas_vectoriales.length} capa de análisis`);
-                    let html = '';
-                    data.capas.capas_vectoriales.forEach(capa => {
-                        const id = `layer-v-${capa.nombre.replace(/\s+/g, '-')}`;
-                        html += `
-                            <div class="layer-control-item">
-                                <label>
-                                    <input type="checkbox" id="${id}" 
-                                        onchange="toggleVectorLayer('${capa.ruta}', '${id}')">
-                                    ${capa.nombre}
-                                </label>
-                                <small style="color: #666; display: block; margin-top: 2px;">
-                                    ${capa.descripcion || 'Capa vectorial para análisis'}
-                                </small>
-                                <input type="range" min="0" max="100" value="60"
-                                    oninput="updateVectorOpacity('${id}', this.value)">
-                                <span class="opacity-value" id="${id}-value">60%</span>
-                            </div>
-                        `;
-                    });
-                    container.innerHTML = html;
+                
+                if (data.status === 'success' && data.capas) {
+                    // Mostrar capas vectoriales
+                    if (data.capas.capas_vectoriales && data.capas.capas_vectoriales.length > 0) {
+                        console.log(`✅ Se encontraron ${data.capas.capas_vectoriales.length} capas vectoriales`);
+                        let html = '';
+                        data.capas.capas_vectoriales.forEach(capa => {
+                            const id = `layer-v-${capa.nombre.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '')}`;
+                            html += `
+                                <div class="layer-control-item" style="margin-bottom: 10px; padding: 8px; border: 1px solid #e2e8f0; border-radius: 4px;">
+                                    <div style="display: flex; align-items: center; margin-bottom: 5px;">
+                                        <input type="checkbox" id="${id}" 
+                                            onchange="toggleVectorLayer('${capa.nombre}', '${capa.ruta}', this.checked)"
+                                            style="margin-right: 8px;">
+                                        <label for="${id}" style="margin: 0; font-weight: 500; color: #2d3748;">
+                                            ${capa.nombre}
+                                        </label>
+                                    </div>
+                                    <small style="color: #666; display: block; margin-bottom: 5px;">
+                                        ${capa.descripcion || 'Capa vectorial para análisis'}
+                                    </small>
+                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                        <span style="font-size: 12px; color: #718096;">Opacidad:</span>
+                                        <input type="range" min="0" max="100" value="60"
+                                            oninput="updateVectorOpacity('${id}', this.value)"
+                                            style="flex: 1;">
+                                        <span class="opacity-value" id="${id}-value" style="font-size: 12px; min-width: 35px;">60%</span>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                        container.innerHTML = html;
+                    } else {
+                        container.innerHTML = '<p style="color: #718096;">No hay capas vectoriales disponibles.</p>';
+                    }
+                    
+                    // Mostrar capas WMS
+                    if (data.capas.capas_wms) {
+                        const wmsContainer = document.getElementById('capas-wms-lista') || createWMSContainer();
+                        let wmsHtml = '';
+                        Object.entries(data.capas.capas_wms).forEach(([key, capa]) => {
+                            if (capa.disponible) {
+                                const id = `layer-wms-${key}`;
+                                wmsHtml += `
+                                    <div class="layer-control-item" style="margin-bottom: 10px; padding: 8px; border: 1px solid #e2e8f0; border-radius: 4px;">
+                                        <div style="display: flex; align-items: center;">
+                                            <input type="checkbox" id="${id}" 
+                                                onchange="toggleWMSLayer('${key}', this.checked)"
+                                                style="margin-right: 8px;">
+                                            <label for="${id}" style="margin: 0; font-weight: 500; color: #2d3748;">
+                                                ${capa.nombre}
+                                            </label>
+                                        </div>
+                                        <small style="color: #666; display: block; margin-top: 2px;">
+                                            ${capa.descripcion || 'Capa WMS'}
+                                        </small>
+                                    </div>
+                                `;
+                            }
+                        });
+                        wmsContainer.innerHTML = wmsHtml;
+                    }
+                    
                 } else {
-                    console.log('⚠️ No se encontró la capa consolidada');
-                    container.innerHTML = '<p>No se encontró la capa de análisis consolidada.</p>';
+                    console.log('⚠️ No se encontraron capas disponibles');
+                    container.innerHTML = '<p style="color: #e53e3e;">Error cargando capas disponibles.</p>';
                 }
             } catch (error) {
-                console.error('❌ Error cargando capa de análisis:', error);
+                console.error('❌ Error cargando capas:', error);
                 document.getElementById('capas-vectoriales-lista').innerHTML = 
-                    '<p style="color: #e53e3e;">Error cargando la capa de análisis.</p>';
+                    '<p style="color: #e53e3e;">Error cargando las capas.</p>';
             }
+        }
+
+        // Crear contenedor para capas WMS si no existe
+        function createWMSContainer() {
+            const container = document.createElement('div');
+            container.id = 'capas-wms-lista';
+            container.style.marginTop = '15px';
+            
+            const title = document.createElement('h4');
+            title.textContent = '🗺️ Capas Base';
+            title.style.color = '#667eea';
+            title.style.marginBottom = '10px';
+            
+            const parent = document.getElementById('capas-vectoriales-lista').parentNode;
+            parent.insertBefore(title, container.nextSibling);
+            parent.insertBefore(container, title.nextSibling);
+            
+            return container;
         }
 
         // Variable para guardar capas vectoriales activas
         let activeVectorLayers = {};
 
         // Toggle capa vectorial
-        async function toggleVectorLayer(capaArchivo, checked, capaRuta) {
+        async function toggleVectorLayer(capaNombre, capaRuta, checked) {
             if (checked) {
                 try {
-                    console.log(`📡 Solicitando GeoJSON para: ${capaRuta} `);
-                    const response = await fetch(`/ api / v1 / capas / geojson ? ruta = ${encodeURIComponent(capaRuta)} `);
+                    console.log(`📡 Solicitando GeoJSON para: ${capaNombre} (${capaRuta})`);
+                    const response = await fetch(`/api/v1/capas/geojson?ruta=${encodeURIComponent(capaRuta)}`);
                     if (!response.ok) throw new Error('Error al obtener la capa');
 
                     const data = await response.json();
 
                     // Crear capa Leaflet
-                    activeVectorLayers[capaArchivo] = L.geoJSON(data, {
+                    activeVectorLayers[capaNombre] = L.geoJSON(data, {
                         style: {
                             color: '#4a5568',
                             weight: 2,
@@ -2127,9 +2186,9 @@
                         },
                         onEachFeature: (feature, layer) => {
                             if (feature.properties) {
-                                let popup = '<div style="max-height: 200px; overflow-y: auto;"><strong>Capa: ' + capaArchivo + '</strong><br><hr>';
+                                let popup = '<div style="max-height: 200px; overflow-y: auto;"><strong>Capa: ' + capaNombre + '</strong><br><hr>';
                                 for (const [k, v] of Object.entries(feature.properties)) {
-                                    popup += `< strong > ${k}:</strong > ${v} <br>`;
+                                    popup += `<strong>${k}:</strong> ${v}<br>`;
                                 }
                                 popup += '</div>';
                                 layer.bindPopup(popup);
@@ -2137,16 +2196,82 @@
                         }
                     }).addTo(map);
 
-                    console.log(`✅ Capa ${capaArchivo} cargada en el mapa`);
+                    console.log(`✅ Capa ${capaNombre} cargada en el mapa`);
                 } catch (error) {
                     console.error('❌ Error cargando capa vectorial:', error);
                     alert(`No se pudo cargar la capa: ${error.message}`);
+                    // Desmarcar checkbox si hubo error
+                    const checkbox = document.querySelector(`input[onchange*="${capaNombre}"]`);
+                    if (checkbox) checkbox.checked = false;
                 }
             } else {
-                if (activeVectorLayers[capaArchivo]) {
-                    map.removeLayer(activeVectorLayers[capaArchivo]);
-                    delete activeVectorLayers[capaArchivo];
+                if (activeVectorLayers[capaNombre]) {
+                    map.removeLayer(activeVectorLayers[capaNombre]);
+                    delete activeVectorLayers[capaNombre];
+                    console.log(`🗑️ Capa ${capaNombre} eliminada del mapa`);
                 }
+            }
+        }
+
+        // Toggle capa WMS
+        function toggleWMSLayer(layerKey, checked) {
+            if (checked) {
+                try {
+                    console.log(`📡 Activando capa WMS: ${layerKey}`);
+                    
+                    let wmsLayer;
+                    if (layerKey === 'catastro') {
+                        wmsLayer = L.tileLayer.wms('https://www.ign.es/wms-inspire/pnoa-ma', {
+                            layers: 'OI.OrthoimageCoverage',
+                            format: 'image/png',
+                            transparent: true,
+                            attribution: '© IGN España'
+                        });
+                    } else if (layerKey === 'pnoa') {
+                        wmsLayer = L.tileLayer.wms('https://www.ign.es/wms-inspire/pnoa-ma', {
+                            layers: 'OI.OrthoimageCoverage',
+                            format: 'image/png',
+                            transparent: true,
+                            attribution: '© IGN España'
+                        });
+                    }
+                    
+                    if (wmsLayer) {
+                        activeVectorLayers[`wms-${layerKey}`] = wmsLayer;
+                        wmsLayer.addTo(map);
+                        console.log(`✅ Capa WMS ${layerKey} activada`);
+                    }
+                } catch (error) {
+                    console.error('❌ Error activando capa WMS:', error);
+                    alert(`No se pudo activar la capa WMS: ${error.message}`);
+                    const checkbox = document.getElementById(`layer-wms-${layerKey}`);
+                    if (checkbox) checkbox.checked = false;
+                }
+            } else {
+                const wmsLayer = activeVectorLayers[`wms-${layerKey}`];
+                if (wmsLayer) {
+                    map.removeLayer(wmsLayer);
+                    delete activeVectorLayers[`wms-${layerKey}`];
+                    console.log(`🗑️ Capa WMS ${layerKey} desactivada`);
+                }
+            }
+        }
+
+        // Actualizar opacidad de capa vectorial
+        function updateVectorOpacity(layerId, opacity) {
+            const layer = activeVectorLayers[layerId.replace('layer-v-', '')];
+            if (layer) {
+                const opacityValue = opacity / 100;
+                layer.setStyle({
+                    opacity: opacityValue,
+                    fillOpacity: opacityValue * 0.3
+                });
+            }
+            
+            // Actualizar texto del porcentaje
+            const valueSpan = document.getElementById(`${layerId}-value`);
+            if (valueSpan) {
+                valueSpan.textContent = `${opacity}%`;
             }
         }
 
