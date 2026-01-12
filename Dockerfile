@@ -24,7 +24,7 @@ COPY . .
 RUN mkdir -p outputs/gml outputs/pdfs outputs/imagenes outputs/html outputs/zips capas/gpkg
 
 # Exponer el puerto
-EXPOSE 8080
+EXPOSE 81
 
 # Comando para ejecutar la aplicación
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8090"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "81"]

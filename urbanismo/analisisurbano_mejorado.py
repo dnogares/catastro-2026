@@ -56,16 +56,21 @@ class AnalisisUrbano:
         self._wfs_cache = {}
         self._wms_cache = {}
         
-        # URLs de servicios (configurables)
+        # URLs de servicios (configurables) - DESACTIVADAS para usar GPKG local
         self.wfs_carm_url = "https://mapas-gis-inter.carm.es/geoserver/SIT_USU_PLA_URB_CARM/wfs?"
         self.wms_carm_url = "https://mapas-gis-inter.carm.es/geoserver/SIT_USU_PLA_URB_CARM/wms?"
         self.wms_ign_url = "https://www.ign.es/wms-inspire/pnoa-ma"
         
-        # Nombres de capas
+        # Nombres de capas - DESACTIVADAS para usar GPKG local
         self.wfs_layer = "SIT_USU_PLA_URB_CARM:clases_plu_ze_37mun"
         self.wms_layer = "SIT_USU_PLA_URB_CARM:clases_plu_ze_37mun"
         
+        # Configuración para usar GPKG local
+        self.usar_gpkg_local = True
+        self.gpkg_consolidado = None
+        
         logger.info(f"AnalisisUrbano inicializado. Output: {self.output_dir}")
+        logger.info("AnalisisUrbano configurado para usar GPKG local")
 
     def cargar_parcela(self, path_geojson: str) -> gpd.GeoDataFrame:
         """
@@ -100,9 +105,10 @@ class AnalisisUrbano:
     def descargar_capa_wfs(self, base_url: str, typename: str, use_cache: bool = True) -> gpd.GeoDataFrame:
         """
         Descarga capa WFS como GeoDataFrame con caché optimizado
+        O usa GPKG local si está configurado para ello
         
         Args:
-            base_url: URL base del servicio WFS
+            base_url: URL base del servicio WFS (ignorado si usar_gpkg_local=True)
             typename: Nombre de la capa a descargar
             use_cache: Si usar caché para evitar descargas repetidas
             
@@ -113,6 +119,10 @@ class AnalisisUrbano:
             requests.RequestException: Si falla la descarga
             ValueError: Si la respuesta no es válida
         """
+        # Si está configurado para usar GPKG local, cargar desde ahí
+        if self.usar_gpkg_local:
+            return self._cargar_capa_gpkg_local(typename)
+        
         cache_key = f"{base_url}_{typename}"
         
         # Usar caché si está disponible
@@ -148,25 +158,62 @@ class AnalisisUrbano:
             # Reproyectar a EPSG:25830 para cálculos de área precisos
             gdf = gdf.to_crs(epsg=25830)
             
-            # Validar campos requeridos
-            campos_requeridos = ['clasificacion', 'geometry']
-            campos_faltantes = [c for c in campos_requeridos if c not in gdf.columns]
-            if campos_faltantes:
-                raise ValueError(f"Faltan campos requeridos en la capa: {campos_faltantes}")
-            
             # Guardar en caché
             if use_cache:
                 self._wfs_cache[cache_key] = gdf
             
-            logger.info(f"Capa WFS descargada: {typename} ({len(gdf)} elementos)")
             return gdf
             
-        except requests.RequestException as e:
-            logger.error(f"Error de red descargando WFS {typename}: {e}")
-            raise
         except Exception as e:
-            logger.error(f"Error procesando capa WFS {typename}: {e}")
+            logger.error(f"Error descargando capa WFS {typename}: {e}")
             raise
+    
+    def _cargar_capa_gpkg_local(self, typename: str) -> gpd.GeoDataFrame:
+        """
+        Carga una capa desde el GPKG consolidado local
+        
+        Args:
+            typename: Nombre de la capa (formato: "SIT_USU_PLA_URB_CARM:nombre_capa")
+            
+        Returns:
+            GeoDataFrame en EPSG:25830 para cálculos de área
+        """
+        try:
+            # Extraer nombre de capa del typename
+            if ":" in typename:
+                layer_name = typename.split(":")[1]
+            else:
+                layer_name = typename
+            
+            # Ruta al GPKG consolidado
+            from config.paths import CAPAS_DIR
+            gpkg_path = CAPAS_DIR / "capas_consolidadas_20260112_173239.gpkg"
+            
+            if not gpkg_path.exists():
+                logger.error(f"No se encuentra el GPKG consolidado: {gpkg_path}")
+                # Devolver GeoDataFrame vacío para que continúe el proceso
+                return gpd.GeoDataFrame()
+            
+            logger.info(f"Cargando capa desde GPKG local: {layer_name}")
+            gdf = gpd.read_file(gpkg_path, layer=layer_name)
+            
+            if gdf.empty:
+                logger.warning(f"La capa GPKG está vacía: {layer_name}")
+                return gdf
+            
+            # Estandarizar nombres de columnas a minúsculas
+            gdf.columns = [c.lower() for c in gdf.columns]
+            
+            # Reproyectar a EPSG:25830 para cálculos de área precisos
+            gdf = gdf.to_crs(epsg=25830)
+            
+            logger.info(f"Capa '{layer_name}' cargada desde GPKG: {len(gdf)} geometrías")
+            return gdf
+            
+        except Exception as e:
+            logger.error(f"Error cargando capa GPKG {typename}: {e}")
+            # Devolver GeoDataFrame vacío para que continúe el proceso
+            return gpd.GeoDataFrame()
 
     def calcular_porcentajes(self, gdf_parcela: gpd.GeoDataFrame, 
                            gdf_planeamiento: gpd.GeoDataFrame) -> Tuple[Dict[str, float], Dict[str, float]]:
@@ -429,9 +476,9 @@ class AnalisisUrbano:
         
         timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         
-        # Crear directorio de salida
-        carpeta_salida = self.output_dir / f"{referencia}_{timestamp}"
-        carpeta_salida.mkdir(exist_ok=True)
+        # Crear directorio de salida (DIRECTO en la referencia, sin timestamp)
+        carpeta_salida = self.output_dir / referencia
+        carpeta_salida.mkdir(exist_ok=True, parents=True)
         
         logger.info(f"Procesando parcela: {referencia}")
         

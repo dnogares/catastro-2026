@@ -1,8 +1,9 @@
 @echo off
+
 title Suite Tasacion Launcher
 
 echo ==========================================
-echo    DESPLEGANDO SUITE TASACION LOCAL
+echo DESPLEGANDO SUITE TASACION LOCAL
 echo ==========================================
 
 REM Ir al directorio del proyecto
@@ -11,15 +12,15 @@ cd /d I:\Tasacion2026
 REM Verificar Python
 python --version >nul 2>&1
 if %errorlevel% neq 0 (
-    echo [ERROR] Python no esta instalado
-    pause
-    exit /b
+echo [ERROR] Python no esta instalado
+pause
+exit /b
 )
 
 REM Crear entorno virtual si no existe
 if not exist "venv" (
-    echo [INFO] Creando entorno virtual...
-    python -m venv venv
+echo [INFO] Creando entorno virtual...
+python -m venv venv
 )
 
 REM Activar entorno
@@ -55,12 +56,12 @@ if not exist "outputs" mkdir outputs
 
 echo.
 echo ==========================================
-echo    INICIANDO SERVIDOR
-echo    Accede a: http://localhost:81
+echo INICIANDO SERVIDOR (SIN RECARGA AUTOMATICA)
+echo Accede a: http://localhost:81
 echo ==========================================
 echo.
 
-REM Ejecutar aplicacion
-python main.py
+REM Ejecutar aplicacion sin reload
+uvicorn main:app --host 0.0.0.0 --port 81
 
 pause

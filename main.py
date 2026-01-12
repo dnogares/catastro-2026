@@ -109,86 +109,178 @@ async def health_check():
         "capas_dir": str(CAPAS_DIR.exists())
     }
 
-@app.post("/api/v1/analizar-parcela")
-async def paso1_analizar(referencia: str = Form(...)):
-    """
-    Paso 1: Descarga datos catastrales y analiza afecciones
-    """
-    try:
+# Importaciones necesarias para ZIP
+import zipfile
+import json
+from datetime import datetime
 
 def generar_csv_tecnico(referencia, urban_data, aff_data, output_dir):
     """Genera un CSV con todos los datos técnicos del análisis."""
     import csv
     from datetime import datetime
+    import os
     
     filepath = output_dir / f"{referencia}_datos_tecnicos.csv"
     
-    # Estructura base
+    # Estructura base con más información
     data = {}
     
     # 1. Datos Identificativos
     data["Referencia"] = referencia
     data["Fecha_Analisis"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     
-    # 2. Datos Catastrales (Area)
-    # Intentar obtener área de urbanismo o afecciones
-    area = 0.0
-    if urban_data and not urban_data.get("error"):
-        area = urban_data.get("area_parcela_m2", 0)
-    if area == 0 and aff_data:
-        area = aff_data.get("area_parcela_m2", aff_data.get("area_total_m2", 0))
-    
-    data["Area_Parcela_m2"] = round(area, 2)
+    # 2. Datos Catastrales básicos
+    data["Procesado"] = "Sí"
+    data["Error_Procesamiento"] = ""
     
     # 3. Datos Urbanísticos
-    if urban_data and not urban_data.get("error") and urban_data.get("urbanismo"):
-        # Detalles (suelen ser porcentajes)
-        for k, v in urban_data.get("detalle", {}).items():
-            key_name = f"URB_{k.replace(' ', '_')}_pct"
-            data[key_name] = v
-            # Calcular área aprox
-            data[f"URB_{k.replace(' ', '_')}_m2"] = round((v / 100) * area, 2)
+    if urban_data and not urban_data.get("error"):
+        data["Analisis_Urbanistico"] = "Sí"
+        data["Area_Parcela_m2"] = round(urban_data.get("area_parcela_m2", 0), 2)
+        data["Urbanismo_Detectado"] = urban_data.get("urbanismo", False)
+        
+        # Análisis avanzado (nuevas funcionalidades)
+        if urban_data.get("analisis_avanzado"):
+            data["Analisis_Avanzado"] = "Sí"
+            
+            # Parámetros urbanísticos
+            params = urban_data.get("parametros_urbanisticos", {})
+            if params:
+                for param, valor in params.items():
+                    if param != "superficie_parcela" and isinstance(valor, dict):
+                        key_name = f"URB_{param.replace(' ', '_')}"
+                        if "valor" in valor:
+                            data[key_name] = valor["valor"]
+                
+                # Campos específicos importantes
+                if "coeficiente_ocupacion" in params:
+                    data["URB_Coeficiente_Ocupacion"] = params["coeficiente_ocupacion"].get("valor", 0)
+                    data["URB_Superficie_Ocupada_m2"] = params["coeficiente_ocupacion"].get("superficie_ocupada_m2", 0)
+                
+                if "edificabilidad" in params:
+                    data["URB_Edificabilidad_m2m2"] = params["edificabilidad"].get("valor", 0)
+                
+                if "altura_maxima" in params:
+                    data["URB_Altura_Maxima_m"] = params["altura_maxima"].get("valor", 0)
+                    data["URB_Altura_Maxima_Plantas"] = params["altura_maxima"].get("plantas", 0)
+                
+                if "separacion_linderos" in params:
+                    data["URB_Separacion_Linderos_m"] = params["separacion_linderos"].get("valor", 0)
+            
+            # Zonas afectadas
+            zonas = urban_data.get("zonas_afectadas", [])
+            if zonas:
+                data["URB_Zonas_Afectadas_Count"] = len([z for z in zonas if "capa" in z])
+                zonas_nombres = [z.get("capa", "") for z in zonas if "capa" in z]
+                data["URB_Zonas_Afectadas"] = "; ".join(zonas_nombres)
+            
+            # Afecciones específicas
+            afecciones = urban_data.get("afecciones_detectadas", [])
+            if afecciones:
+                data["URB_Afecciones_Especificas_Count"] = len([a for a in afecciones if "capa" in a])
+                afecciones_tipos = [a.get("tipo", "") for a in afecciones if "tipo" in a]
+                data["URB_Afecciones_Tipos"] = "; ".join(set(afecciones_tipos))
+            
+            # Recomendaciones
+            recomendaciones = urban_data.get("recomendaciones", [])
+            if recomendaciones:
+                data["URB_Recomendaciones_Count"] = len(recomendaciones)
+                data["URB_Recomendaciones"] = " | ".join(recomendaciones[:3])  # Primeras 3
+        
+        # Detalles urbanísticos (compatibilidad con sistema anterior)
+        if urban_data.get("detalle"):
+            for k, v in urban_data.get("detalle", {}).items():
+                key_name = f"URB_{k.replace(' ', '_')}_pct"
+                data[key_name] = v
+                # Calcular área aprox
+                area = data["Area_Parcela_m2"]
+                if area > 0:
+                    data[f"URB_{k.replace(' ', '_')}_m2"] = round((v / 100) * area, 2)
+    else:
+        data["Analisis_Urbanistico"] = "No"
+        data["Area_Parcela_m2"] = 0.0
+        data["Urbanismo_Detectado"] = False
+        data["Analisis_Avanzado"] = "No"
+        if urban_data and urban_data.get("error"):
+            data["Error_Urbanistico"] = urban_data.get("error")
     
     # 4. Afecciones Vectoriales
-    if aff_data:
-        data["Afecciones_Total_Max_pct"] = aff_data.get("total", 0)
+    if aff_data and not aff_data.get("mensaje"):
+        data["Analisis_Afecciones"] = "Sí"
+        data["Afecciones_Detectadas"] = aff_data.get("afecciones_detectadas", False)
+        data["Afecciones_Total_pct"] = aff_data.get("total", 0.0)
+        data["Area_Total_Parcela_m2"] = aff_data.get("area_total_m2", 0.0)
         
-        # Detalles (en paso1_analizar guardamos áreas en 'detalle')
-        for k, v in aff_data.get("detalle", {}).items():
-            # k es "Capa - Clase"
-            clean_key = f"AF_{k}".replace(" ", "_").replace("-", "_").replace("__", "_")
-            data[f"{clean_key}_m2"] = v
-            # Calcular porcentaje
-            if area > 0:
-                data[f"{clean_key}_pct"] = round((v / area) * 100, 2)
-            else:
-                data[f"{clean_key}_pct"] = 0.0
-
-    # Escribir CSV (Vertical key-value para legibilidad técnica, o horizontal?)
-    # El usuario pide "un csv con todos los datos". Formato tabla horizontal es estándar.
+        # Detalles de afecciones
+        if aff_data.get("detalle"):
+            for k, v in aff_data.get("detalle", {}).items():
+                # k es "Capa - Clase"
+                clean_key = f"AF_{k}".replace(" ", "_").replace("-", "_").replace("__", "_")
+                data[f"{clean_key}_m2"] = v
+                # Calcular porcentaje
+                area = data["Area_Total_Parcela_m2"]
+                if area > 0:
+                    data[f"{clean_key}_pct"] = round((v / area) * 100, 2)
+                else:
+                    data[f"{clean_key}_pct"] = 0.0
+    else:
+        data["Analisis_Afecciones"] = "No"
+        data["Afecciones_Detectadas"] = False
+        data["Afecciones_Total_pct"] = 0.0
+        if aff_data and aff_data.get("mensaje"):
+            data["Estado_Afecciones"] = aff_data.get("mensaje")
     
+    # 5. Archivos generados (verificar existencia)
+    ref_dir = output_dir
+    data["PDF_Ficha"] = "Sí" if (ref_dir / "pdf" / f"{referencia}_ficha_catastral.pdf").exists() else "No"
+    data["PDF_Urbanistico"] = "Sí" if (ref_dir / f"Informe_{referencia}.pdf").exists() else "No"  # Cambiado: misma carpeta
+    data["GML_Parcela"] = "Sí" if (ref_dir / f"{referencia}_parcela.gml").exists() or (ref_dir / "gml" / f"{referencia}_parcela.gml").exists() else "No"
+    data["KML_Parcela"] = "Sí" if (ref_dir / f"{referencia}_parcela.kml").exists() or (ref_dir / "gml" / f"{referencia}_parcela.kml").exists() else "No"
+    data["Certificado_Urb"] = "Sí" if (ref_dir / f"certificado_{referencia}.txt").exists() else "No"  # Nuevo: certificado
+    
+    # 6. Metadatos del sistema
+    data["Servidor"] = "Suite Tasación v3.1"
+    data["Directorio_Salida"] = str(output_dir)
+    data["Estado_Afecciones"] = aff_data.get("mensaje", "")
+    
+    # Escribir CSV
     try:
+        # Ordenar columnas lógicamente
+        column_order = [
+            "Referencia", "Fecha_Analisis", "Procesado", "Error_Procesamiento",
+            "Analisis_Urbanistico", "Analisis_Avanzado", "Analisis_Afecciones", "Area_Parcela_m2",
+            "Urbanismo_Detectado", "Afecciones_Detectadas", "Afecciones_Total_pct",
+            "URB_Coeficiente_Ocupacion", "URB_Superficie_Ocupada_m2", "URB_Edificabilidad_m2m2",
+            "URB_Altura_Maxima_m", "URB_Altura_Maxima_Plantas", "URB_Separacion_Linderos_m",
+            "URB_Zonas_Afectadas_Count", "URB_Afecciones_Especificas_Count", "URB_Recomendaciones_Count",
+            "PDF_Ficha", "PDF_Urbanistico", "Certificado_Urb", "GML_Parcela", "KML_Parcela",
+            "Servidor", "Directorio_Salida", "Estado_Afecciones"
+        ]
+        
+        # Agregar columnas dinámicas (urbanísticas y afecciones)
+        all_keys = list(data.keys())
+        dynamic_keys = [k for k in all_keys if k.startswith(("URB_", "AF_"))]
+        column_order.extend(sorted(dynamic_keys))
+        
+        # Filtrar solo las columnas que existen
+        final_columns = [col for col in column_order if col in data]
+        
         with open(filepath, 'w', newline='', encoding='utf-8') as f:
-            writer = csv.writer(f)
-            # Cabecera
-            writer.writerow(data.keys())
-            # Valores
-            writer.writerow(data.values())
+            writer = csv.DictWriter(f, fieldnames=final_columns)
+            writer.writeheader()
+            writer.writerow(data)
+            
+        print(f"✅ CSV técnico generado: {filepath}")
+        print(f"   📊 Columnas: {len(final_columns)}")
+        print(f"   📏 Área parcela: {data['Area_Parcela_m2']} m²")
+        print(f"   🏙️ Análisis urbanístico: {data['Analisis_Urbanistico']}")
+        print(f"   ⚠️ Análisis afecciones: {data['Analisis_Afecciones']}")
+        
         return str(filepath)
     except Exception as e:
         print(f"⚠️ Error generando CSV técnico: {e}")
         return None
 
-# --- ENDPOINTS ---
-@app.get("/api/health")
-async def health_check():
-    """Endpoint de verificación de salud del servicio"""
-    return {
-        "status": "healthy",
-        "version": "3.1",
-        "outputs_dir": str(OUTPUTS_DIR.exists()),
-        "capas_dir": str(CAPAS_DIR.exists())
-    }
 
 @app.post("/api/v1/analizar-parcela")
 async def paso1_analizar(referencia: str = Form(...)):
@@ -205,8 +297,8 @@ async def paso1_analizar(referencia: str = Form(...)):
                 detail="Referencia catastral inválida (mínimo 14 caracteres)"
             )
 
-        # 1. Descargar datos catastrales
-        exito, zip_path = downloader.descargar_todo_completo(ref_limpia)
+        # 1. Descargar datos catastrales (sin ZIP)
+        exito, _ = downloader.descargar_todo_completo(ref_limpia)
         
         if not exito:
             raise HTTPException(
@@ -217,9 +309,20 @@ async def paso1_analizar(referencia: str = Form(...)):
         # 2. Análisis urbanístico si hay GML disponible
         result_urban = {}
         ref_dir = OUTPUTS_DIR / ref_limpia
-        gml_path = ref_dir / "gml" / f"{ref_limpia}_parcela.gml"
         
-        if gml_path.exists():
+        # Buscar GML en la raíz (descargas individuales) o en subcarpeta gml/ (lotes)
+        gml_path = None
+        posibles_gml = [
+            ref_dir / f"{ref_limpia}_parcela.gml",  # Descarga individual
+            ref_dir / "gml" / f"{ref_limpia}_parcela.gml"  # Procesamiento de lote
+        ]
+        
+        for gml_candidate in posibles_gml:
+            if gml_candidate.exists():
+                gml_path = gml_candidate
+                break
+        
+        if gml_path:
             try:
                 result_urban = urbanismo_service.analizar_parcela(str(gml_path), ref_limpia)
             except Exception as e:
@@ -228,63 +331,74 @@ async def paso1_analizar(referencia: str = Form(...)):
         else:
             result_urban = {"error": "GML no disponible", "urbanismo": False}
 
-        # 2. Análisis de afecciones MULTI-CAPA
+        # 2. Análisis de afecciones (OPCIONAL - desactivado por defecto)
         images_dir = ref_dir / "images"
         
-        # Buscar todas las capas disponibles
-        todas_capas = get_all_vector_layers(CAPAS_DIR)
-        print(f"🔍 Analizando parcelas contra {len(todas_capas)} capas encontradas.")
+        # Usar solo el archivo de capas consolidadas específico
+        capas_consolidadas_path = CAPAS_DIR / "capas_consolidadas_20260112_173239.gpkg"
+        todas_capas = [capas_consolidadas_path] if capas_consolidadas_path.exists() else []
+        print(f"🔍 Analizando parcelas contra archivo consolidado: {capas_consolidadas_path.name if capas_consolidadas_path.exists() else 'NO ENCONTRADO'}")
 
         res_afecciones = {
             "detalle": {},
             "total": 0.0,
             "area_total_m2": 0.0,
-            "afecciones_detectadas": False
+            "afecciones_detectadas": False,
+            "mensaje": "Análisis de afecciones desactivado. Use el panel 'Análisis Afecciones' para análisis manual."
         }
         
-        max_afeccion = 0.0
+        # Comentar/descomentar esta línea para activar/desactivar análisis automático
+        # ANALISIS_AFECCIONES_ACTIVO = False  # Desactivado por defecto
+        ANALISIS_AFECCIONES_ACTIVO = False
         
-        for capa_path in todas_capas:
-            try:
-                # Analizar capa individual
-                res_capa = analyzer.analizar(
-                    parcela_path=gml_path,
-                    capa_input=capa_path,
-                    campo_clasificacion="tipo" 
-                )
-                
-                # Si hay error o no hay intersección, continuar
-                if "error" in res_capa or not res_capa.get("afecciones_detectadas"):
-                    continue
-                
-                # Actualizar área total (debería ser la misma siempre, tomamos la primera válida)
-                if res_afecciones["area_total_m2"] == 0:
-                    res_afecciones["area_total_m2"] = res_capa.get("area_parcela_m2", 0)
-                
-                # Agregar detalles
-                nombre_capa = capa_path.stem
-                if res_capa.get("afecciones"):
-                    res_afecciones["afecciones_detectadas"] = True
-                    for af in res_capa["afecciones"]:
-                        clave = f"{nombre_capa} - {af.get('clase', 'General')}"
-                        res_afecciones["detalle"][clave] = af.get("area_m2", 0)
+        if ANALISIS_AFECCIONES_ACTIVO and todas_capas:
+            max_afeccion = 0.0
+            
+            for capa_path in todas_capas:
+                try:
+                    # Analizar capa individual
+                    res_capa = analyzer.analizar(
+                        parcela_path=gml_path,
+                        capa_input=capa_path,
+                        campo_clasificacion="tipo" 
+                    )
                     
-                    # Trackear máxima afectación encontrada
-                    total_capa = res_capa.get("total_afectado_percent", 0)
-                    if total_capa > max_afeccion:
-                        max_afeccion = total_capa
-                        
-            except Exception as e:
-                print(f"⚠️ Error analizando capa {capa_path.name}: {e}")
-                
-        # Asignar la máxima afectación como 'total' (proxy seguro sin hacer union geométrica compleja en runtime)
-        res_afecciones["total"] = max_afeccion
-        if not res_afecciones["detalle"]:
-            res_afecciones["mensaje"] = "No se detectaron intersecciones con las capas disponibles."
+                    # Si hay error o no hay intersección, continuar
+                    if "error" in res_capa or not res_capa.get("afecciones_detectadas"):
+                        continue
+                    
+                    # Actualizar área total (debería ser la misma siempre, tomamos la primera válida)
+                    if res_afecciones["area_total_m2"] == 0:
+                        res_afecciones["area_total_m2"] = res_capa.get("area_parcela_m2", 0)
+                    
+                    # Agregar detalles
+                    nombre_capa = capa_path.stem
+                    if res_capa.get("afecciones"):
+                        res_afecciones["afecciones_detectadas"] = True
+                        for af in res_capa["afecciones"]:
+                            clave = f"{nombre_capa} - {af.get('clase', 'General')}"
+                            res_afecciones["detalle"][clave] = af.get("area_m2", 0)
+                            
+                        # Trackear máxima afectación encontrada
+                        total_capa = res_capa.get("total_afectado_percent", 0)
+                        if total_capa > max_afeccion:
+                            max_afeccion = total_capa
+                            
+                except Exception as e:
+                    print(f"⚠️ Error analizando capa {capa_path.name}: {e}")
+                    
+            # Asignar la máxima afectación como 'total' (proxy seguro sin hacer union geométrica compleja en runtime)
+            res_afecciones["total"] = max_afeccion
+            if not res_afecciones["detalle"]:
+                res_afecciones["mensaje"] = "No se detectaron intersecciones con las capas disponibles."
+        else:
+            print(f"📋 Análisis de afecciones desactivado para {ref_limpia}")
 
         # 3. Generar "Plano Perfecto" para el informe
         plano_path = images_dir / f"{ref_limpia}_plano_perfecto.jpg"
         if gml_path.exists():
+            # Asegurar que el directorio images exista
+            images_dir.mkdir(parents=True, exist_ok=True)
             downloader.generar_plano_perfecto(
                 gml_path=gml_path,
                 output_path=plano_path,
@@ -292,7 +406,49 @@ async def paso1_analizar(referencia: str = Form(...)):
                 info_afecciones=res_afecciones
             )
         
-        # 4. Generar CSV Técnico Consolidado
+        # 4. Generar PDF Urbanístico si hay análisis urbanístico
+        urbanismo_pdf_path = None
+        if result_urban and not result_urban.get("error") and result_urban.get("urbanismo"):
+            try:
+                print("📄 Generando PDF urbanístico...")
+                
+                # Obtener mapas del servicio urbanístico
+                mapas_urbanismo = urbanismo_service.obtener_mapas(ref_limpia)
+                
+                if mapas_urbanismo:
+                    # Encontrar el directorio con timestamp más reciente
+                    urbanismo_base_dir = OUTPUTS_DIR / "urbanismo"
+                    timestamp_dirs = list(urbanismo_base_dir.glob(f"{ref_limpia}_*"))
+                    
+                    if timestamp_dirs:
+                        # Usar el directorio más reciente
+                        latest_dir = max(timestamp_dirs, key=lambda x: x.stat().st_mtime)
+                        print(f"📂 Usando directorio urbanismo: {latest_dir.name}")
+                        
+                        # Generar PDF usando el generador de afecciones en directorio de la referencia
+                        from afecciones.pdf_generator import AfeccionesPDF
+                        ref_dir = OUTPUTS_DIR / ref_limpia
+                        pdf_gen_temp = AfeccionesPDF(output_dir=str(ref_dir))
+                        urbanismo_pdf_path = pdf_gen_temp.generar(
+                            referencia=ref_limpia,
+                            resultados=result_urban,
+                            mapas=mapas_urbanismo,
+                            incluir_tabla=bool(result_urban.get("urbanismo", False))
+                        )
+                        
+                        if urbanismo_pdf_path:
+                            print(f"✅ PDF urbanístico generado: {urbanismo_pdf_path}")
+                        else:
+                            print("⚠️ No se pudo generar el PDF urbanístico")
+                    else:
+                        print("⚠️ No se encontraron directorios de urbanismo con timestamp")
+                else:
+                    print("⚠️ No se encontraron mapas para generar el PDF urbanístico")
+                    
+            except Exception as e:
+                print(f"❌ Error generando PDF urbanístico: {e}")
+
+        # 5. Generar CSV Técnico Consolidado
         csv_path = generar_csv_tecnico(ref_limpia, result_urban, res_afecciones, ref_dir)
 
         # 5. Localizar mapa para el frontend
@@ -317,13 +473,81 @@ async def paso1_analizar(referencia: str = Form(...)):
             "url_mapa_web": mapa_disponible,
             "archivos_generados": {
                 "zip": f"/outputs/{ref_limpia}_completo.zip",
-                "kml": f"/outputs/{ref_limpia}/gml/{ref_limpia}_parcela.kml",
+                "kml": f"/outputs/{ref_limpia}/gml/{ref_limpia}_parcela.gml",  # KML en subcarpeta gml/
                 "pdf_ficha": f"/outputs/{ref_limpia}/pdf/{ref_limpia}_ficha_catastral.pdf"
             }
         }
         
+        # Agregar PDF urbanístico si se generó
+        if urbanismo_pdf_path:
+            # Convertir la ruta absoluta a relativa para el servidor
+            urbanismo_pdf_path = Path(urbanismo_pdf_path)
+            if urbanismo_pdf_path.exists():
+                # La ruta debe ser relativa al OUTPUTS_DIR
+                try:
+                    relative_path = urbanismo_pdf_path.relative_to(OUTPUTS_DIR)
+                    response_data["archivos_generados"]["pdf_urbanistico"] = f"/outputs/{relative_path}"
+                    print(f"✅ URL PDF urbanístico: /outputs/{relative_path}")
+                except ValueError:
+                    # Si no puede ser relativa, construir la ruta correcta con timestamp
+                    # Buscar el directorio con timestamp más reciente
+                    urbanismo_base = OUTPUTS_DIR / "urbanismo"
+                    timestamp_dirs = list(urbanismo_base.glob(f"{ref_limpia}_*"))
+                    if timestamp_dirs:
+                        latest_dir = max(timestamp_dirs, key=lambda x: x.stat().st_mtime)
+                        pdf_relative = latest_dir.relative_to(OUTPUTS_DIR) / f"Informe_{ref_limpia}.pdf"
+                        response_data["archivos_generados"]["pdf_urbanistico"] = f"/outputs/{pdf_relative}"
+                        print(f"✅ URL PDF urbanístico (fallback): /outputs/{pdf_relative}")
+                    else:
+                        response_data["archivos_generados"]["pdf_urbanistico"] = None
+            else:
+                print(f"⚠️ El PDF urbanístico no existe en: {urbanismo_pdf_path}")
+                response_data["archivos_generados"]["pdf_urbanistico"] = None
+        
         if csv_path:
             response_data["archivos_generados"]["csv_tecnico"] = f"/outputs/{ref_limpia}/{Path(csv_path).name}"
+        
+        # 6. Crear ZIP completo con TODOS los archivos generados
+        zip_path = None
+        try:
+            zip_path = OUTPUTS_DIR / f"{ref_limpia}_completo.zip"
+            
+            with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+                # Añadir todos los archivos del directorio de la referencia
+                for file_path in ref_dir.rglob('*'):
+                    if file_path.is_file():
+                        # Ruta relativa dentro del ZIP
+                        arcname = file_path.relative_to(ref_dir)
+                        zipf.write(file_path, arcname)
+                        print(f"   📦 Añadido al ZIP: {arcname}")
+                
+                # Crear manifiesto
+                manifest = {
+                    "referencia": ref_limpia,
+                    "fecha_generacion": datetime.now().isoformat(),
+                    "archivos": []
+                }
+                
+                # Contar archivos en el ZIP
+                for file_path in ref_dir.rglob('*'):
+                    if file_path.is_file():
+                        arcname = str(file_path.relative_to(ref_dir))
+                        manifest["archivos"].append({
+                            "ruta": arcname,
+                            "tamano": file_path.stat().st_size,
+                            "fecha": datetime.fromtimestamp(file_path.stat().st_mtime).isoformat()
+                        })
+                
+                # Añadir manifiesto al ZIP
+                manifest_json = json.dumps(manifest, indent=2, ensure_ascii=False)
+                zipf.writestr("manifesto.json", manifest_json)
+                
+            print(f"✅ ZIP completo creado: {zip_path}")
+            print(f"   📁 Archivos incluidos: {len(manifest['archivos'])}")
+            
+        except Exception as e:
+            print(f"❌ Error creando ZIP completo: {e}")
+            zip_path = None
             
         return response_data
 
@@ -376,8 +600,10 @@ async def paso2_generar_pdf(req: PdfRequest):
             gml_path = ref_dir / "gml" / f"{ref_limpia}_parcela.gml"
             if gml_path.exists():
                 try:
-                    todas_capas = get_all_vector_layers(CAPAS_DIR)
-                    print(f"📄 PDF Afecciones: analizando contra {len(todas_capas)} capas")
+                    # Usar solo el archivo de capas consolidadas específico
+                    capas_consolidadas_path = CAPAS_DIR / "capas_consolidadas_20260112_173239.gpkg"
+                    todas_capas = [capas_consolidadas_path] if capas_consolidadas_path.exists() else []
+                    print(f"📄 PDF Afecciones: analizando contra archivo consolidado: {capas_consolidadas_path.name if capas_consolidadas_path.exists() else 'NO ENCONTRADO'}")
                     
                     resultados_afecciones = {
                         "detalle": {},
@@ -916,7 +1142,8 @@ async def analizar_afecciones_manual(
 @app.get("/api/v1/capas-disponibles")
 async def obtener_capas_disponibles():
     """
-    Obtiene la lista de capas vectoriales disponibles en el volumen
+    Obtiene la lista de capas vectoriales disponibles
+    Ahora solo muestra el archivo consolidado específico
     """
     try:
         capas_info = {
@@ -935,36 +1162,20 @@ async def obtener_capas_disponibles():
             }
         }
         
-        # Buscar capas vectoriales en el volumen
-        if CAPAS_DIR.exists():
-            for capa_file in CAPAS_DIR.rglob("*.gpkg"):
-                if capa_file.is_file():
-                    capas_info["capas_vectoriales"].append({
-                        "nombre": capa_file.stem,
-                        "archivo": capa_file.name,
-                        "ruta": str(capa_file.relative_to(CAPAS_DIR)),
-                        "tamano": capa_file.stat().st_size,
-                        "tipo": "vectorial"
-                    })
-            
-            # Buscar en subdirectorios
-            for subdir in ["ambiental", "riesgos", "infraestructuras"]:
-                subdir_path = CAPAS_DIR / subdir
-                if subdir_path.exists():
-                    for capa_file in subdir_path.rglob("*.gpkg"):
-                        if capa_file.is_file():
-                            capas_info["capas_vectoriales"].append({
-                                "nombre": capa_file.stem,
-                                "archivo": str(subdir_path / capa_file.name),
-                                "ruta": str(subdir_path / capa_file.relative_to(subdir_path)),
-                                "tamano": capa_file.stat().st_size,
-                                "tipo": "vectorial",
-                                "categoria": subdir
-                            })
+        # Buscar solo el archivo consolidado específico
+        capas_consolidadas = CAPAS_DIR / "capas_consolidadas_20260112_173239.gpkg"
+        if capas_consolidadas.exists():
+            capas_info["capas_vectoriales"].append({
+                "nombre": "Capas Consolidadas",
+                "archivo": capas_consolidadas.name,
+                "ruta": str(capas_consolidadas.relative_to(CAPAS_DIR)),
+                "tamano": capas_consolidadas.stat().st_size,
+                "tipo": "vectorial",
+                "descripcion": "Archivo consolidado con todas las capas de análisis"
+            })
         
         return {
             "status": "success",
-            "total_capas": len(capas_info["capas_vectoriales"]),
             "capas": capas_info
         }
         
@@ -986,6 +1197,6 @@ if __name__ == "__main__":
     uvicorn.run(
         "main:app", 
         host="0.0.0.0", 
-        port=8090, 
+        port=81, 
         reload=True
     )

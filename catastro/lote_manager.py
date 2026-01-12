@@ -116,8 +116,12 @@ class LoteManager:
                     ref_dir = self.output_dir / ref_limpia
                     resultado_ref["archivos"] = self._recopilar_archivos(ref_dir)
                     
-                    # 2. Análisis de afecciones (si está disponible)
-                    if analyzer:
+                    # 2. Análisis de afecciones (DEACTIVADO por defecto)
+                    # Desactivado para mejorar rendimiento en lotes grandes
+                    # Para activar, cambiar ANALISIS_AFECCIONES_ACTIVO = True
+                    ANALISIS_AFECCIONES_ACTIVO = False
+                    
+                    if ANALISIS_AFECCIONES_ACTIVO and analyzer:
                         logger.info("  🔍 Analizando afecciones...")
                         try:
                             gml_path = ref_dir / "gml" / f"{ref_limpia}_parcela.gml"
@@ -131,6 +135,15 @@ class LoteManager:
                                 logger.info("    ✅ Afecciones analizadas")
                         except Exception as e:
                             logger.warning(f"    ⚠️ Error analizando afecciones: {e}")
+                    else:
+                        logger.info(f"  📋 Análisis de afecciones desactivado para {ref_limpia}")
+                        resultado_ref["afecciones"] = {
+                            "detalle": {},
+                            "total": 0.0,
+                            "area_total_m2": 0.0,
+                            "afecciones_detectadas": False,
+                            "mensaje": "Análisis de afecciones desactivado. Use el panel 'Análisis Afecciones' para análisis manual."
+                        }
                     
                     # 3. Generar PDF (si está disponible)
                     if pdf_gen and analyzer:

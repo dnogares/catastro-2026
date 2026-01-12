@@ -135,7 +135,7 @@ Este script verificará:
 python main.py
 
 # Abrir navegador
-http://localhost:8090
+http://localhost:81
 ```
 
 La interfaz web permite:
@@ -149,14 +149,14 @@ La interfaz web permite:
 #### Analizar una referencia
 
 ```bash
-curl -X POST "http://localhost:8090/api/v1/analizar-parcela" \
+curl -X POST "http://localhost:81/api/v1/analizar-parcela" \
      -F "referencia=1234567VK1234S0001WX"
 ```
 
 #### Procesar lote (archivo .txt)
 
 ```bash
-curl -X POST "http://localhost:8090/api/v1/lote" \
+curl -X POST "http://localhost:81/api/v1/lote" \
      -F "file=@referencias.txt"
 ```
 
@@ -170,7 +170,7 @@ Formato del archivo:
 #### Generar PDF
 
 ```bash
-curl -X POST "http://localhost:8090/api/v1/generar-pdf" \
+curl -X POST "http://localhost:81/api/v1/generar-pdf" \
      -H "Content-Type: application/json" \
      -d '{
        "referencia": "1234567VK1234S0001WX",
@@ -182,7 +182,7 @@ curl -X POST "http://localhost:8090/api/v1/generar-pdf" \
 #### Consultar estado de lote
 
 ```bash
-curl "http://localhost:8090/api/v1/lote/lote_20250107_143022/status"
+curl "http://localhost:81/api/v1/lote/lote_20250107_143022/status"
 ```
 
 ### Opción 3: Uso Programático

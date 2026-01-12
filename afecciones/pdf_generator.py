@@ -52,11 +52,11 @@ class AfeccionesPDF:
             Path al PDF generado o None si falla
         """
         try:
-            # Crear directorio para esta referencia
-            target_dir = self.output_dir / referencia
+            # Crear directorio para esta referencia (solo si no existe)
+            target_dir = self.output_dir
             target_dir.mkdir(parents=True, exist_ok=True)
             
-            # Ruta del PDF
+            # Ruta del PDF (directamente en el directorio output_dir)
             pdf_path = target_dir / f"Informe_{referencia}.pdf"
             
             logger.info(f"Generando PDF: {pdf_path}")
@@ -95,6 +95,20 @@ class AfeccionesPDF:
                 c.setFont("Helvetica-Bold", 12)
                 c.drawString(50, y_table + 20, "ANÁLISIS DE AFECCIONES VECTORIALES")
                 self._dibujar_tabla_afecciones(c, resultados, 50, y_table)
+                
+                # DATOS URBANÍSTICOS AVANZADOS (si existen)
+                if resultados.get("analisis_avanzado") and resultados.get("parametros_urbanisticos"):
+                    y_urb = height - 420
+                    c.setFont("Helvetica-Bold", 12)
+                    c.drawString(50, y_urb + 20, "PARÁMETROS URBANÍSTICOS")
+                    self._dibujar_parametros_urbanisticos(c, resultados, 50, y_urb)
+                    
+                    # AFECCIONES ESPECÍFICAS
+                    if resultados.get("afecciones_detectadas"):
+                        y_afecciones = height - 520
+                        c.setFont("Helvetica-Bold", 12)
+                        c.drawString(50, y_afecciones + 20, "AFECCIONES ESPECÍFICAS")
+                        self._dibujar_afecciones_especificas(c, resultados, 50, y_afecciones)
 
             # Pie de página
             self._dibujar_pie(c, width, height)
@@ -284,6 +298,129 @@ class AfeccionesPDF:
         )
         
         c.setFillColor(colors.black)
+
+    def _dibujar_parametros_urbanisticos(self, c, resultados: Dict, x: float, y: float):
+        """Dibuja tabla con parámetros urbanísticos"""
+        try:
+            params = resultados.get("parametros_urbanisticos", {})
+            
+            if not params:
+                c.setFont("Helvetica", 10)
+                c.drawString(x, y, "No se encontraron parámetros urbanísticos")
+                return
+            
+            # Preparar datos
+            data = [["Parámetro", "Valor", "Observación"]]
+            
+            for param, valor in params.items():
+                if param == "superficie_parcela":
+                    continue
+                    
+                if isinstance(valor, dict):
+                    nombre_formateado = param.replace("_", " ").title()
+                    valor_str = str(valor.get("valor", "N/A"))
+                    nota = valor.get("nota", "")
+                    
+                    # Formateo especial para algunos parámetros
+                    if "superficie_ocupada" in valor:
+                        valor_str = f"{valor.get('valor', 0):.0f} m²"
+                    elif "edificabilidad" in param:
+                        valor_str = f"{valor.get('valor', 0):.2f} m²/m²"
+                    elif "altura" in param:
+                        valor_str = f"{valor.get('valor', 0)} m"
+                    elif "separacion" in param:
+                        valor_str = f"{valor.get('valor', 0)} m"
+                    
+                    data.append([nombre_formateado, valor_str, nota])
+            
+            # Crear tabla
+            table = Table(data, colWidths=[150, 80, 150])
+            
+            # Estilo
+            style = TableStyle([
+                # Cabecera
+                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#10b981")),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 9),
+                ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
+                
+                # Celdas normales
+                ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+                ('FONTSIZE', (0, 1), (-1, -1), 8),
+                ('ALIGN', (0, 1), (0, -1), 'LEFT'),
+                ('ALIGN', (1, 1), (2, -1), 'LEFT'),
+                
+                # Bordes
+                ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+                ('BOX', (0, 0), (-1, -1), 1, colors.black),
+            ])
+            table.setStyle(style)
+            
+            # Dibujar tabla
+            w, h = table.wrap(0, 0)
+            table.drawOn(c, x, y - h)
+            
+        except Exception as e:
+            logger.error(f"Error dibujando parámetros urbanísticos: {e}")
+            c.setFont("Helvetica", 10)
+            c.drawString(x, y, "Error generando tabla de parámetros")
+
+    def _dibujar_afecciones_especificas(self, c, resultados: Dict, x: float, y: float):
+        """Dibuja tabla con afecciones específicas"""
+        try:
+            afecciones = resultados.get("afecciones_detectadas", [])
+            
+            if not afecciones:
+                c.setFont("Helvetica", 10)
+                c.drawString(x, y, "No se detectaron afecciones específicas")
+                return
+            
+            # Preparar datos
+            data = [["Tipo", "Capa", "Elementos", "Descripción"]]
+            
+            for afeccion in afecciones:
+                if "capa" in afeccion:
+                    tipo = afeccion.get("tipo", "Desconocido")
+                    capa = afeccion.get("capa", "N/A")
+                    elementos = str(afeccion.get("elementos", 0))
+                    descripcion = afeccion.get("descripcion", "Afección detectada")
+                    
+                    data.append([tipo.title(), capa, elementos, descripcion])
+                else:
+                    data.append(["Nota", afeccion.get("nota", "N/A"), "", ""])
+            
+            # Crear tabla
+            table = Table(data, colWidths=[80, 120, 60, 120])
+            
+            # Estilo
+            style = TableStyle([
+                # Cabecera
+                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#f59e0b")),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 9),
+                ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
+                
+                # Celdas normales
+                ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+                ('FONTSIZE', (0, 1), (-1, -1), 8),
+                ('ALIGN', (0, 1), (-1, -1), 'LEFT'),
+                
+                # Bordes
+                ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+                ('BOX', (0, 0), (-1, -1), 1, colors.black),
+            ])
+            table.setStyle(style)
+            
+            # Dibujar tabla
+            w, h = table.wrap(0, 0)
+            table.drawOn(c, x, y - h)
+            
+        except Exception as e:
+            logger.error(f"Error dibujando afecciones específicas: {e}")
+            c.setFont("Helvetica", 10)
+            c.drawString(x, y, "Error generando tabla de afecciones específicas")
 
 
 # Testing

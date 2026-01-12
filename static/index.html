@@ -563,6 +563,86 @@
         .measurement-result strong {
             color: #667eea;
         }
+
+        /* Toggle Switch Design */
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 36px;
+            height: 20px;
+            margin-right: 10px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 2px;
+            bottom: 2px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked+.slider {
+            background-color: #667eea;
+        }
+
+        input:focus+.slider {
+            box-shadow: 0 0 1px #667eea;
+        }
+
+        input:checked+.slider:before {
+            transform: translateX(16px);
+        }
+
+        /* Map Coordinates Control */
+        .leaflet-control-coordinates {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 11px;
+            box-shadow: 0 1px 5px rgba(0, 0, 0, 0.4);
+            cursor: pointer;
+        }
+
+        /* Responsive Split View */
+        @media (max-width: 900px) {
+            .visor-split-view {
+                flex-direction: column;
+                height: auto;
+            }
+
+            #map {
+                height: 400px !important;
+            }
+
+            .visor-sidebar {
+                width: 100%;
+                height: auto;
+                max-height: 500px;
+            }
+        }
     </style>
 </head>
 
@@ -706,21 +786,7 @@
             <div class="gis-search">
                 <input type="text" id="gis-referencia" placeholder="Referencia catastral (ej: 1234567VK1234S0001WX)">
                 <button class="btn" onclick="buscarParcela()">🔍 Buscar Parcela</button>
-            </div>
-
-            <!-- Herramientas del mapa -->
-            <div class="map-tools">
-                <button class="tool-btn" onclick="toggleMeasureDistance()">📏 Medir Distancia</button>
-                <button class="tool-btn" onclick="toggleMeasureArea()">📐 Medir Área</button>
-                <button class="tool-btn" onclick="clearMeasurements()">🗑️ Limpiar Mediciones</button>
-                <button class="tool-btn" onclick="exportMapImage()">📸 Exportar Imagen</button>
-                <button class="tool-btn" id="btn-descargar-kml" onclick="descargarKML()"
-                    style="background: #3182ce; display: none;">📥 Descargar KML</button>
-            </div>
-
-            <!-- Resultado de mediciones -->
-            <div id="measurement-result" class="measurement-result">
-                <strong>Resultado:</strong> <span id="measurement-value"></span>
+                <button class="btn" onclick="centrarParcela()" id="btn-centrar-parcela" style="background: #38a169; display: none;">🎯 Centrar</button>
             </div>
 
             <!-- Contenedor Flex para Mapa y Sidebar -->
@@ -739,32 +805,43 @@
                                 🗺️ Cartografía Base</div>
                             <div class="layer-group-content">
                                 <div class="layer-control-item">
-                                    <label><input type="checkbox" id="layer-catastro" checked
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="layer-catastro" checked
                                             onchange="toggleLayer('catastro')">
-                                        Catastro</label>
+                                        <span class="slider"></span>
+                                    </label>
+                                    <label for="layer-catastro">Catastro</label>
                                     <input type="range" id="opacity-catastro" min="0" max="100" value="80"
                                         oninput="updateOpacity('catastro', this.value)">
                                     <span class="opacity-value" id="opacity-catastro-value">80%</span>
                                 </div>
                                 <div class="layer-control-item">
-                                    <label><input type="checkbox" id="layer-ortofoto" checked
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="layer-ortofoto" checked
                                             onchange="toggleLayer('ortofoto')">
-                                        Ortofoto</label>
+                                        <span class="slider"></span>
+                                    </label>
+                                    <label for="layer-ortofoto">Ortofoto</label>
                                     <input type="range" id="opacity-ortofoto" min="0" max="100" value="70"
                                         oninput="updateOpacity('ortofoto', this.value)">
                                     <span class="opacity-value" id="opacity-ortofoto-value">70%</span>
                                 </div>
                                 <div class="layer-control-item">
-                                    <label><input type="checkbox" id="layer-compuesta"
-                                            onchange="toggleLayer('compuesta')">
-                                        Compuesta</label>
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="layer-compuesta" onchange="toggleLayer('compuesta')">
+                                        <span class="slider"></span>
+                                    </label>
+                                    <label for="layer-compuesta">Compuesta</label>
                                     <input type="range" id="opacity-compuesta" min="0" max="100" value="90"
                                         oninput="updateOpacity('compuesta', this.value)">
                                     <span class="opacity-value" id="opacity-compuesta-value">90%</span>
                                 </div>
                                 <div class="layer-control-item">
-                                    <label><input type="checkbox" id="layer-parcela" onchange="toggleLayer('parcela')">
-                                        Vectorial</label>
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="layer-parcela" onchange="toggleLayer('parcela')">
+                                        <span class="slider"></span>
+                                    </label>
+                                    <label for="layer-parcela">Vectorial</label>
                                     <input type="range" id="opacity-parcela" min="0" max="100" value="100"
                                         oninput="updateOpacity('parcela', this.value)">
                                     <span class="opacity-value" id="opacity-parcela-value">100%</span>
@@ -884,7 +961,7 @@
                     </div>
 
                     <div style="margin-top: 20px; border-top: 1px solid #ddd; padding-top: 10px;">
-                        <h3 style="color: #667eea; margin-bottom: 10px;">📂 Capas Vectoriales</h3>
+                        <h3 style="color: #667eea; margin-bottom: 10px;">📂 Capas de Análisis</h3>
                         <div id="capas-vectoriales-lista">
                             <p style="color: #888;">Cargando capas...</p>
                         </div>
@@ -1306,6 +1383,37 @@
             }
         }
 
+        // Función de test para diagnóstico
+        function testFunctions() {
+            console.log('🧪 Test de funciones del visor GIS');
+            alert('Iniciando test de funciones...');
+            
+            // Verificar variables globales
+            console.log('Variables globales:');
+            console.log('  - map:', typeof map, map ? '✅' : '❌');
+            console.log('  - measurementMode:', typeof measurementMode, measurementMode);
+            console.log('  - measurementPoints:', typeof measurementPoints, measurementPoints.length);
+            console.log('  - measurementLayer:', typeof measurementLayer, measurementLayer ? '✅' : '❌');
+            console.log('  - layers:', typeof layers, layers ? '✅' : '❌');
+            
+            // Verificar funciones
+            console.log('Funciones:');
+            console.log('  - toggleMeasureDistance:', typeof toggleMeasureDistance);
+            console.log('  - toggleMeasureArea:', typeof toggleMeasureArea);
+            console.log('  - clearMeasurements:', typeof clearMeasurements);
+            console.log('  - centrarParcela:', typeof centrarParcela);
+            console.log('  - handleMapClick:', typeof handleMapClick);
+            console.log('  - handleMapDblClick:', typeof handleMapDblClick);
+            
+            // Verificar elementos del DOM
+            console.log('Elementos DOM:');
+            console.log('  - btn-centrar-parcela:', document.getElementById('btn-centrar-parcela') ? '✅' : '❌');
+            console.log('  - measurement-result:', document.getElementById('measurement-result') ? '✅' : '❌');
+            console.log('  - measurement-value:', document.getElementById('measurement-value') ? '✅' : '❌');
+            
+            alert('Test completado. Revisa la consola para ver los detalles.');
+        }
+
         // ========== FUNCIONES DEL VISOR GIS ==========
 
         // Inicializar mapa
@@ -1315,7 +1423,27 @@
             console.log('🗺️ Inicializando visor GIS...');
 
             // Crear mapa centrado en España
-            map = L.map('map').setView([40.4168, -3.7038], 6);
+            map = L.map('map', {
+                zoomControl: false // Movemos zoom control a otra posición si queremos, o lo dejamos default
+            }).setView([40.4168, -3.7038], 6);
+
+            // Controles de UI Mejorados
+            L.control.zoom({ position: 'topright' }).addTo(map);
+            L.control.scale({ imperial: false, maxWidth: 200 }).addTo(map);
+
+            // Control de Coordenadas
+            const CoordsControl = L.Control.extend({
+                options: { position: 'bottomright' },
+                onAdd: function (map) {
+                    const div = L.DomUtil.create('div', 'leaflet-control-coordinates');
+                    div.innerHTML = 'Lat: - | Lon: -';
+                    map.on('mousemove', function (e) {
+                        div.innerHTML = `Lat: ${e.latlng.lat.toFixed(5)} | Lon: ${e.latlng.lng.toFixed(5)}`;
+                    });
+                    return div;
+                }
+            });
+            map.addControl(new CoordsControl());
 
             // Capa base OpenStreetMap
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -1337,6 +1465,15 @@
             map.on('dblclick', handleMapDblClick);
 
             console.log('✅ Mapa inicializado');
+            
+            // Verificar que las funciones de medición estén disponibles
+            console.log('🔍 Verificando funciones de medición:');
+            console.log('  - toggleMeasureDistance:', typeof toggleMeasureDistance);
+            console.log('  - toggleMeasureArea:', typeof toggleMeasureArea);
+            console.log('  - clearMeasurements:', typeof clearMeasurements);
+            console.log('  - centrarParcela:', typeof centrarParcela);
+            console.log('  - handleMapClick:', typeof handleMapClick);
+            console.log('  - handleMapDblClick:', typeof handleMapDblClick);
         }
 
         // Añadir capas WMS del Catastro e IGN
@@ -1597,6 +1734,9 @@
                     // Activar checkbox de parcela
                     document.getElementById('layer-parcela').checked = true;
 
+                    // Mostrar botón de centrar
+                    document.getElementById('btn-centrar-parcela').style.display = 'inline-block';
+
                     console.log(`✅ Parcela ${ref} cargada con perímetro: ${perimetro.toFixed(2)
                         } m`);
 
@@ -1622,6 +1762,111 @@
 
 
         }
+
+        // Cargar GeoJSON de parcela desde el backend
+        async function cargarGeoJSONParcela(ref) {
+            try {
+                console.log(`📡 Solicitando GeoJSON para referencia: ${ref}`);
+                
+                const response = await fetch(`/api/v1/referencia/${ref}/geojson`);
+                if (!response.ok) {
+                    throw new Error(`Error ${response.status}: ${response.statusText}`);
+                }
+                
+                const geojson = await response.json();
+                
+                if (!geojson || !geojson.features || geojson.features.length === 0) {
+                    throw new Error('No se encontraron geometrías en el GeoJSON');
+                }
+                
+                // Remover capa anterior si existe
+                if (layers.parcela) {
+                    map.removeLayer(layers.parcela);
+                }
+                
+                // Crear capa GeoJSON
+                layers.parcela = L.geoJSON(geojson, {
+                    style: {
+                        color: '#ff0000',
+                        fillColor: '#ff0000',
+                        fillOpacity: 0.3,
+                        weight: 3
+                    }
+                }).addTo(map);
+                
+                // Centrar mapa en la parcela
+                map.fitBounds(layers.parcela.getBounds());
+                
+                // Calcular y mostrar perímetro
+                const coords = geojson.features[0].geometry.coordinates[0];
+                const perimetro = calcularPerimetro(coords);
+                
+                // Añadir popup con información
+                const popupContent = `
+                    <div style="padding: 10px; min-width: 200px;">
+                        <h4 style="margin: 0 0 10px 0; color: #333;">📍 Parcela ${ref}</h4>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                            <div>
+                                <strong>📐 Área:</strong><br>
+                                <span style="color: #667eea;">${calcularArea(coords).toFixed(2)} m²</span>
+                            </div>
+                            <div>
+                                <strong>📏 Perímetro:</strong><br>
+                                <span style="color: #ff6b6b;">${perimetro.toFixed(2)} m</span>
+                            </div>
+                        </div>
+                        <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #ddd;">
+                            <small style="color: #666;">
+                                <strong>Coordenadas:</strong> ${coords.length} puntos<br>
+                                <strong>Formato:</strong> GeoJSON
+                            </small>
+                        </div>
+                    </div>
+                `;
+                
+                layers.parcela.bindPopup(popupContent);
+                
+                // Guardar referencia para descarga KML
+                currentGISReferencia = ref;
+                
+                // Activar checkbox de parcela
+                document.getElementById('layer-parcela').checked = true;
+                
+                console.log(` Parcela ${ref} cargada via GeoJSON con perímetro: ${perimetro.toFixed(2)}m`);
+                
+            } catch (error) {
+                console.error(' Error cargando GeoJSON:', error);
+                alert(`Error cargando la parcela: ${error.message}`);
+            }
+        }
+
+        // Centrar mapa en la parcela cargada
+        function centrarParcela() {
+            if (!layers.parcela) {
+                alert('No hay ninguna parcela cargada para centrar');
+                return;
+            }
+            
+            try {
+                // Centrar el mapa en los límites de la parcela
+                map.fitBounds(layers.parcela.getBounds(), {
+                    padding: [50, 50], // Padding de 50px
+                    maxZoom: 18 // Zoom máximo para no acercarse demasiado
+                });
+                
+                // Abrir popup informativo
+                if (layers.parcela.getPopup()) {
+                    layers.parcela.openPopup();
+                }
+                
+                console.log('🎯 Mapa centrado en la parcela');
+                
+            } catch (error) {
+                console.error('❌ Error centrando la parcela:', error);
+                alert('Error al centrar la parcela');
+            }
+        }
+
         // Toggle visibilidad de capa
         function toggleLayer(layerName) {
             const checkbox = document.getElementById(`layer-${layerName}`);
@@ -1638,6 +1883,11 @@
 
         // Medir distancia
         function toggleMeasureDistance() {
+            if (!map) {
+                alert('El mapa no está inicializado. Espera a que cargue completamente.');
+                return;
+            }
+            
             const btn = event.currentTarget;
             if (measurementMode === 'distance') {
                 measurementMode = null;
@@ -1655,25 +1905,30 @@
 
         // Manejar doble clic para terminar mediciones
         function handleMapDblClick(e) {
-            if (measurementMode) {
-                if (measurementMode === 'area' && measurementPoints.length >= 3) {
-                    // Cerrar polígono visualmente si no se cerró
-                    L.polygon(measurementPoints, {
-                        color: '#667eea',
-                        fillColor: '#667eea',
-                        fillOpacity: 0.4,
-                        weight: 3
-                    }).addTo(measurementLayer);
-                }
-
-                measurementMode = null;
-                document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
-                console.log("📏 Medición finalizada");
+            if (!measurementMode) return;
+            
+            if (measurementMode === 'area' && measurementPoints.length >= 3) {
+                // Cerrar polígono visualmente si no se cerró
+                L.polygon(measurementPoints, {
+                    color: '#667eea',
+                    fillColor: '#667eea',
+                    fillOpacity: 0.4,
+                    weight: 3
+                }).addTo(measurementLayer);
             }
+
+            measurementMode = null;
+            document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+            console.log("📏 Medición finalizada");
         }
 
         // Medir área
         function toggleMeasureArea() {
+            if (!map) {
+                alert('El mapa no está inicializado. Espera a que cargue completamente.');
+                return;
+            }
+            
             const btn = event.currentTarget;
             if (measurementMode === 'area') {
                 measurementMode = null;
@@ -1734,7 +1989,7 @@
 
                 if (measurementMode === 'distance') {
                     const totalDist = calcularDistanciaTotal(measurementPoints);
-                    mostrarResultadoMedicion(`< b > Distancia Total:</b > ${totalDist.toFixed(2)} m`);
+                    mostrarResultadoMedicion(`<b>Distancia Total:</b> ${totalDist.toFixed(2)} m`);
                 } else if (measurementMode === 'area' && measurementPoints.length >= 3) {
                     // Refrescar polígono de área
                     const poly = L.polygon(measurementPoints, {
@@ -1749,7 +2004,7 @@
                     poly.addTo(measurementLayer);
 
                     const area = calcularArea(measurementPoints);
-                    mostrarResultadoMedicion(`< b > Área estimada:</b > ${area.toFixed(2)} m²`);
+                    mostrarResultadoMedicion(`<b>Área estimada:</b> ${area.toFixed(2)} m²`);
                 }
             }
         }
@@ -1810,33 +2065,41 @@
         // Cargar capas vectoriales disponibles
         async function cargarCapasVectoriales() {
             try {
-                console.log('📡 Cargando lista de capas vectoriales...');
+                console.log('📡 Cargando capa de análisis consolidada...');
                 const response = await fetch('/api/v1/capas-disponibles');
                 const data = await response.json();
 
                 const container = document.getElementById('capas-vectoriales-lista');
                 if (data.status === 'success' && data.capas && data.capas.capas_vectoriales) {
-                    console.log(`✅ Se encontraron ${data.capas.capas_vectoriales.length} capas vectoriales`);
+                    console.log(`✅ Se encontró ${data.capas.capas_vectoriales.length} capa de análisis`);
                     let html = '';
                     data.capas.capas_vectoriales.forEach(capa => {
-                        const id = `layer - v - ${capa.nombre.replace(/\s+/g, '-')} `;
+                        const id = `layer-v-${capa.nombre.replace(/\s+/g, '-')}`;
                         html += `
-                    < div class="layer-control-item" >
-                        <label>
-                            <input type="checkbox" id="${id}" onchange="toggleVectorLayer('${capa.archivo}', this.checked, '${capa.ruta}')">
-                                📁 ${capa.nombre}
-                        </label>
-                            </div >
-                    `;
+                            <div class="layer-control-item">
+                                <label>
+                                    <input type="checkbox" id="${id}" 
+                                        onchange="toggleVectorLayer('${capa.ruta}', '${id}')">
+                                    ${capa.nombre}
+                                </label>
+                                <small style="color: #666; display: block; margin-top: 2px;">
+                                    ${capa.descripcion || 'Capa vectorial para análisis'}
+                                </small>
+                                <input type="range" min="0" max="100" value="60"
+                                    oninput="updateVectorOpacity('${id}', this.value)">
+                                <span class="opacity-value" id="${id}-value">60%</span>
+                            </div>
+                        `;
                     });
                     container.innerHTML = html;
                 } else {
-                    console.log('⚠️ No se encontraron capas vectoriales en el volumen');
-                    container.innerHTML = '<p>No se encontraron capas vectoriales en el volumen.</p>';
+                    console.log('⚠️ No se encontró la capa consolidada');
+                    container.innerHTML = '<p>No se encontró la capa de análisis consolidada.</p>';
                 }
             } catch (error) {
-                console.error('❌ Error cargando capas:', error);
-                document.getElementById('capas-vectoriales-lista').innerHTML = '<p class="error">Error al cargar capas.</p>';
+                console.error('❌ Error cargando capa de análisis:', error);
+                document.getElementById('capas-vectoriales-lista').innerHTML = 
+                    '<p style="color: #e53e3e;">Error cargando la capa de análisis.</p>';
             }
         }
 
@@ -2068,24 +2331,33 @@
             window.open(`/api/v1/referencia/${currentGISReferencia}/kml?tipo=parcela`, '_blank');
         }
 
-        // Sobrescribir buscarParcela para manejar el botón KML
-        const originalBuscarParcela = buscarParcela;
-        buscarParcela = async function () {
-            const refInput = document.getElementById('gis-referencia');
-            const ref = refInput.value.trim();
-            if (!ref) {
-                alert('Introduce una referencia catastral');
-                return;
-            }
-
-            currentGISReferencia = ref;
+        function mostrarBotonKML() {
             const btnKml = document.getElementById('btn-descargar-kml');
-            btnKml.style.display = 'none';
-
-            await originalBuscarParcela();
-            // Si el visor cargó la parcela (tendría una capa activa)
-            if (layers.parcela) {
+            if (layers.parcela && btnKml) {
                 btnKml.style.display = 'inline-block';
+            }
+        };
+
+        // Modificar las funciones de carga de parcela para mostrar botón KML
+        const originalCargarGMLParcela = cargarGMLParcela;
+        cargarGMLParcela = async function(gmlUrl, ref) {
+            await originalCargarGMLParcela(gmlUrl, ref);
+            currentGISReferencia = ref;
+            mostrarBotonKML();
+            // Asegurar que el botón de centrar sea visible
+            if (layers.parcela) {
+                document.getElementById('btn-centrar-parcela').style.display = 'inline-block';
+            }
+        };
+
+        const originalCargarGeoJSONParcela = cargarGeoJSONParcela;
+        cargarGeoJSONParcela = async function(ref) {
+            await originalCargarGeoJSONParcela(ref);
+            currentGISReferencia = ref;
+            mostrarBotonKML();
+            // Asegurar que el botón de centrar sea visible
+            if (layers.parcela) {
+                document.getElementById('btn-centrar-parcela').style.display = 'inline-block';
             }
         };
     </script>

@@ -21,12 +21,23 @@ class VectorAnalyzer:
         self.crs_objetivo = crs_objetivo
         self.config_titulos = self.cargar_config_titulos()
 
-    def analizar(self, parcela_path, capa_input, campo_clasificacion="tipo"):
+    def analizar(self, parcela_path, capa_input, campo_clasificacion="tipo", layer=None):
         """
-        Analiza una parcela contra una capa específica (GPKG, GeoJSON, SHP, etc.).
-        capa_input puede ser un nombre de archivo en capas_dir o una ruta absoluta.
+        Analiza intersección entre parcela y capa vectorial
+        
+        Args:
+            parcela_path: Ruta al archivo de la parcela (GML/GeoJSON)
+            capa_input: Ruta o nombre del archivo de la capa
+            campo_clasificacion: Campo para clasificar afecciones
+            layer: Nombre de la capa específica (para archivos multicapa)
         """
         try:
+            import os
+            import warnings
+            
+            # Suprimir advertencias de GeoPandas
+            warnings.filterwarnings('ignore', category=UserWarning)
+            
             parcela_path = Path(parcela_path)
             
             # Determinar ruta de la capa
@@ -45,8 +56,37 @@ class VectorAnalyzer:
             geom_parcela = parcela_gdf.union_all()
             area_total = geom_parcela.area
 
-            # Cargar capa
-            capa_gdf = gpd.read_file(capa_path)
+            # Cargar capa con manejo de múltiples capas y límites de tamaño
+            try:
+                # Configurar límite de tamaño para GeoJSON (en MB)
+                os.environ['OGR_GEOJSON_MAX_OBJ_SIZE'] = '50'  # 50 MB
+                
+                if layer:
+                    # Si se especifica una capa, usarla directamente
+                    capa_gdf = gpd.read_file(capa_path, layer=layer)
+                else:
+                    # Intentar leer la primera capa
+                    capa_gdf = gpd.read_file(capa_path)
+                    
+            except Exception as e:
+                # Si falla por tamaño o complejidad, intentar con la primera capa
+                if "too complex/large" in str(e) or "max_obj_size" in str(e):
+                    print(f"⚠️ Archivo {capa_path.name} demasiado grande, intentando con primera capa...")
+                    try:
+                        # Listar capas disponibles
+                        import fiona
+                        layers = fiona.listlayers(capa_path)
+                        if layers:
+                            print(f"📋 Capas disponibles: {layers[:3]}...")  # Mostrar primeras 3
+                            # Usar la primera capa
+                            capa_gdf = gpd.read_file(capa_path, layer=layers[0])
+                        else:
+                            return {"error": f"No se encontraron capas en {capa_path.name}", "afecciones": []}
+                    except Exception as e2:
+                        return {"error": f"No se pudo leer {capa_path.name}: {str(e2)}", "afecciones": []}
+                else:
+                    return {"error": f"Error leyendo capa {capa_path.name}: {str(e)}", "afecciones": []}
+            
             if capa_gdf.crs != self.crs_objetivo:
                 capa_gdf = capa_gdf.to_crs(self.crs_objetivo)
 

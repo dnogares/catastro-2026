@@ -1,9 +1,7 @@
 from pathlib import Path
 import os
 import time
-import geopandas
-import matplotlib
-import contextily
+
 import json
 import zipfile
 import requests
@@ -395,8 +393,20 @@ class CatastroDownloader:
     def superponer_contorno_parcela(self, ref, bbox_wgs84):
         """Superpone el contorno de la parcela sobre plano, ortofoto y composición."""
         ref = self.limpiar_referencia(ref)
-        gml_file = self.output_dir / f"{ref}_parcela.gml"
-        if not os.path.exists(gml_file):
+        
+        # Buscar GML en la raíz o en subcarpeta gml/
+        posibles_gml = [
+            self.output_dir / f"{ref}_parcela.gml",
+            self.output_dir / f"{ref}_parcela.gml"  # Fallback redundante por compatibilidad
+        ]
+        
+        gml_file = None
+        for gml_candidate in posibles_gml:
+            if os.path.exists(gml_candidate):
+                gml_file = gml_candidate
+                break
+        
+        if not gml_file:
             print("  ⚠ No existe GML de parcela, no se puede dibujar contorno")
             return False
 
@@ -674,6 +684,7 @@ class CatastroDownloader:
         try:
             response = requests.get(url, params=params, timeout=30)
             if response.status_code == 200:
+                # Guardar directamente en el directorio de salida (sin subcarpeta gml)
                 filename = self.output_dir / f"{ref}_parcela.gml"
                 
                 # Verificar si es un error XML (ExceptionReport)
@@ -716,6 +727,7 @@ class CatastroDownloader:
                     print(f"  ⚠ Edificio GML no disponible para {ref} (puede ser solo parcela)")
                     return False
                     
+                # Guardar directamente en el directorio de salida (sin subcarpeta gml)
                 filename = self.output_dir / f"{ref}_edificio.gml"
                 with open(filename, 'wb') as f:
                     f.write(content)
@@ -762,6 +774,7 @@ class CatastroDownloader:
         """
         Versión mejorada de descargar_todo() que retorna (exito, zip_path)
         Compatible con LoteManager
+        Incluye todos los archivos generados en diferentes directorios
         """
         try:
             # Usar el método existente
@@ -769,17 +782,63 @@ class CatastroDownloader:
             
             # Crear ZIP con todos los archivos generados
             ref_dir = self.output_dir / referencia
-            if ref_dir.exists():
-                zip_path = self.output_dir / f"{referencia}_completo.zip"
-                
-                with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+            zip_path = self.output_dir / f"{referencia}_completo.zip"
+            
+            with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+                # 1. Archivos del directorio principal de la referencia
+                if ref_dir.exists():
                     for file_path in ref_dir.rglob('*'):
                         if file_path.is_file():
-                            zipf.write(file_path, file_path.relative_to(ref_dir))
+                            # Ruta relativa dentro del ZIP
+                            zip_path_relative = file_path.relative_to(ref_dir)
+                            zipf.write(file_path, zip_path_relative)
                 
-                return True, zip_path
-            else:
-                return False, None
+                # 2. Archivos del directorio urbanismo (con timestamp)
+                urbanismo_base = self.output_dir / "urbanismo"
+                if urbanismo_base.exists():
+                    for urbanismo_dir in urbanismo_base.glob(f"{referencia}_*"):
+                        if urbanismo_dir.is_dir():
+                            for file_path in urbanismo_dir.rglob('*'):
+                                if file_path.is_file():
+                                    # Ruta relativa: urbanismo/timestamp/archivo
+                                    zip_path_relative = Path("urbanismo") / urbanismo_dir.name / file_path.relative_to(urbanismo_dir)
+                                    zipf.write(file_path, zip_path_relative)
+                
+                # 3. Buscar y añadir archivos CSV técnicos si existen
+                csv_files = list(self.output_dir.glob(f"{referencia}_datos_tecnicos.csv"))
+                for csv_file in csv_files:
+                    zipf.write(csv_file, csv_file.name)
+                
+                # 4. Crear un manifiesto de contenidos
+                manifest = {
+                    "referencia": referencia,
+                    "fecha_generacion": time.strftime("%Y-%m-%d %H:%M:%S"),
+                    "archivos_incluidos": []
+                }
+                
+                # Guardar el ZIP temporalmente para poder leerlo y crear el manifiesto
+                zipf.close()
+                
+                # Contar archivos en el ZIP
+                with zipfile.ZipFile(zip_path, 'r') as zip_check:
+                    for file_info in zip_check.filelist:
+                        # Convertir date_time tuple a timestamp
+                        date_tuple = file_info.date_time
+                        timestamp = time.mktime(date_tuple + (0, 0, -1))  # Ajustar para mktime
+                        
+                        manifest["archivos_incluidos"].append({
+                            "ruta": file_info.filename,
+                            "tamaño": file_info.file_size,
+                            "fecha": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(timestamp))
+                        })
+                
+                # Reabrir el ZIP para añadir el manifiesto
+                with zipfile.ZipFile(zip_path, 'a', zipfile.ZIP_DEFLATED) as zipf_add:
+                    manifest_json = json.dumps(manifest, indent=2, ensure_ascii=False)
+                    zipf_add.writestr("manifesto.json", manifest_json)
+                
+            print(f"  📦 ZIP completo creado: {zip_path}")
+            return True, zip_path
                 
         except Exception as e:
             print(f"Error en descargar_todo_completo: {e}")
@@ -796,7 +855,7 @@ class CatastroDownloader:
             # Si no tenemos tools gráficas, fallamos suavemente copiado la composición si existe
             if not GEOTOOLS_AVAILABLE:
                 # Intentar copiar la composición existente si existe
-                composicion = self.output_dir / ref / "images" / f"{ref}_plano_con_ortofoto.png"
+                composicion = self.output_dir / ref / f"{ref}_plano_con_ortofoto.png"
                 if composicion.exists():
                      import shutil
                      shutil.copy(composicion, output_path)

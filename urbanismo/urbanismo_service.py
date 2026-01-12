@@ -2,6 +2,7 @@
 """
 urbanismo/urbanismo_service.py
 Servicio de urbanismo integrado con el sistema SuiteTasacion
+Incluye análisis avanzado con AnalizadorUrbanistico
 """
 
 import logging
@@ -10,6 +11,7 @@ from typing import Dict, List, Optional, Tuple
 from dataclasses import asdict
 
 from .analisisurbano_mejorado import AnalisisUrbano, ResultadosUrbanismo
+from .analizador_urbanistico import AnalizadorUrbanistico
 
 logger = logging.getLogger(__name__)
 
@@ -17,6 +19,7 @@ class UrbanismoService:
     """
     Servicio de urbanismo para integración con el sistema principal
     Proporciona interfaz compatible con LoteManager y PDFGenerator
+    Incluye análisis avanzado de parámetros urbanísticos y afecciones
     """
     
     def __init__(self, output_base_dir: str = "resultados"):
@@ -27,37 +30,174 @@ class UrbanismoService:
             output_base_dir: Directorio base para resultados
         """
         self.output_base_dir = Path(output_base_dir)
+        
+        # Analizador básico (para compatibilidad) - ahora usa directorio base directamente
         self.analizador = AnalisisUrbano(
-            output_dir=str(self.output_base_dir / "urbanismo"),
+            output_dir=str(self.output_base_dir),  # Cambiado: ya no usa subcarpeta urbanismo
             encuadre_factor=4.0
         )
         
+        # Analizador avanzado (nuevas funcionalidades)
+        self.analizador_avanzado = AnalizadorUrbanistico(
+            normativa_dir=str(self.output_base_dir / "normativa"),
+            capas_service=self  # Pasar el mismo servicio para usar GPKG local
+        )
+        
         logger.info(f"UrbanismoService inicializado. Output: {self.output_base_dir}")
+    
+    # --- Métodos de CapasService para usar GPKG local ---
+    def listar_capas(self) -> List[Dict]:
+        """
+        Lista las capas disponibles en el GPKG consolidado
+        """
+        try:
+            from config.paths import CAPAS_DIR
+            capas_consolidadas = CAPAS_DIR / "capas_consolidadas_20260112_173239.gpkg"
+            
+            if not capas_consolidadas.exists():
+                logger.warning(f"No se encuentra el GPKG consolidado: {capas_consolidadas}")
+                return []
+            
+            # Listar capas del GPKG
+            import fiona
+            capas_disponibles = []
+            
+            for layer_name in fiona.listlayers(capas_consolidadas):
+                capas_disponibles.append({
+                    "nombre": layer_name,
+                    "tipo": "vectorial",
+                    "ruta": str(capas_consolidadas)
+                })
+            
+            logger.info(f"Capas encontradas en GPKG: {[c['nombre'] for c in capas_disponibles]}")
+            return capas_disponibles
+            
+        except Exception as e:
+            logger.error(f"Error listando capas del GPKG: {e}")
+            return []
+    
+    def cargar_capa(self, nombre_capa: str):
+        """
+        Carga una capa específica del GPKG consolidado
+        """
+        try:
+            from config.paths import CAPAS_DIR
+            capas_consolidadas = CAPAS_DIR / "capas_consolidadas_20260112_173239.gpkg"
+            
+            if not capas_consolidadas.exists():
+                logger.error(f"No se encuentra el GPKG consolidado: {capas_consolidadas}")
+                return None
+            
+            import geopandas as gpd
+            capa_gdf = gpd.read_file(capas_consolidadas, layer=nombre_capa)
+            
+            # Asegurar CRS WGS84
+            if capa_gdf.crs and capa_gdf.crs != "EPSG:4326":
+                capa_gdf = capa_gdf.to_crs("EPSG:4326")
+            
+            logger.info(f"Capa '{nombre_capa}' cargada: {len(capa_gdf)} geometrías")
+            return capa_gdf
+            
+        except Exception as e:
+            logger.error(f"Error cargando capa '{nombre_capa}': {e}")
+            return None
 
     def analizar_parcela(self, parcela_path: str, referencia: str) -> Dict[str, any]:
         """
-        Analiza una parcela y devuelve resultados compatibles con el sistema
+        Analiza una parcela y devuelve resultados completos
         
         Args:
             parcela_path: Ruta al archivo de la parcela (GML/GeoJSON)
             referencia: Referencia catastral
             
         Returns:
-            Diccionario con resultados en formato compatible
+            Diccionario con resultados completos (básicos + avanzados)
         """
         try:
-            # Convertir GML a GeoJSON si es necesario
+            # 1. Análisis básico (compatibilidad con sistema existente)
             geojson_path = self._asegurar_geojson(parcela_path)
+            resultados_basicos = self.analizador.procesar_parcela(geojson_path, referencia)
             
-            # Analizar con el motor mejorado
-            resultados = self.analizador.procesar_parcela(geojson_path, referencia)
+            # 2. Análisis avanzado (nuevas funcionalidades)
+            resultados_avanzados = self.analizador_avanzado.analizar_referencia(
+                referencia=referencia,
+                geometria_path=geojson_path
+            )
             
-            # Convertir a formato compatible con el sistema existente
-            return self._convertir_resultados_sistema(resultados)
+            # 3. Combinar resultados
+            resultado_final = self._combinar_resultados(resultados_basicos, resultados_avanzados)
+            
+            # 4. Generar certificado si hay análisis avanzado
+            if resultados_avanzados and not resultados_avanzados.get("error"):
+                self._generar_certificado_avanzado(resultados_avanzados, referencia)
+            
+            return resultado_final
             
         except Exception as e:
             logger.error(f"Error en análisis urbanístico para {referencia}: {e}")
             return self._resultados_vacios(referencia, str(e))
+
+    def _combinar_resultados(self, basicos: ResultadosUrbanismo, avanzados: Dict) -> Dict[str, any]:
+        """
+        Combina resultados básicos y avanzados en un solo diccionario
+        
+        Args:
+            basicos: Resultados del análisis básico
+            avanzados: Resultados del análisis avanzado
+            
+        Returns:
+            Diccionario combinado compatible con el sistema
+        """
+        # Base: resultados básicos (para compatibilidad)
+        resultado = {
+            "total": sum(basicos.porcentajes.values()),
+            "detalle": basicos.porcentajes,
+            "area_parcela_m2": basicos.area_total_m2,
+            "area_afectada_m2": basicos.area_total_m2,
+            "urbanismo": True,
+            "mapa_urbano": basicos.mapa_path,
+            "referencia": basicos.referencia,
+            "timestamp": basicos.timestamp,
+            "csv_path": basicos.csv_path,
+            "txt_path": basicos.txt_path
+        }
+        
+        # Agregar datos avanzados
+        if avanzados and not avanzados.get("error"):
+            resultado.update({
+                "analisis_avanzado": True,
+                "superficie": avanzados.get("superficie"),
+                "zonas_afectadas": avanzados.get("zonas_afectadas", []),
+                "parametros_urbanisticos": avanzados.get("parametros_urbanisticos", {}),
+                "afecciones_detectadas": avanzados.get("afecciones", []),
+                "recomendaciones": avanzados.get("recomendaciones", [])
+            })
+        
+        return resultado
+
+    def _generar_certificado_avanzado(self, analisis: Dict, referencia: str):
+        """
+        Genera certificado de análisis avanzado
+        
+        Args:
+            analisis: Resultados del análisis avanzado
+            referencia: Referencia catastral
+        """
+        try:
+            # Directorio de la referencia (misma carpeta que todo lo demás)
+            ref_dir = self.output_base_dir / referencia
+            ref_dir.mkdir(parents=True, exist_ok=True)
+            
+            # Ruta del certificado en la misma carpeta
+            cert_path = ref_dir / f"certificado_{referencia}.txt"
+            
+            # Generar certificado
+            self.analizador_avanzado.generar_certificado(analisis, str(cert_path))
+            
+            logger.info(f"Certificado avanzado generado: {cert_path}")
+            
+        except Exception as e:
+            logger.error(f"Error generando certificado avanzado: {e}")
 
     def _asegurar_geojson(self, parcela_path: str) -> str:
         """
