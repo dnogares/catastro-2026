@@ -1,0 +1,825 @@
+==========================================
+   DESPLEGANDO SUITE TASACION LOCAL
+==========================================
+Requirement already satisfied: pip in i:\tasacion2026\venv\lib\site-packages (25.3)
+[INFO] Instalando pipwin para manejar dependencias de Windows...
+Collecting pipwin
+  Downloading pipwin-0.5.2.tar.gz (7.9 kB)
+  Installing build dependencies ... done
+  Getting requirements to build wheel ... done
+  Preparing metadata (pyproject.toml) ... done
+Collecting docopt (from pipwin)
+  Downloading docopt-0.6.2.tar.gz (25 kB)
+  Installing build dependencies ... done
+  Getting requirements to build wheel ... done
+  Preparing metadata (pyproject.toml) ... done
+Collecting requests (from pipwin)
+  Downloading requests-2.32.5-py3-none-any.whl.metadata (4.9 kB)
+Collecting pyprind (from pipwin)
+  Downloading PyPrind-2.11.3-py2.py3-none-any.whl.metadata (1.1 kB)
+Collecting six (from pipwin)
+  Using cached six-1.17.0-py2.py3-none-any.whl.metadata (1.7 kB)
+Collecting beautifulsoup4>=4.9.0 (from pipwin)
+  Using cached beautifulsoup4-4.14.3-py3-none-any.whl.metadata (3.8 kB)
+Collecting js2py (from pipwin)
+  Downloading Js2Py-0.74-py3-none-any.whl.metadata (868 bytes)
+Collecting packaging (from pipwin)
+  Using cached packaging-25.0-py3-none-any.whl.metadata (3.3 kB)
+Collecting pySmartDL>=1.3.1 (from pipwin)
+  Downloading pySmartDL-1.3.4-py3-none-any.whl.metadata (2.8 kB)
+Collecting soupsieve>=1.6.1 (from beautifulsoup4>=4.9.0->pipwin)
+  Using cached soupsieve-2.8.1-py3-none-any.whl.metadata (4.6 kB)
+Collecting typing-extensions>=4.0.0 (from beautifulsoup4>=4.9.0->pipwin)
+  Using cached typing_extensions-4.15.0-py3-none-any.whl.metadata (3.3 kB)
+Collecting tzlocal>=1.2 (from js2py->pipwin)
+  Downloading tzlocal-5.3.1-py3-none-any.whl.metadata (7.6 kB)
+Collecting pyjsparser>=2.5.1 (from js2py->pipwin)
+  Downloading pyjsparser-2.7.1.tar.gz (24 kB)
+  Installing build dependencies ... done
+  Getting requirements to build wheel ... done
+  Preparing metadata (pyproject.toml) ... done
+Collecting tzdata (from tzlocal>=1.2->js2py->pipwin)
+  Using cached tzdata-2025.3-py2.py3-none-any.whl.metadata (1.4 kB)
+Collecting charset_normalizer<4,>=2 (from requests->pipwin)
+  Downloading charset_normalizer-3.4.4-cp314-cp314-win_amd64.whl.metadata (38 kB)
+Collecting idna<4,>=2.5 (from requests->pipwin)
+  Using cached idna-3.11-py3-none-any.whl.metadata (8.4 kB)
+Collecting urllib3<3,>=1.21.1 (from requests->pipwin)
+  Downloading urllib3-2.6.3-py3-none-any.whl.metadata (6.9 kB)
+Collecting certifi>=2017.4.17 (from requests->pipwin)
+  Downloading certifi-2026.1.4-py3-none-any.whl.metadata (2.5 kB)
+Using cached beautifulsoup4-4.14.3-py3-none-any.whl (107 kB)
+Downloading pySmartDL-1.3.4-py3-none-any.whl (20 kB)
+Using cached soupsieve-2.8.1-py3-none-any.whl (36 kB)
+Using cached typing_extensions-4.15.0-py3-none-any.whl (44 kB)
+Downloading Js2Py-0.74-py3-none-any.whl (1.0 MB)
+   ---------------------------------------- 1.0/1.0 MB 2.0 MB/s  0:00:00
+Using cached six-1.17.0-py2.py3-none-any.whl (11 kB)
+Downloading tzlocal-5.3.1-py3-none-any.whl (18 kB)
+Using cached packaging-25.0-py3-none-any.whl (66 kB)
+Downloading PyPrind-2.11.3-py2.py3-none-any.whl (8.4 kB)
+Downloading requests-2.32.5-py3-none-any.whl (64 kB)
+Downloading charset_normalizer-3.4.4-cp314-cp314-win_amd64.whl (107 kB)
+Using cached idna-3.11-py3-none-any.whl (71 kB)
+Downloading urllib3-2.6.3-py3-none-any.whl (131 kB)
+Downloading certifi-2026.1.4-py3-none-any.whl (152 kB)
+Using cached tzdata-2025.3-py2.py3-none-any.whl (348 kB)
+Building wheels for collected packages: pipwin, docopt, pyjsparser
+  Building wheel for pipwin (pyproject.toml) ... done
+  Created wheel for pipwin: filename=pipwin-0.5.2-py2.py3-none-any.whl size=8860 sha256=d188d64365d9a7e56833f6e3c1f1e8d6793bb8cd4cad94803535780eb617b7ad
+  Stored in directory: c:\users\arnyd\appdata\local\pip\cache\wheels\73\03\c1\1ed9c5626efe8c0c06ec002247943624b4e057f7c93c124051
+  Building wheel for docopt (pyproject.toml) ... done
+  Created wheel for docopt: filename=docopt-0.6.2-py2.py3-none-any.whl size=13889 sha256=63ed4ffd7dac1c860f0dd1b955d9b60e53adfb553aa56f4d28e78a100b58924d
+  Stored in directory: c:\users\arnyd\appdata\local\pip\cache\wheels\79\6f\5f\26c3d1a144117ef52122d67c32b9f3c297c3dec4fea00a31ac
+  Building wheel for pyjsparser (pyproject.toml) ... done
+  Created wheel for pyjsparser: filename=pyjsparser-2.7.1-py3-none-any.whl size=25763 sha256=1706c8d1a13b653d053179410dfa36b4ab5b0caae9a575e289543484847cf6a9
+  Stored in directory: c:\users\arnyd\appdata\local\pip\cache\wheels\c7\4a\4a\faea8faa646e9dee97574d1820a2eed10bc041aa3802e5db87
+Successfully built pipwin docopt pyjsparser
+Installing collected packages: pySmartDL, pyprind, pyjsparser, docopt, urllib3, tzdata, typing-extensions, soupsieve, six, packaging, idna, charset_normalizer, certifi, tzlocal, requests, beautifulsoup4, js2py, pipwin
+Successfully installed beautifulsoup4-4.14.3 certifi-2026.1.4 charset_normalizer-3.4.4 docopt-0.6.2 idna-3.11 js2py-0.74 packaging-25.0 pipwin-0.5.2 pySmartDL-1.3.4 pyjsparser-2.7.1 pyprind-2.11.3 requests-2.32.5 six-1.17.0 soupsieve-2.8.1 typing-extensions-4.15.0 tzdata-2025.3 tzlocal-5.3.1 urllib3-2.6.3
+[INFO] Instalando GDAL, Fiona y Shapely precompilados...
+b"\x80\x00V\x00P\x00p\x01\\\x03\\\x05V\x004\x014\x01p\x02/\x00p\x03.\x00p\x04V\x02\x10\x00F?p\x05WS\\\x07V\x044\x01&\x00V\x04P\t\\\x0bV\x05P\x0cV\x05P\x0e4\x024\x01\x1f\x00KA\t\x00\x1e\x00\\\x10P\x12'\x00d\x13\x1c\x00R\x00P\x15V\x044\x01p\x06M\x0b\\\x17V\x044\x01p\x06Wa8wd\xe4\x1c\x00\\\x19V\x064\x01\x1f\x00\\\x19V\x014\x01\x1f\x00\\\x1b\\\x1d\\\x07V\x064\x01\\\x07V\x014\x014\x024\x01\x10\x00F\xa0p\x07W\x17,\x1aWg,\x1a8wd\x82\x1c\x00\x1b\x00Ws9\x00g\x03\x1c\x00K\t\\\x19W7,\x1a4\x01\x1f\x00\\\x19W7^\x02,\n,\x1a4\x01\x1f\x00\\\x19\\\x03\\\x1f\\ V\x014\x024\x01V\x07^\x04,\nV\x07^\x08,\x00\x01\x004\x01\x1f\x00\\\x19WG^\x04,\nV\x07^\x08,\x00\x01\x004\x01\x1f\x00\x1b\x00\\#R\x014\x01h\x01\t\x00\x1e\x00R\x02#\x00R\x02#\x00"
+b"\x80\x00V\x00P\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00p\x01\\\x03\x00\x00\x00\x00\x00\x00\x00\x00\\\x05\x00\x00\x00\x00\x00\x00\x00\x00V\x004\x01\x00\x00\x00\x00\x00\x004\x01\x00\x00\x00\x00\x00\x00p\x02/\x00p\x03.\x00p\x04V\x02\x10\x00F?\x00\x00p\x05WS\\\x07\x00\x00\x00\x00\x00\x00\x00\x00V\x044\x01\x00\x00\x00\x00\x00\x00&\x00\x00\x00V\x04P\t\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\\\x0b\x00\x00\x00\x00\x00\x00\x00\x00V\x05P\x0c\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00V\x05P\x0e\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x004\x02\x00\x00\x00\x00\x00\x004\x01\x00\x00\x00\x00\x00\x00\x1f\x00KA\x00\x00\t\x00\x1e\x00\\\x10\x00\x00\x00\x00\x00\x00\x00\x00P\x12\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'\x00\x00\x00\x00\x00\x00\x00d\x13\x00\x00\x1c\x00R\x00P\x15\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00V\x044\x01\x00\x00\x00\x00\x00\x00p\x06M\x0b\\\x17\x00\x00\x00\x00\x00\x00\x00\x00V\x044\x01\x00\x00\x00\x00\x00\x00p\x06Wa8w\x00\x00d\xe4\x00\x00\x1c\x00\\\x19\x00\x00\x00\x00\x00\x00\x00\x00V\x064\x01\x00\x00\x00\x00\x00\x00\x1f\x00\\\x19\x00\x00\x00\x00\x00\x00\x00\x00V\x014\x01\x00\x00\x00\x00\x00\x00\x1f\x00\\\x1b\x00\x00\x00\x00\x00\x00\x00\x00\\\x1d\x00\x00\x00\x00\x00\x00\x00\x00\\\x07\x00\x00\x00\x00\x00\x00\x00\x00V\x064\x01\x00\x00\x00\x00\x00\x00\\\x07\x00\x00\x00\x00\x00\x00\x00\x00V\x014\x01\x00\x00\x00\x00\x00\x004\x02\x00\x00\x00\x00\x00\x004\x01\x00\x00\x00\x00\x00\x00\x10\x00F\xa0\x00\x00p\x07W\x17,\x1a\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00Wg,\x1a\x00\x00\x00\x00\x00\x00\x00\x00\x00\x008w\x00\x00d\x82\x00\x00\x1c\x00\x1b\x00Ws9\x00\x00\x00g\x03\x00\x00\x1c\x00K\t\x00\x00\\\x19\x00\x00\x00\x00\x00\x00\x00\x00W7,\x1a\x00\x00\x00\x00\x00\x00\x00\x00\x00\x004\x01\x00\x00\x00\x00\x00\x00\x1f\x00\\\x19\x00\x00\x00\x00\x00\x00\x00\x00W7^\x02,\n\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00,\x1a\x00\x00\x00\x00\x00\x00\x00\x00\x00\x004\x01\x00\x00\x00\x00\x00\x00\x1f\x00\\\x19\x00\x00\x00\x00\x00\x00\x00\x00\\\x03\x00\x00\x00\x00\x00\x00\x00\x00\\\x1f\x00\x00\x00\x00\x00\x00\x00\x00\\ \x00\x00\x00\x00\x00\x00\x00\x00V\x014\x02\x00\x00\x00\x00\x00\x004\x01\x00\x00\x00\x00\x00\x00V\x07^\x04,\n\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00V\x07^\x08,\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01\x004\x01\x00\x00\x00\x00\x00\x00\x1f\x00\\\x19\x00\x00\x00\x00\x00\x00\x00\x00WG^\x04,\n\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00V\x07^\x08,\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01\x004\x01\x00\x00\x00\x00\x00\x00\x1f\x00\x1b\x00\\#\x00\x00\x00\x00\x00\x00\x00\x00R\x014\x01\x00\x00\x00\x00\x00\x00h\x01\t\x00\x1e\x00R\x02#\x00R\x02#\x00"
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "I:\Tasacion2026\venv\Scripts\pipwin.exe\__main__.py", line 2, in <module>
+    from pipwin.command import main
+  File "I:\Tasacion2026\venv\Lib\site-packages\pipwin\command.py", line 28, in <module>
+    from . import pipwin, __version__
+  File "I:\Tasacion2026\venv\Lib\site-packages\pipwin\pipwin.py", line 13, in <module>
+    import js2py
+  File "I:\Tasacion2026\venv\Lib\site-packages\js2py\__init__.py", line 72, in <module>
+    from .base import PyJsException
+  File "I:\Tasacion2026\venv\Lib\site-packages\js2py\base.py", line 6, in <module>
+    from .utils.injector import fix_js_args
+  File "I:\Tasacion2026\venv\Lib\site-packages\js2py\utils\injector.py", line 264, in <module>
+    check(six.get_function_code(check))
+    ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "I:\Tasacion2026\venv\Lib\site-packages\js2py\utils\injector.py", line 251, in check
+    raise RuntimeError(
+        'Your python version made changes to the bytecode')
+RuntimeError: Your python version made changes to the bytecode
+b"\x80\x00V\x00P\x00p\x01\\\x03\\\x05V\x004\x014\x01p\x02/\x00p\x03.\x00p\x04V\x02\x10\x00F?p\x05WS\\\x07V\x044\x01&\x00V\x04P\t\\\x0bV\x05P\x0cV\x05P\x0e4\x024\x01\x1f\x00KA\t\x00\x1e\x00\\\x10P\x12'\x00d\x13\x1c\x00R\x00P\x15V\x044\x01p\x06M\x0b\\\x17V\x044\x01p\x06Wa8wd\xe4\x1c\x00\\\x19V\x064\x01\x1f\x00\\\x19V\x014\x01\x1f\x00\\\x1b\\\x1d\\\x07V\x064\x01\\\x07V\x014\x014\x024\x01\x10\x00F\xa0p\x07W\x17,\x1aWg,\x1a8wd\x82\x1c\x00\x1b\x00Ws9\x00g\x03\x1c\x00K\t\\\x19W7,\x1a4\x01\x1f\x00\\\x19W7^\x02,\n,\x1a4\x01\x1f\x00\\\x19\\\x03\\\x1f\\ V\x014\x024\x01V\x07^\x04,\nV\x07^\x08,\x00\x01\x004\x01\x1f\x00\\\x19WG^\x04,\nV\x07^\x08,\x00\x01\x004\x01\x1f\x00\x1b\x00\\#R\x014\x01h\x01\t\x00\x1e\x00R\x02#\x00R\x02#\x00"
+b"\x80\x00V\x00P\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00p\x01\\\x03\x00\x00\x00\x00\x00\x00\x00\x00\\\x05\x00\x00\x00\x00\x00\x00\x00\x00V\x004\x01\x00\x00\x00\x00\x00\x004\x01\x00\x00\x00\x00\x00\x00p\x02/\x00p\x03.\x00p\x04V\x02\x10\x00F?\x00\x00p\x05WS\\\x07\x00\x00\x00\x00\x00\x00\x00\x00V\x044\x01\x00\x00\x00\x00\x00\x00&\x00\x00\x00V\x04P\t\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\\\x0b\x00\x00\x00\x00\x00\x00\x00\x00V\x05P\x0c\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00V\x05P\x0e\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x004\x02\x00\x00\x00\x00\x00\x004\x01\x00\x00\x00\x00\x00\x00\x1f\x00KA\x00\x00\t\x00\x1e\x00\\\x10\x00\x00\x00\x00\x00\x00\x00\x00P\x12\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'\x00\x00\x00\x00\x00\x00\x00d\x13\x00\x00\x1c\x00R\x00P\x15\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00V\x044\x01\x00\x00\x00\x00\x00\x00p\x06M\x0b\\\x17\x00\x00\x00\x00\x00\x00\x00\x00V\x044\x01\x00\x00\x00\x00\x00\x00p\x06Wa8w\x00\x00d\xe4\x00\x00\x1c\x00\\\x19\x00\x00\x00\x00\x00\x00\x00\x00V\x064\x01\x00\x00\x00\x00\x00\x00\x1f\x00\\\x19\x00\x00\x00\x00\x00\x00\x00\x00V\x014\x01\x00\x00\x00\x00\x00\x00\x1f\x00\\\x1b\x00\x00\x00\x00\x00\x00\x00\x00\\\x1d\x00\x00\x00\x00\x00\x00\x00\x00\\\x07\x00\x00\x00\x00\x00\x00\x00\x00V\x064\x01\x00\x00\x00\x00\x00\x00\\\x07\x00\x00\x00\x00\x00\x00\x00\x00V\x014\x01\x00\x00\x00\x00\x00\x004\x02\x00\x00\x00\x00\x00\x004\x01\x00\x00\x00\x00\x00\x00\x10\x00F\xa0\x00\x00p\x07W\x17,\x1a\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00Wg,\x1a\x00\x00\x00\x00\x00\x00\x00\x00\x00\x008w\x00\x00d\x82\x00\x00\x1c\x00\x1b\x00Ws9\x00\x00\x00g\x03\x00\x00\x1c\x00K\t\x00\x00\\\x19\x00\x00\x00\x00\x00\x00\x00\x00W7,\x1a\x00\x00\x00\x00\x00\x00\x00\x00\x00\x004\x01\x00\x00\x00\x00\x00\x00\x1f\x00\\\x19\x00\x00\x00\x00\x00\x00\x00\x00W7^\x02,\n\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00,\x1a\x00\x00\x00\x00\x00\x00\x00\x00\x00\x004\x01\x00\x00\x00\x00\x00\x00\x1f\x00\\\x19\x00\x00\x00\x00\x00\x00\x00\x00\\\x03\x00\x00\x00\x00\x00\x00\x00\x00\\\x1f\x00\x00\x00\x00\x00\x00\x00\x00\\ \x00\x00\x00\x00\x00\x00\x00\x00V\x014\x02\x00\x00\x00\x00\x00\x004\x01\x00\x00\x00\x00\x00\x00V\x07^\x04,\n\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00V\x07^\x08,\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01\x004\x01\x00\x00\x00\x00\x00\x00\x1f\x00\\\x19\x00\x00\x00\x00\x00\x00\x00\x00WG^\x04,\n\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00V\x07^\x08,\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01\x004\x01\x00\x00\x00\x00\x00\x00\x1f\x00\x1b\x00\\#\x00\x00\x00\x00\x00\x00\x00\x00R\x014\x01\x00\x00\x00\x00\x00\x00h\x01\t\x00\x1e\x00R\x02#\x00R\x02#\x00"
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "I:\Tasacion2026\venv\Scripts\pipwin.exe\__main__.py", line 2, in <module>
+    from pipwin.command import main
+  File "I:\Tasacion2026\venv\Lib\site-packages\pipwin\command.py", line 28, in <module>
+    from . import pipwin, __version__
+  File "I:\Tasacion2026\venv\Lib\site-packages\pipwin\pipwin.py", line 13, in <module>
+    import js2py
+  File "I:\Tasacion2026\venv\Lib\site-packages\js2py\__init__.py", line 72, in <module>
+    from .base import PyJsException
+  File "I:\Tasacion2026\venv\Lib\site-packages\js2py\base.py", line 6, in <module>
+    from .utils.injector import fix_js_args
+  File "I:\Tasacion2026\venv\Lib\site-packages\js2py\utils\injector.py", line 264, in <module>
+    check(six.get_function_code(check))
+    ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "I:\Tasacion2026\venv\Lib\site-packages\js2py\utils\injector.py", line 251, in check
+    raise RuntimeError(
+        'Your python version made changes to the bytecode')
+RuntimeError: Your python version made changes to the bytecode
+b"\x80\x00V\x00P\x00p\x01\\\x03\\\x05V\x004\x014\x01p\x02/\x00p\x03.\x00p\x04V\x02\x10\x00F?p\x05WS\\\x07V\x044\x01&\x00V\x04P\t\\\x0bV\x05P\x0cV\x05P\x0e4\x024\x01\x1f\x00KA\t\x00\x1e\x00\\\x10P\x12'\x00d\x13\x1c\x00R\x00P\x15V\x044\x01p\x06M\x0b\\\x17V\x044\x01p\x06Wa8wd\xe4\x1c\x00\\\x19V\x064\x01\x1f\x00\\\x19V\x014\x01\x1f\x00\\\x1b\\\x1d\\\x07V\x064\x01\\\x07V\x014\x014\x024\x01\x10\x00F\xa0p\x07W\x17,\x1aWg,\x1a8wd\x82\x1c\x00\x1b\x00Ws9\x00g\x03\x1c\x00K\t\\\x19W7,\x1a4\x01\x1f\x00\\\x19W7^\x02,\n,\x1a4\x01\x1f\x00\\\x19\\\x03\\\x1f\\ V\x014\x024\x01V\x07^\x04,\nV\x07^\x08,\x00\x01\x004\x01\x1f\x00\\\x19WG^\x04,\nV\x07^\x08,\x00\x01\x004\x01\x1f\x00\x1b\x00\\#R\x014\x01h\x01\t\x00\x1e\x00R\x02#\x00R\x02#\x00"
+b"\x80\x00V\x00P\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00p\x01\\\x03\x00\x00\x00\x00\x00\x00\x00\x00\\\x05\x00\x00\x00\x00\x00\x00\x00\x00V\x004\x01\x00\x00\x00\x00\x00\x004\x01\x00\x00\x00\x00\x00\x00p\x02/\x00p\x03.\x00p\x04V\x02\x10\x00F?\x00\x00p\x05WS\\\x07\x00\x00\x00\x00\x00\x00\x00\x00V\x044\x01\x00\x00\x00\x00\x00\x00&\x00\x00\x00V\x04P\t\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\\\x0b\x00\x00\x00\x00\x00\x00\x00\x00V\x05P\x0c\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00V\x05P\x0e\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x004\x02\x00\x00\x00\x00\x00\x004\x01\x00\x00\x00\x00\x00\x00\x1f\x00KA\x00\x00\t\x00\x1e\x00\\\x10\x00\x00\x00\x00\x00\x00\x00\x00P\x12\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'\x00\x00\x00\x00\x00\x00\x00d\x13\x00\x00\x1c\x00R\x00P\x15\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00V\x044\x01\x00\x00\x00\x00\x00\x00p\x06M\x0b\\\x17\x00\x00\x00\x00\x00\x00\x00\x00V\x044\x01\x00\x00\x00\x00\x00\x00p\x06Wa8w\x00\x00d\xe4\x00\x00\x1c\x00\\\x19\x00\x00\x00\x00\x00\x00\x00\x00V\x064\x01\x00\x00\x00\x00\x00\x00\x1f\x00\\\x19\x00\x00\x00\x00\x00\x00\x00\x00V\x014\x01\x00\x00\x00\x00\x00\x00\x1f\x00\\\x1b\x00\x00\x00\x00\x00\x00\x00\x00\\\x1d\x00\x00\x00\x00\x00\x00\x00\x00\\\x07\x00\x00\x00\x00\x00\x00\x00\x00V\x064\x01\x00\x00\x00\x00\x00\x00\\\x07\x00\x00\x00\x00\x00\x00\x00\x00V\x014\x01\x00\x00\x00\x00\x00\x004\x02\x00\x00\x00\x00\x00\x004\x01\x00\x00\x00\x00\x00\x00\x10\x00F\xa0\x00\x00p\x07W\x17,\x1a\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00Wg,\x1a\x00\x00\x00\x00\x00\x00\x00\x00\x00\x008w\x00\x00d\x82\x00\x00\x1c\x00\x1b\x00Ws9\x00\x00\x00g\x03\x00\x00\x1c\x00K\t\x00\x00\\\x19\x00\x00\x00\x00\x00\x00\x00\x00W7,\x1a\x00\x00\x00\x00\x00\x00\x00\x00\x00\x004\x01\x00\x00\x00\x00\x00\x00\x1f\x00\\\x19\x00\x00\x00\x00\x00\x00\x00\x00W7^\x02,\n\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00,\x1a\x00\x00\x00\x00\x00\x00\x00\x00\x00\x004\x01\x00\x00\x00\x00\x00\x00\x1f\x00\\\x19\x00\x00\x00\x00\x00\x00\x00\x00\\\x03\x00\x00\x00\x00\x00\x00\x00\x00\\\x1f\x00\x00\x00\x00\x00\x00\x00\x00\\ \x00\x00\x00\x00\x00\x00\x00\x00V\x014\x02\x00\x00\x00\x00\x00\x004\x01\x00\x00\x00\x00\x00\x00V\x07^\x04,\n\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00V\x07^\x08,\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01\x004\x01\x00\x00\x00\x00\x00\x00\x1f\x00\\\x19\x00\x00\x00\x00\x00\x00\x00\x00WG^\x04,\n\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00V\x07^\x08,\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01\x004\x01\x00\x00\x00\x00\x00\x00\x1f\x00\x1b\x00\\#\x00\x00\x00\x00\x00\x00\x00\x00R\x014\x01\x00\x00\x00\x00\x00\x00h\x01\t\x00\x1e\x00R\x02#\x00R\x02#\x00"
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "I:\Tasacion2026\venv\Scripts\pipwin.exe\__main__.py", line 2, in <module>
+    from pipwin.command import main
+  File "I:\Tasacion2026\venv\Lib\site-packages\pipwin\command.py", line 28, in <module>
+    from . import pipwin, __version__
+  File "I:\Tasacion2026\venv\Lib\site-packages\pipwin\pipwin.py", line 13, in <module>
+    import js2py
+  File "I:\Tasacion2026\venv\Lib\site-packages\js2py\__init__.py", line 72, in <module>
+    from .base import PyJsException
+  File "I:\Tasacion2026\venv\Lib\site-packages\js2py\base.py", line 6, in <module>
+    from .utils.injector import fix_js_args
+  File "I:\Tasacion2026\venv\Lib\site-packages\js2py\utils\injector.py", line 264, in <module>
+    check(six.get_function_code(check))
+    ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "I:\Tasacion2026\venv\Lib\site-packages\js2py\utils\injector.py", line 251, in check
+    raise RuntimeError(
+        'Your python version made changes to the bytecode')
+RuntimeError: Your python version made changes to the bytecode
+[INFO] Instalando dependencias restantes...
+Collecting fastapi==0.104.1 (from -r requirements.txt (line 1))
+  Using cached fastapi-0.104.1-py3-none-any.whl.metadata (24 kB)
+Collecting uvicorn==0.24.0 (from -r requirements.txt (line 2))
+  Using cached uvicorn-0.24.0-py3-none-any.whl.metadata (6.4 kB)
+Collecting pydantic==2.5.2 (from -r requirements.txt (line 3))
+  Using cached pydantic-2.5.2-py3-none-any.whl.metadata (65 kB)
+Collecting requests==2.31.0 (from -r requirements.txt (line 4))
+  Using cached requests-2.31.0-py3-none-any.whl.metadata (4.6 kB)
+Collecting pandas==2.1.3 (from -r requirements.txt (line 5))
+  Downloading pandas-2.1.3.tar.gz (4.3 MB)
+     ---------------------------------------- 4.3/4.3 MB 9.4 MB/s  0:00:00
+  Installing build dependencies ... error
+  error: subprocess-exited-with-error
+
+  × installing build dependencies for pandas did not run successfully.
+  │ exit code: 1
+  ╰─> [642 lines of output]
+      Ignoring oldest-supported-numpy: markers 'python_version < "3.12"' don't match your environment
+      Collecting meson-python==0.13.1
+        Downloading meson_python-0.13.1-py3-none-any.whl.metadata (4.1 kB)
+      Collecting meson==1.2.1
+        Downloading meson-1.2.1-py3-none-any.whl.metadata (1.7 kB)
+      Collecting wheel
+        Using cached wheel-0.45.1-py3-none-any.whl.metadata (2.3 kB)
+      Collecting Cython<3,>=0.29.33
+        Downloading Cython-0.29.37-py2.py3-none-any.whl.metadata (3.1 kB)
+      Collecting numpy<2,>=1.26.0
+        Using cached numpy-1.26.4.tar.gz (15.8 MB)
+        Installing build dependencies: started
+        Installing build dependencies: finished with status 'done'
+        Getting requirements to build wheel: started
+        Getting requirements to build wheel: finished with status 'done'
+        Installing backend dependencies: started
+        Installing backend dependencies: finished with status 'done'
+        Preparing metadata (pyproject.toml): started
+        Preparing metadata (pyproject.toml): finished with status 'error'
+        error: subprocess-exited-with-error
+
+        Preparing metadata (pyproject.toml) did not run successfully.
+        exit code: 1
+
+        [606 lines of output]
+        + I:\Tasacion2026\venv\Scripts\python.exe C:\Users\arnyd\AppData\Local\Temp\pip-install-yi1qugxj\numpy_91d77987145f489a95b1a7d97a1b0e0a\vendored-meson\meson\meson.py setup C:\Users\arnyd\AppData\Local\Temp\pip-install-yi1qugxj\numpy_91d77987145f489a95b1a7d97a1b0e0a C:\Users\arnyd\AppData\Local\Temp\pip-install-yi1qugxj\numpy_91d77987145f489a95b1a7d97a1b0e0a\.mesonpy-jzygbclm -Dbuildtype=release -Db_ndebug=if-release -Db_vscrt=md --native-file=C:\Users\arnyd\AppData\Local\Temp\pip-install-yi1qugxj\numpy_91d77987145f489a95b1a7d97a1b0e0a\.mesonpy-jzygbclm\meson-python-native-file.ini
+        The Meson build system
+        Version: 1.2.99
+        Source dir: C:\Users\arnyd\AppData\Local\Temp\pip-install-yi1qugxj\numpy_91d77987145f489a95b1a7d97a1b0e0a
+        Build dir: C:\Users\arnyd\AppData\Local\Temp\pip-install-yi1qugxj\numpy_91d77987145f489a95b1a7d97a1b0e0a\.mesonpy-jzygbclm
+        Build type: native build
+        Project name: NumPy
+        Project version: 1.26.4
+        Activating VS 16.11.50
+        C compiler for the host machine: cl (msvc 19.29.30159 "Compilador de optimizaci¢n de C/C++ de Microsoft (R) versi¢n 19.29.30159 para x64")
+        C linker for the host machine: link link 14.29.30159.0
+        C++ compiler for the host machine: cl (msvc 19.29.30159 "Compilador de optimizaci¢n de C/C++ de Microsoft (R) versi¢n 19.29.30159 para x64")
+        C++ linker for the host machine: link link 14.29.30159.0
+        Cython compiler for the host machine: cython (cython 3.0.12)
+        Host machine cpu family: x86_64
+        Host machine cpu: x86_64
+        Program python found: YES (I:\Tasacion2026\venv\Scripts\python.exe)
+        Run-time dependency python found: YES 3.14
+        Has header "Python.h" with dependency python: YES
+        Compiler for C supports arguments -fno-strict-aliasing: NO
+        Test features "SSE SSE2 SSE3" : Supported
+        Test features "SSSE3" : Supported
+        Test features "SSE41" : Supported
+        Test features "POPCNT" : Supported
+        Test features "SSE42" : Supported
+        Test features "AVX" : Supported
+        Test features "F16C" : Supported
+        Test features "FMA3" : Supported
+        Test features "AVX2" : Supported (cached)
+        Test features "AVX512F" : Supported
+        Test features "AVX512CD" : Supported (cached)
+        Test features "AVX512_KNL" : disabled due to AVX512_KNL is disabled due to "msvc compiler does not support it"
+        Test features "AVX512_KNM" : disabled due to AVX512_KNM is disabled due to "msvc compiler does not support it"
+        Test features "AVX512_SKX" : Supported (cached)
+        Test features "AVX512_CLX" : Supported
+        Test features "AVX512_CNL" : Supported
+        Test features "AVX512_ICL" : Supported
+        Test features "AVX512_SPR" : disabled due to AVX512_SPR is disabled due to "msvc compiler does not support it"
+        Configuring npy_cpu_dispatch_config.h using configuration
+        Message:
+        CPU Optimization Options
+          baseline:
+            Requested : min
+            Enabled   : SSE SSE2 SSE3
+          dispatch:
+            Requested : max -xop -fma4
+            Enabled   : SSSE3 SSE41 POPCNT SSE42 AVX F16C FMA3 AVX2 AVX512F AVX512CD AVX512_SKX AVX512_CLX AVX512_CNL AVX512_ICL
+
+        Library m found: NO
+        Fetching value of define "__MINGW32__" :
+        Did not find pkg-config by name 'pkg-config'
+        Found Pkg-config: NO
+        Run-time dependency scipy-openblas found: NO (tried pkgconfig)
+        Run-time dependency mkl found: NO (tried pkgconfig and system)
+        Run-time dependency mkl found: NO (tried pkgconfig and system)
+        Run-time dependency accelerate found: NO (tried system)
+        Found CMake: C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.EXE (3.20.21032501)
+        WARNING: CMake Toolchain: Failed to determine CMake compilers state
+        Run-time dependency openblas found: NO (tried pkgconfig, pkgconfig, pkgconfig, system and cmake)
+        Run-time dependency flexiblas found: NO (tried pkgconfig and cmake)
+        Run-time dependency blis found: NO (tried pkgconfig and cmake)
+        Run-time dependency blas found: NO (tried pkgconfig and system)
+        Run-time dependency mkl found: NO (tried pkgconfig and system)
+        Run-time dependency accelerate found: NO (tried system)
+        Run-time dependency openblas found: NO (tried pkgconfig, pkgconfig, pkgconfig, system and cmake)
+        Run-time dependency flexiblas found: NO (tried pkgconfig and cmake)
+        Run-time dependency lapack found: NO (tried pkgconfig and system)
+        Program _build_utils/process_src_template.py found: YES (I:\Tasacion2026\venv\Scripts\python.exe C:\Users\arnyd\AppData\Local\Temp\pip-install-yi1qugxj\numpy_91d77987145f489a95b1a7d97a1b0e0a\numpy\_build_utils/process_src_template.py)
+        Program _build_utils/tempita.py found: YES (I:\Tasacion2026\venv\Scripts\python.exe C:\Users\arnyd\AppData\Local\Temp\pip-install-yi1qugxj\numpy_91d77987145f489a95b1a7d97a1b0e0a\numpy\_build_utils/tempita.py)
+        Configuring __config__.py using configuration
+        ..\numpy\meson.build:372: WARNING: The variable(s) 'BLAS_INCLUDEDIR', 'BLAS_LIBDIR', 'BLAS_OPENBLAS_CONFIG', 'BLAS_PCFILEDIR', 'BLAS_TYPE_NAME', 'BLAS_VERSION' in the input file 'numpy\__config__.py.in' are not present in the given configuration data.
+        Checking for size of "short" : 2
+        Checking for size of "int" : 4
+        Checking for size of "long" : 4
+        Checking for size of "long long" : 8
+        Checking for size of "float" : 4
+        Checking for size of "double" : 8
+        Checking for size of "long double" : 8
+        Checking for size of "off_t" : 4
+        Checking for size of "Py_intptr_t" with dependency python: 8
+        Checking for size of "PY_LONG_LONG" with dependency python: 8
+        Has header "complex.h" : YES
+        Checking for type "_Fcomplex" : YES
+        Checking for size of "struct {float __x; float __y;}" : 8
+        Checking for type "_Dcomplex" : YES
+        Checking for size of "struct {double __x; double __y;}" : 16
+        Checking for type "_Lcomplex" : YES
+        Checking for size of "struct {long double __x; long double __y;}" : 16
+        Checking for function "sin" with dependency -lm: YES
+        Checking for function "cos" with dependency -lm: YES
+        Checking for function "tan" with dependency -lm: YES
+        Checking for function "sinh" with dependency -lm: YES
+        Checking for function "cosh" with dependency -lm: YES
+        Checking for function "tanh" with dependency -lm: YES
+        Checking for function "fabs" with dependency -lm: YES
+        Checking for function "floor" with dependency -lm: YES
+        Checking for function "ceil" with dependency -lm: YES
+        Checking for function "sqrt" with dependency -lm: YES
+        Checking for function "log10" with dependency -lm: YES
+        Checking for function "log" with dependency -lm: YES
+        Checking for function "exp" with dependency -lm: YES
+        Checking for function "asin" with dependency -lm: YES
+        Checking for function "acos" with dependency -lm: YES
+        Checking for function "atan" with dependency -lm: YES
+        Checking for function "fmod" with dependency -lm: YES
+        Checking for function "modf" with dependency -lm: YES
+        Checking for function "frexp" with dependency -lm: YES
+        Checking for function "ldexp" with dependency -lm: YES
+        Checking for function "expm1" with dependency -lm: YES
+        Checking for function "log1p" with dependency -lm: YES
+        Checking for function "acosh" with dependency -lm: YES
+        Checking for function "asinh" with dependency -lm: YES
+        Checking for function "atanh" with dependency -lm: YES
+        Checking for function "rint" with dependency -lm: YES
+        Checking for function "trunc" with dependency -lm: YES
+        Checking for function "exp2" with dependency -lm: YES
+        Checking for function "copysign" with dependency -lm: YES
+        Checking for function "nextafter" with dependency -lm: YES
+        Checking for function "cbrt" with dependency -lm: YES
+        Checking for function "log2" with dependency -lm: YES
+        Checking for function "pow" with dependency -lm: YES
+        Checking for function "hypot" with dependency -lm: YES
+        Checking for function "atan2" with dependency -lm: YES
+        Checking for function "csin" with dependency -lm: YES
+        Checking for function "csinh" with dependency -lm: YES
+        Checking for function "ccos" with dependency -lm: YES
+        Checking for function "ccosh" with dependency -lm: YES
+        Checking for function "ctan" with dependency -lm: YES
+        Checking for function "ctanh" with dependency -lm: YES
+        Checking for function "creal" with dependency -lm: YES
+        Checking for function "cimag" with dependency -lm: YES
+        Checking for function "conj" with dependency -lm: YES
+        Checking for function "strtoll" : YES
+        Checking for function "strtoull" : YES
+        Checking for function "cabs" with dependency -lm: YES
+        Checking for function "cabsf" with dependency -lm: YES
+        Checking for function "cabsl" with dependency -lm: YES
+        Checking for function "cacos" with dependency -lm: YES
+        Checking for function "cacosf" with dependency -lm: YES
+        Checking for function "cacosl" with dependency -lm: YES
+        Checking for function "cacosh" with dependency -lm: YES
+        Checking for function "cacoshf" with dependency -lm: YES
+        Checking for function "cacoshl" with dependency -lm: YES
+        Checking for function "carg" with dependency -lm: YES
+        Checking for function "cargf" with dependency -lm: YES
+        Checking for function "cargl" with dependency -lm: YES
+        Checking for function "casin" with dependency -lm: YES
+        Checking for function "casinf" with dependency -lm: YES
+        Checking for function "casinl" with dependency -lm: YES
+        Checking for function "casinh" with dependency -lm: YES
+        Checking for function "casinhf" with dependency -lm: YES
+        Checking for function "casinhl" with dependency -lm: YES
+        Checking for function "catan" with dependency -lm: YES
+        Checking for function "catanf" with dependency -lm: YES
+        Checking for function "catanl" with dependency -lm: YES
+        Checking for function "catanh" with dependency -lm: YES
+        Checking for function "catanhf" with dependency -lm: YES
+        Checking for function "catanhl" with dependency -lm: YES
+        Checking for function "cexp" with dependency -lm: YES
+        Checking for function "cexpf" with dependency -lm: YES
+        Checking for function "cexpl" with dependency -lm: YES
+        Checking for function "clog" with dependency -lm: YES
+        Checking for function "clogf" with dependency -lm: YES
+        Checking for function "clogl" with dependency -lm: YES
+        Checking for function "cpow" with dependency -lm: YES
+        Checking for function "cpowf" with dependency -lm: YES
+        Checking for function "cpowl" with dependency -lm: YES
+        Checking for function "csqrt" with dependency -lm: YES
+        Checking for function "csqrtf" with dependency -lm: YES
+        Checking for function "csqrtl" with dependency -lm: YES
+        Checking for function "csin" with dependency -lm: YES (cached)
+        Checking for function "csinf" with dependency -lm: YES
+        Checking for function "csinl" with dependency -lm: YES
+        Checking for function "csinh" with dependency -lm: YES (cached)
+        Checking for function "csinhf" with dependency -lm: YES
+        Checking for function "csinhl" with dependency -lm: YES
+        Checking for function "ccos" with dependency -lm: YES (cached)
+        Checking for function "ccosf" with dependency -lm: YES
+        Checking for function "ccosl" with dependency -lm: YES
+        Checking for function "ccosh" with dependency -lm: YES (cached)
+        Checking for function "ccoshf" with dependency -lm: YES
+        Checking for function "ccoshl" with dependency -lm: YES
+        Checking for function "ctan" with dependency -lm: YES (cached)
+        Checking for function "ctanf" with dependency -lm: YES
+        Checking for function "ctanl" with dependency -lm: YES
+        Checking for function "ctanh" with dependency -lm: YES (cached)
+        Checking for function "ctanhf" with dependency -lm: YES
+        Checking for function "ctanhl" with dependency -lm: YES
+        Checking for function "isfinite" with dependency -lm: NO
+        Checking for function "isinf" with dependency -lm: NO
+        Checking for function "isnan" with dependency -lm: NO
+        Checking for function "signbit" with dependency -lm: NO
+        Checking for function "fallocate" : NO
+        Header "Python.h" has symbol "HAVE_FTELLO" with dependency python: NO
+        Checking for function "ftello" : NO
+        Header "Python.h" has symbol "HAVE_FSEEKO" with dependency python: NO
+        Checking for function "fseeko" : NO
+        Checking for function "backtrace" : NO
+        Checking for function "madvise" : NO
+        Has header "features.h" : NO
+        Has header "xlocale.h" : NO
+        Has header "dlfcn.h" : NO
+        Has header "execinfo.h" : NO
+        Has header "libunwind.h" : NO
+        Has header "sys/mman.h" : NO
+        Checking for function "strtold_l" : NO
+        Compiler for C supports arguments /O2: YES
+        Has header "endian.h" : NO
+        Has header "sys/endian.h" : NO
+        Header "inttypes.h" has symbol "PRIdPTR" : YES
+        Compiler for C supports function attribute visibility:hidden: NO
+        Configuring config.h using configuration
+        Configuring _numpyconfig.h using configuration
+        Compiler for C supports arguments -d2VolatileMetadata-: YES
+        Configuring npymath.ini using configuration
+        Configuring mlib.ini using configuration
+        Generating multi-targets for "_umath_tests.dispatch.h"
+          Enabled targets: AVX2, SSE41, baseline
+        Generating multi-targets for "argfunc.dispatch.h"
+          Enabled targets: AVX512_SKX, AVX2, SSE42, baseline
+        Generating multi-targets for "simd_qsort.dispatch.h"
+          Enabled targets: AVX512_SKX
+        Generating multi-targets for "simd_qsort_16bit.dispatch.h"
+          Enabled targets: AVX512_ICL
+        Generating multi-targets for "loops_arithm_fp.dispatch.h"
+          Enabled targets: AVX2, baseline
+        Generating multi-targets for "loops_arithmetic.dispatch.h"
+          Enabled targets: AVX512_SKX, AVX512F, AVX2, SSE41, baseline
+        Generating multi-targets for "loops_comparison.dispatch.h"
+          Enabled targets: AVX512_SKX, AVX512F, AVX2, SSE42, baseline
+        Generating multi-targets for "loops_exponent_log.dispatch.h"
+          Enabled targets: AVX512_SKX, AVX512F, AVX2, baseline
+        Generating multi-targets for "loops_hyperbolic.dispatch.h"
+          Enabled targets: AVX512_SKX, AVX2, baseline
+        Generating multi-targets for "loops_logical.dispatch.h"
+          Enabled targets: AVX512_SKX, AVX2, baseline
+        Generating multi-targets for "loops_minmax.dispatch.h"
+          Enabled targets: AVX512_SKX, AVX2, baseline
+        Generating multi-targets for "loops_modulo.dispatch.h"
+          Enabled targets: baseline
+        Generating multi-targets for "loops_trigonometric.dispatch.h"
+          Enabled targets: AVX512F, AVX2, baseline
+        Generating multi-targets for "loops_umath_fp.dispatch.h"
+          Enabled targets: AVX512_SKX, baseline
+        Generating multi-targets for "loops_unary.dispatch.h"
+          Enabled targets: AVX512_SKX, AVX2, baseline
+        Generating multi-targets for "loops_unary_fp.dispatch.h"
+          Enabled targets: SSE41, baseline
+        Generating multi-targets for "loops_unary_fp_le.dispatch.h"
+          Enabled targets: SSE41, baseline
+        Generating multi-targets for "loops_unary_complex.dispatch.h"
+          Enabled targets: AVX512F, AVX2, baseline
+        Generating multi-targets for "loops_autovec.dispatch.h"
+          Enabled targets: AVX2, baseline
+        Generating multi-targets for "_simd.dispatch.h"
+          Enabled targets: SSE42, AVX2, FMA3, AVX512F, AVX512_SKX, baseline
+        Build targets in project: 99
+
+        NumPy 1.26.4
+
+          User defined options
+            Native files: C:\Users\arnyd\AppData\Local\Temp\pip-install-yi1qugxj\numpy_91d77987145f489a95b1a7d97a1b0e0a\.mesonpy-jzygbclm\meson-python-native-file.ini
+            buildtype   : release
+            b_ndebug    : if-release
+            b_vscrt     : md
+
+        Found ninja.EXE-1.13.0.git.kitware.jobserver-pipe-1 at C:\Users\arnyd\AppData\Local\Temp\pip-build-env-aidu7513\normal\Scripts\ninja.EXE
+        + I:\Tasacion2026\venv\Scripts\python.exe C:\Users\arnyd\AppData\Local\Temp\pip-install-yi1qugxj\numpy_91d77987145f489a95b1a7d97a1b0e0a\vendored-meson\meson\meson.py compile
+        [1/503] Generating 'numpy\\core\\npymath.lib.p\\npy_math_complex.c'
+        [2/503] Generating numpy/core/__umath_generated with a custom command
+        [3/503] Generating numpy/core/npy_math_internal.h with a custom command
+        [4/503] Generating 'numpy\\core\\libargfunc.dispatch.h_AVX512_SKX.a.p\\npy_sort.h'
+        [5/503] Generating 'numpy\\core\\npymath.lib.p\\ieee754.c'
+        [6/503] Generating 'numpy\\core\\libargfunc.dispatch.h_baseline.a.p\\arraytypes.h'
+        [7/503] Generating 'numpy\\core\\libargfunc.dispatch.h_baseline.a.p\\npy_sort.h'
+        [8/503] Generating 'numpy\\core\\libargfunc.dispatch.h_AVX512_SKX.a.p\\argfunc.dispatch.c'
+        [9/503] Generating 'numpy\\core\\libargfunc.dispatch.h_baseline.a.p\\argfunc.dispatch.c'
+        [10/503] Generating 'numpy\\core\\libargfunc.dispatch.h_AVX512_SKX.a.p\\arraytypes.h'
+        [11/503] Generating numpy/__init__.cython-30.pxd with a custom command
+        [12/503] Generating numpy/__init__.pxd with a custom command
+        [13/503] Generating numpy/__init__.py with a custom command
+        [14/503] Generating 'numpy\\core\\libargfunc.dispatch.h_SSE42.a.p\\arraytypes.h'
+        [15/503] Generating 'numpy\\core\\libargfunc.dispatch.h_SSE42.a.p\\npy_sort.h'
+        [16/503] Generating 'numpy\\core\\libargfunc.dispatch.h_AVX2.a.p\\arraytypes.h'
+        [17/503] Generating 'numpy\\core\\libargfunc.dispatch.h_AVX2.a.p\\argfunc.dispatch.c'
+        [18/503] Generating 'numpy\\core\\libargfunc.dispatch.h_AVX2.a.p\\npy_sort.h'
+        [19/503] Generating 'numpy\\core\\libargfunc.dispatch.h_SSE42.a.p\\argfunc.dispatch.c'
+        [20/503] Generating 'numpy\\core\\libsimd_qsort.dispatch.h_AVX512_SKX.a.p\\arraytypes.h'
+        [21/503] Generating 'numpy\\core\\libsimd_qsort.dispatch.h_AVX512_SKX.a.p\\npy_sort.h'
+        [22/503] Generating 'numpy\\core\\libsimd_qsort_16bit.dispatch.h_AVX512_ICL.a.p\\arraytypes.h'
+        [23/503] Generating 'numpy\\core\\libsimd_qsort_16bit.dispatch.h_AVX512_ICL.a.p\\npy_sort.h'
+        [24/503] Generating 'numpy\\core\\libloops_arithm_fp.dispatch.h_baseline.a.p\\loops.h'
+        [25/503] Generating 'numpy\\core\\libloops_arithm_fp.dispatch.h_baseline.a.p\\loops_arithm_fp.dispatch.c'
+        [26/503] Generating 'numpy\\core\\libloops_arithm_fp.dispatch.h_AVX2.a.p\\loops_arithm_fp.dispatch.c'
+        [27/503] Generating 'numpy\\core\\libloops_arithm_fp.dispatch.h_AVX2.a.p\\loops_utils.h'
+        [28/503] Generating 'numpy\\core\\libloops_arithm_fp.dispatch.h_baseline.a.p\\loops_utils.h'
+        [29/503] Generating 'numpy\\core\\libloops_arithmetic.dispatch.h_baseline.a.p\\loops.h'
+        [30/503] Generating 'numpy\\core\\libloops_arithm_fp.dispatch.h_AVX2.a.p\\loops.h'
+        [31/503] Generating 'numpy\\core\\libloops_arithmetic.dispatch.h_baseline.a.p\\loops_utils.h'
+        [32/503] Generating 'numpy\\core\\libloops_arithmetic.dispatch.h_baseline.a.p\\loops_arithmetic.dispatch.c'
+        [33/503] Generating 'numpy\\core\\libloops_arithmetic.dispatch.h_AVX512_SKX.a.p\\loops_utils.h'
+        [34/503] Generating 'numpy\\core\\libloops_arithmetic.dispatch.h_AVX512_SKX.a.p\\loops.h'
+        [35/503] Generating 'numpy\\core\\libloops_arithmetic.dispatch.h_AVX512_SKX.a.p\\loops_arithmetic.dispatch.c'
+        [36/503] Generating 'numpy\\core\\libloops_arithmetic.dispatch.h_AVX512F.a.p\\loops.h'
+        [37/503] Generating 'numpy\\core\\libloops_arithmetic.dispatch.h_AVX512F.a.p\\loops_arithmetic.dispatch.c'
+        [38/503] Generating 'numpy\\core\\libloops_arithmetic.dispatch.h_AVX2.a.p\\loops.h'
+        [39/503] Generating 'numpy\\core\\libloops_arithmetic.dispatch.h_AVX2.a.p\\loops_utils.h'
+        [40/503] Generating 'numpy\\core\\libloops_arithmetic.dispatch.h_AVX2.a.p\\loops_arithmetic.dispatch.c'
+        [41/503] Generating 'numpy\\core\\libloops_arithmetic.dispatch.h_AVX512F.a.p\\loops_utils.h'
+        [42/503] Generating 'numpy\\core\\libloops_arithmetic.dispatch.h_SSE41.a.p\\loops.h'
+        [43/503] Generating 'numpy\\core\\libloops_arithmetic.dispatch.h_SSE41.a.p\\loops_utils.h'
+        [44/503] Generating 'numpy\\core\\libloops_arithmetic.dispatch.h_SSE41.a.p\\loops_arithmetic.dispatch.c'
+        [45/503] Generating 'numpy\\core\\libloops_comparison.dispatch.h_baseline.a.p\\loops_utils.h'
+        [46/503] Generating 'numpy\\core\\libloops_comparison.dispatch.h_baseline.a.p\\loops.h'
+        [47/503] Generating 'numpy\\core\\libloops_comparison.dispatch.h_AVX512_SKX.a.p\\loops_utils.h'
+        [48/503] Generating 'numpy\\core\\libloops_comparison.dispatch.h_AVX512_SKX.a.p\\loops.h'
+        [49/503] Generating 'numpy\\core\\libloops_comparison.dispatch.h_AVX512F.a.p\\loops_utils.h'
+        [50/503] Generating 'numpy\\core\\libloops_comparison.dispatch.h_AVX512_SKX.a.p\\loops_comparison.dispatch.c'
+        [51/503] Generating 'numpy\\core\\libloops_comparison.dispatch.h_AVX512F.a.p\\loops.h'
+        [52/503] Generating 'numpy\\core\\libloops_comparison.dispatch.h_baseline.a.p\\loops_comparison.dispatch.c'
+        [53/503] Generating 'numpy\\core\\libloops_comparison.dispatch.h_AVX2.a.p\\loops.h'
+        [54/503] Generating 'numpy\\core\\libloops_comparison.dispatch.h_AVX2.a.p\\loops_utils.h'
+        [55/503] Generating 'numpy\\core\\libloops_comparison.dispatch.h_AVX512F.a.p\\loops_comparison.dispatch.c'
+        [56/503] Generating 'numpy\\core\\libloops_comparison.dispatch.h_AVX2.a.p\\loops_comparison.dispatch.c'
+        [57/503] Generating 'numpy\\core\\libloops_comparison.dispatch.h_SSE42.a.p\\loops_utils.h'
+        [58/503] Generating 'numpy\\core\\libloops_comparison.dispatch.h_SSE42.a.p\\loops.h'
+        [59/503] Generating 'numpy\\core\\libloops_comparison.dispatch.h_SSE42.a.p\\loops_comparison.dispatch.c'
+        [60/503] Generating 'numpy\\core\\libloops_exponent_log.dispatch.h_baseline.a.p\\loops.h'
+        [61/503] Generating 'numpy\\core\\libloops_exponent_log.dispatch.h_baseline.a.p\\loops_utils.h'
+        [62/503] Generating 'numpy\\core\\libloops_exponent_log.dispatch.h_AVX512_SKX.a.p\\loops_utils.h'
+        [63/503] Generating 'numpy\\core\\libloops_exponent_log.dispatch.h_AVX512_SKX.a.p\\loops_exponent_log.dispatch.c'
+        [64/503] Generating 'numpy\\core\\libloops_exponent_log.dispatch.h_AVX512F.a.p\\loops.h'
+        [65/503] Generating 'numpy\\core\\libloops_exponent_log.dispatch.h_AVX512F.a.p\\loops_utils.h'
+        [66/503] Generating 'numpy\\core\\libloops_exponent_log.dispatch.h_AVX512F.a.p\\loops_exponent_log.dispatch.c'
+        [67/503] Generating 'numpy\\core\\libloops_exponent_log.dispatch.h_baseline.a.p\\loops_exponent_log.dispatch.c'
+        [68/503] Generating 'numpy\\core\\libloops_exponent_log.dispatch.h_AVX512_SKX.a.p\\loops.h'
+        [69/503] Generating 'numpy\\core\\libloops_exponent_log.dispatch.h_AVX2.a.p\\loops.h'
+        [70/503] Generating 'numpy\\core\\libloops_exponent_log.dispatch.h_AVX2.a.p\\loops_exponent_log.dispatch.c'
+        [71/503] Generating 'numpy\\core\\libloops_exponent_log.dispatch.h_AVX2.a.p\\loops_utils.h'
+        [72/503] Generating numpy/core/__ufunc_api with a custom command
+        [73/503] Generating 'numpy\\core\\libloops_hyperbolic.dispatch.h_baseline.a.p\\loops.h'
+        [74/503] Generating numpy/core/__multiarray_api with a custom command
+        [75/503] Generating 'numpy\\core\\libloops_hyperbolic.dispatch.h_baseline.a.p\\loops_hyperbolic.dispatch.c'
+        [76/503] Generating 'numpy\\core\\libloops_hyperbolic.dispatch.h_AVX512_SKX.a.p\\loops_utils.h'
+        [77/503] Generating 'numpy\\core\\libloops_hyperbolic.dispatch.h_baseline.a.p\\loops_utils.h'
+        [78/503] Generating 'numpy\\core\\libloops_hyperbolic.dispatch.h_AVX512_SKX.a.p\\loops_hyperbolic.dispatch.c'
+        [79/503] Generating 'numpy\\core\\libloops_hyperbolic.dispatch.h_AVX2.a.p\\loops.h'
+        [80/503] Generating 'numpy\\core\\libloops_hyperbolic.dispatch.h_AVX2.a.p\\loops_utils.h'
+        [81/503] Generating 'numpy\\core\\libloops_hyperbolic.dispatch.h_AVX2.a.p\\loops_hyperbolic.dispatch.c'
+        [82/503] Generating 'numpy\\core\\libloops_logical.dispatch.h_baseline.a.p\\loops.h'
+        [83/503] Generating 'numpy\\core\\libloops_hyperbolic.dispatch.h_AVX512_SKX.a.p\\loops.h'
+        [84/503] Generating 'numpy\\core\\libloops_logical.dispatch.h_baseline.a.p\\loops_utils.h'
+        [85/503] Generating 'numpy\\core\\libloops_logical.dispatch.h_AVX512_SKX.a.p\\loops_utils.h'
+        [86/503] Generating 'numpy\\core\\libloops_logical.dispatch.h_AVX512_SKX.a.p\\loops.h'
+        [87/503] Generating 'numpy\\core\\libloops_logical.dispatch.h_baseline.a.p\\loops_logical.dispatch.c'
+        [88/503] Generating 'numpy\\core\\libloops_logical.dispatch.h_AVX2.a.p\\loops_logical.dispatch.c'
+        [89/503] Generating 'numpy\\core\\libloops_logical.dispatch.h_AVX512_SKX.a.p\\loops_logical.dispatch.c'
+        [90/503] Generating 'numpy\\core\\libloops_logical.dispatch.h_AVX2.a.p\\loops_utils.h'
+        [91/503] Generating 'numpy\\core\\libloops_logical.dispatch.h_AVX2.a.p\\loops.h'
+        [92/503] Generating 'numpy\\core\\libloops_minmax.dispatch.h_baseline.a.p\\loops.h'
+        [93/503] Generating 'numpy\\core\\libloops_minmax.dispatch.h_baseline.a.p\\loops_utils.h'
+        [94/503] Generating 'numpy\\core\\libloops_minmax.dispatch.h_AVX512_SKX.a.p\\loops_utils.h'
+        [95/503] Generating 'numpy\\core\\libloops_minmax.dispatch.h_AVX512_SKX.a.p\\loops.h'
+        [96/503] Generating 'numpy\\core\\libloops_minmax.dispatch.h_AVX2.a.p\\loops.h'
+        [97/503] Generating 'numpy\\core\\libloops_minmax.dispatch.h_AVX2.a.p\\loops_utils.h'
+        [98/503] Generating 'numpy\\core\\libloops_minmax.dispatch.h_baseline.a.p\\loops_minmax.dispatch.c'
+        [99/503] Generating 'numpy\\core\\libloops_modulo.dispatch.h_baseline.a.p\\loops_utils.h'
+        [100/503] Generating 'numpy\\core\\libloops_trigonometric.dispatch.h_baseline.a.p\\loops.h'
+        [101/503] Generating 'numpy\\core\\libloops_minmax.dispatch.h_AVX512_SKX.a.p\\loops_minmax.dispatch.c'
+        [102/503] Generating 'numpy\\core\\libloops_modulo.dispatch.h_baseline.a.p\\loops.h'
+        [103/503] Generating 'numpy\\core\\libloops_modulo.dispatch.h_baseline.a.p\\loops_modulo.dispatch.c'
+        [104/503] Generating 'numpy\\core\\libloops_minmax.dispatch.h_AVX2.a.p\\loops_minmax.dispatch.c'
+        [105/503] Generating 'numpy\\core\\libloops_trigonometric.dispatch.h_baseline.a.p\\loops_utils.h'
+        [106/503] Generating 'numpy\\core\\libloops_trigonometric.dispatch.h_baseline.a.p\\loops_trigonometric.dispatch.c'
+        [107/503] Generating 'numpy\\core\\libloops_trigonometric.dispatch.h_AVX512F.a.p\\loops_utils.h'
+        [108/503] Generating 'numpy\\core\\libloops_trigonometric.dispatch.h_AVX512F.a.p\\loops.h'
+        [109/503] Generating 'numpy\\core\\libloops_trigonometric.dispatch.h_AVX2.a.p\\loops.h'
+        [110/503] Generating 'numpy\\core\\libloops_trigonometric.dispatch.h_AVX2.a.p\\loops_utils.h'
+        [111/503] Generating 'numpy\\core\\libloops_trigonometric.dispatch.h_AVX512F.a.p\\loops_trigonometric.dispatch.c'
+        [112/503] Generating 'numpy\\core\\libloops_trigonometric.dispatch.h_AVX2.a.p\\loops_trigonometric.dispatch.c'
+        [113/503] Generating 'numpy\\core\\libloops_umath_fp.dispatch.h_baseline.a.p\\loops_utils.h'
+        [114/503] Generating 'numpy\\core\\libloops_umath_fp.dispatch.h_baseline.a.p\\loops_umath_fp.dispatch.c'
+        [115/503] Generating 'numpy\\core\\libloops_umath_fp.dispatch.h_AVX512_SKX.a.p\\loops_utils.h'
+        [116/503] Generating 'numpy\\core\\libloops_umath_fp.dispatch.h_AVX512_SKX.a.p\\loops.h'
+        [117/503] Generating 'numpy\\core\\libloops_umath_fp.dispatch.h_AVX512_SKX.a.p\\loops_umath_fp.dispatch.c'
+        [118/503] Generating 'numpy\\core\\libloops_umath_fp.dispatch.h_baseline.a.p\\loops.h'
+        [119/503] Generating 'numpy\\core\\libloops_unary.dispatch.h_baseline.a.p\\loops.h'
+        [120/503] Generating 'numpy\\core\\libloops_unary.dispatch.h_baseline.a.p\\loops_utils.h'
+        [121/503] Generating 'numpy\\core\\libloops_unary.dispatch.h_AVX2.a.p\\loops.h'
+        [122/503] Generating 'numpy\\core\\libloops_unary.dispatch.h_AVX512_SKX.a.p\\loops_utils.h'
+        [123/503] Generating 'numpy\\core\\libloops_unary.dispatch.h_AVX2.a.p\\loops_utils.h'
+        [124/503] Generating 'numpy\\core\\libloops_unary.dispatch.h_AVX512_SKX.a.p\\loops.h'
+        [125/503] Generating 'numpy\\core\\libloops_unary_fp.dispatch.h_baseline.a.p\\loops_utils.h'
+        [126/503] Generating 'numpy\\core\\libloops_unary.dispatch.h_baseline.a.p\\loops_unary.dispatch.c'
+        FAILED: [code=1] numpy/core/libloops_unary.dispatch.h_baseline.a.p/loops_unary.dispatch.c
+        "I:\Tasacion2026\venv\Scripts\python.exe" "C:\Users\arnyd\AppData\Local\Temp\pip-install-yi1qugxj\numpy_91d77987145f489a95b1a7d97a1b0e0a\numpy\_build_utils/process_src_template.py" "../numpy/core/src/umath/loops_unary.dispatch.c.src" "--outfile" "numpy/core/libloops_unary.dispatch.h_baseline.a.p/loops_unary.dispatch.c"
+        Traceback (most recent call last):
+          File "C:\Users\arnyd\AppData\Local\Temp\pip-install-yi1qugxj\numpy_91d77987145f489a95b1a7d97a1b0e0a\numpy\_build_utils/process_src_template.py", line 67, in <module>
+            main()
+            ~~~~^^
+          File "C:\Users\arnyd\AppData\Local\Temp\pip-install-yi1qugxj\numpy_91d77987145f489a95b1a7d97a1b0e0a\numpy\_build_utils/process_src_template.py", line 63, in main
+            process_and_write_file(args.infile, outfile_abs)
+            ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+          File "C:\Users\arnyd\AppData\Local\Temp\pip-install-yi1qugxj\numpy_91d77987145f489a95b1a7d97a1b0e0a\numpy\_build_utils/process_src_template.py", line 34, in process_and_write_file
+            f.write(content)
+            ~~~~~~~^^^^^^^^^
+        OSError: [Errno 28] No space left on device
+        [127/503] Generating 'numpy\\core\\libloops_unary_fp.dispatch.h_baseline.a.p\\loops.h'
+        FAILED: [code=1] numpy/core/libloops_unary_fp.dispatch.h_baseline.a.p/loops.h
+        "I:\Tasacion2026\venv\Scripts\python.exe" "C:\Users\arnyd\AppData\Local\Temp\pip-install-yi1qugxj\numpy_91d77987145f489a95b1a7d97a1b0e0a\numpy\_build_utils/process_src_template.py" "../numpy/core/src/umath/loops.h.src" "--outfile" "numpy/core/libloops_unary_fp.dispatch.h_baseline.a.p/loops.h"
+        Traceback (most recent call last):
+          File "C:\Users\arnyd\AppData\Local\Temp\pip-install-yi1qugxj\numpy_91d77987145f489a95b1a7d97a1b0e0a\numpy\_build_utils/process_src_template.py", line 67, in <module>
+            main()
+            ~~~~^^
+          File "C:\Users\arnyd\AppData\Local\Temp\pip-install-yi1qugxj\numpy_91d77987145f489a95b1a7d97a1b0e0a\numpy\_build_utils/process_src_template.py", line 63, in main
+            process_and_write_file(args.infile, outfile_abs)
+            ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+          File "C:\Users\arnyd\AppData\Local\Temp\pip-install-yi1qugxj\numpy_91d77987145f489a95b1a7d97a1b0e0a\numpy\_build_utils/process_src_template.py", line 34, in process_and_write_file
+            f.write(content)
+            ~~~~~~~^^^^^^^^^
+        OSError: [Errno 28] No space left on device
+        [128/503] Generating 'numpy\\core\\libloops_unary.dispatch.h_AVX512_SKX.a.p\\loops_unary.dispatch.c'
+        FAILED: [code=1] numpy/core/libloops_unary.dispatch.h_AVX512_SKX.a.p/loops_unary.dispatch.c
+        "I:\Tasacion2026\venv\Scripts\python.exe" "C:\Users\arnyd\AppData\Local\Temp\pip-install-yi1qugxj\numpy_91d77987145f489a95b1a7d97a1b0e0a\numpy\_build_utils/process_src_template.py" "../numpy/core/src/umath/loops_unary.dispatch.c.src" "--outfile" "numpy/core/libloops_unary.dispatch.h_AVX512_SKX.a.p/loops_unary.dispatch.c"
+        Traceback (most recent call last):
+          File "C:\Users\arnyd\AppData\Local\Temp\pip-install-yi1qugxj\numpy_91d77987145f489a95b1a7d97a1b0e0a\numpy\_build_utils/process_src_template.py", line 67, in <module>
+            main()
+            ~~~~^^
+          File "C:\Users\arnyd\AppData\Local\Temp\pip-install-yi1qugxj\numpy_91d77987145f489a95b1a7d97a1b0e0a\numpy\_build_utils/process_src_template.py", line 63, in main
+            process_and_write_file(args.infile, outfile_abs)
+            ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+          File "C:\Users\arnyd\AppData\Local\Temp\pip-install-yi1qugxj\numpy_91d77987145f489a95b1a7d97a1b0e0a\numpy\_build_utils/process_src_template.py", line 34, in process_and_write_file
+            f.write(content)
+            ~~~~~~~^^^^^^^^^
+        OSError: [Errno 28] No space left on device
+        [129/503] Generating 'numpy\\core\\libloops_unary.dispatch.h_AVX2.a.p\\loops_unary.dispatch.c'
+        FAILED: [code=1] numpy/core/libloops_unary.dispatch.h_AVX2.a.p/loops_unary.dispatch.c
+        "I:\Tasacion2026\venv\Scripts\python.exe" "C:\Users\arnyd\AppData\Local\Temp\pip-install-yi1qugxj\numpy_91d77987145f489a95b1a7d97a1b0e0a\numpy\_build_utils/process_src_template.py" "../numpy/core/src/umath/loops_unary.dispatch.c.src" "--outfile" "numpy/core/libloops_unary.dispatch.h_AVX2.a.p/loops_unary.dispatch.c"
+        Traceback (most recent call last):
+          File "C:\Users\arnyd\AppData\Local\Temp\pip-install-yi1qugxj\numpy_91d77987145f489a95b1a7d97a1b0e0a\numpy\_build_utils/process_src_template.py", line 67, in <module>
+            main()
+            ~~~~^^
+          File "C:\Users\arnyd\AppData\Local\Temp\pip-install-yi1qugxj\numpy_91d77987145f489a95b1a7d97a1b0e0a\numpy\_build_utils/process_src_template.py", line 63, in main
+            process_and_write_file(args.infile, outfile_abs)
+            ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+          File "C:\Users\arnyd\AppData\Local\Temp\pip-install-yi1qugxj\numpy_91d77987145f489a95b1a7d97a1b0e0a\numpy\_build_utils/process_src_template.py", line 34, in process_and_write_file
+            f.write(content)
+            ~~~~~~~^^^^^^^^^
+        OSError: [Errno 28] No space left on device
+        [130/503] Generating 'numpy\\core\\libloops_unary_fp.dispatch.h_baseline.a.p\\loops_unary_fp.dispatch.c'
+        FAILED: [code=1] numpy/core/libloops_unary_fp.dispatch.h_baseline.a.p/loops_unary_fp.dispatch.c
+        "I:\Tasacion2026\venv\Scripts\python.exe" "C:\Users\arnyd\AppData\Local\Temp\pip-install-yi1qugxj\numpy_91d77987145f489a95b1a7d97a1b0e0a\numpy\_build_utils/process_src_template.py" "../numpy/core/src/umath/loops_unary_fp.dispatch.c.src" "--outfile" "numpy/core/libloops_unary_fp.dispatch.h_baseline.a.p/loops_unary_fp.dispatch.c"
+        Traceback (most recent call last):
+          File "C:\Users\arnyd\AppData\Local\Temp\pip-install-yi1qugxj\numpy_91d77987145f489a95b1a7d97a1b0e0a\numpy\_build_utils/process_src_template.py", line 67, in <module>
+            main()
+            ~~~~^^
+          File "C:\Users\arnyd\AppData\Local\Temp\pip-install-yi1qugxj\numpy_91d77987145f489a95b1a7d97a1b0e0a\numpy\_build_utils/process_src_template.py", line 63, in main
+            process_and_write_file(args.infile, outfile_abs)
+            ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+          File "C:\Users\arnyd\AppData\Local\Temp\pip-install-yi1qugxj\numpy_91d77987145f489a95b1a7d97a1b0e0a\numpy\_build_utils/process_src_template.py", line 34, in process_and_write_file
+            f.write(content)
+            ~~~~~~~^^^^^^^^^
+        OSError: [Errno 28] No space left on device
+        [131/503] Generating 'numpy\\core\\libloops_unary_fp.dispatch.h_SSE41.a.p\\loops_utils.h'
+        FAILED: [code=1] numpy/core/libloops_unary_fp.dispatch.h_SSE41.a.p/loops_utils.h
+        "I:\Tasacion2026\venv\Scripts\python.exe" "C:\Users\arnyd\AppData\Local\Temp\pip-install-yi1qugxj\numpy_91d77987145f489a95b1a7d97a1b0e0a\numpy\_build_utils/process_src_template.py" "../numpy/core/src/umath/loops_utils.h.src" "--outfile" "numpy/core/libloops_unary_fp.dispatch.h_SSE41.a.p/loops_utils.h"
+        OSError: [Errno 28] No space left on device
+
+        During handling of the above exception, another exception occurred:
+
+        Traceback (most recent call last):
+          File "C:\Users\arnyd\AppData\Local\Temp\pip-install-yi1qugxj\numpy_91d77987145f489a95b1a7d97a1b0e0a\numpy\_build_utils/process_src_template.py", line 67, in <module>
+            main()
+            ~~~~^^
+          File "C:\Users\arnyd\AppData\Local\Temp\pip-install-yi1qugxj\numpy_91d77987145f489a95b1a7d97a1b0e0a\numpy\_build_utils/process_src_template.py", line 63, in main
+            process_and_write_file(args.infile, outfile_abs)
+            ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+          File "C:\Users\arnyd\AppData\Local\Temp\pip-install-yi1qugxj\numpy_91d77987145f489a95b1a7d97a1b0e0a\numpy\_build_utils/process_src_template.py", line 33, in process_and_write_file
+            with open(outfile, 'w') as f:
+                 ~~~~^^^^^^^^^^^^^^
+        OSError: [Errno 28] No space left on device
+        [132/503] Generating 'numpy\\core\\libloops_unary_fp.dispatch.h_SSE41.a.p\\loops.h'
+        FAILED: [code=1] numpy/core/libloops_unary_fp.dispatch.h_SSE41.a.p/loops.h
+        "I:\Tasacion2026\venv\Scripts\python.exe" "C:\Users\arnyd\AppData\Local\Temp\pip-install-yi1qugxj\numpy_91d77987145f489a95b1a7d97a1b0e0a\numpy\_build_utils/process_src_template.py" "../numpy/core/src/umath/loops.h.src" "--outfile" "numpy/core/libloops_unary_fp.dispatch.h_SSE41.a.p/loops.h"
+        Traceback (most recent call last):
+          File "C:\Users\arnyd\AppData\Local\Temp\pip-install-yi1qugxj\numpy_91d77987145f489a95b1a7d97a1b0e0a\numpy\_build_utils/process_src_template.py", line 67, in <module>
+            main()
+            ~~~~^^
+          File "C:\Users\arnyd\AppData\Local\Temp\pip-install-yi1qugxj\numpy_91d77987145f489a95b1a7d97a1b0e0a\numpy\_build_utils/process_src_template.py", line 63, in main
+            process_and_write_file(args.infile, outfile_abs)
+            ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+          File "C:\Users\arnyd\AppData\Local\Temp\pip-install-yi1qugxj\numpy_91d77987145f489a95b1a7d97a1b0e0a\numpy\_build_utils/process_src_template.py", line 34, in process_and_write_file
+            f.write(content)
+            ~~~~~~~^^^^^^^^^
+        OSError: [Errno 28] No space left on device
+        [133/503] Generating 'numpy\\core\\libloops_unary_fp_le.dispatch.h_baseline.a.p\\loops.h'
+        FAILED: [code=1] numpy/core/libloops_unary_fp_le.dispatch.h_baseline.a.p/loops.h
+        "I:\Tasacion2026\venv\Scripts\python.exe" "C:\Users\arnyd\AppData\Local\Temp\pip-install-yi1qugxj\numpy_91d77987145f489a95b1a7d97a1b0e0a\numpy\_build_utils/process_src_template.py" "../numpy/core/src/umath/loops.h.src" "--outfile" "numpy/core/libloops_unary_fp_le.dispatch.h_baseline.a.p/loops.h"
+        Traceback (most recent call last):
+          File "C:\Users\arnyd\AppData\Local\Temp\pip-install-yi1qugxj\numpy_91d77987145f489a95b1a7d97a1b0e0a\numpy\_build_utils/process_src_template.py", line 67, in <module>
+            main()
+            ~~~~^^
+          File "C:\Users\arnyd\AppData\Local\Temp\pip-install-yi1qugxj\numpy_91d77987145f489a95b1a7d97a1b0e0a\numpy\_build_utils/process_src_template.py", line 63, in main
+            process_and_write_file(args.infile, outfile_abs)
+            ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+          File "C:\Users\arnyd\AppData\Local\Temp\pip-install-yi1qugxj\numpy_91d77987145f489a95b1a7d97a1b0e0a\numpy\_build_utils/process_src_template.py", line 34, in process_and_write_file
+            f.write(content)
+            ~~~~~~~^^^^^^^^^
+        OSError: [Errno 28] No space left on device
+        [134/503] Generating 'numpy\\core\\libloops_unary_fp_le.dispatch.h_baseline.a.p\\loops_utils.h'
+        FAILED: [code=1] numpy/core/libloops_unary_fp_le.dispatch.h_baseline.a.p/loops_utils.h
+        "I:\Tasacion2026\venv\Scripts\python.exe" "C:\Users\arnyd\AppData\Local\Temp\pip-install-yi1qugxj\numpy_91d77987145f489a95b1a7d97a1b0e0a\numpy\_build_utils/process_src_template.py" "../numpy/core/src/umath/loops_utils.h.src" "--outfile" "numpy/core/libloops_unary_fp_le.dispatch.h_baseline.a.p/loops_utils.h"
+        OSError: [Errno 28] No space left on device
+
+        During handling of the above exception, another exception occurred:
+
+        Traceback (most recent call last):
+          File "C:\Users\arnyd\AppData\Local\Temp\pip-install-yi1qugxj\numpy_91d77987145f489a95b1a7d97a1b0e0a\numpy\_build_utils/process_src_template.py", line 67, in <module>
+            main()
+            ~~~~^^
+          File "C:\Users\arnyd\AppData\Local\Temp\pip-install-yi1qugxj\numpy_91d77987145f489a95b1a7d97a1b0e0a\numpy\_build_utils/process_src_template.py", line 63, in main
+            process_and_write_file(args.infile, outfile_abs)
+            ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+          File "C:\Users\arnyd\AppData\Local\Temp\pip-install-yi1qugxj\numpy_91d77987145f489a95b1a7d97a1b0e0a\numpy\_build_utils/process_src_template.py", line 33, in process_and_write_file
+            with open(outfile, 'w') as f:
+                 ~~~~^^^^^^^^^^^^^^
+        OSError: [Errno 28] No space left on device
+        [135/503] Generating 'numpy\\core\\libloops_unary_fp.dispatch.h_SSE41.a.p\\loops_unary_fp.dispatch.c'
+        FAILED: [code=1] numpy/core/libloops_unary_fp.dispatch.h_SSE41.a.p/loops_unary_fp.dispatch.c
+        "I:\Tasacion2026\venv\Scripts\python.exe" "C:\Users\arnyd\AppData\Local\Temp\pip-install-yi1qugxj\numpy_91d77987145f489a95b1a7d97a1b0e0a\numpy\_build_utils/process_src_template.py" "../numpy/core/src/umath/loops_unary_fp.dispatch.c.src" "--outfile" "numpy/core/libloops_unary_fp.dispatch.h_SSE41.a.p/loops_unary_fp.dispatch.c"
+        Traceback (most recent call last):
+          File "C:\Users\arnyd\AppData\Local\Temp\pip-install-yi1qugxj\numpy_91d77987145f489a95b1a7d97a1b0e0a\numpy\_build_utils/process_src_template.py", line 67, in <module>
+            main()
+            ~~~~^^
+          File "C:\Users\arnyd\AppData\Local\Temp\pip-install-yi1qugxj\numpy_91d77987145f489a95b1a7d97a1b0e0a\numpy\_build_utils/process_src_template.py", line 63, in main
+            process_and_write_file(args.infile, outfile_abs)
+            ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+          File "C:\Users\arnyd\AppData\Local\Temp\pip-install-yi1qugxj\numpy_91d77987145f489a95b1a7d97a1b0e0a\numpy\_build_utils/process_src_template.py", line 33, in process_and_write_file
+            with open(outfile, 'w') as f:
+                 ~~~~^^^^^^^^^^^^^^
+        OSError: [Errno 28] No space left on device: 'C:\\Users\\arnyd\\AppData\\Local\\Temp\\pip-install-yi1qugxj\\numpy_91d77987145f489a95b1a7d97a1b0e0a\\.mesonpy-jzygbclm\\numpy/core/libloops_unary_fp.dispatch.h_SSE41.a.p/loops_unary_fp.dispatch.c'
+        [136/503] Generating 'numpy\\core\\libloops_unary_fp_le.dispatch.h_SSE41.a.p\\loops_utils.h'
+        FAILED: [code=1] numpy/core/libloops_unary_fp_le.dispatch.h_SSE41.a.p/loops_utils.h
+        "I:\Tasacion2026\venv\Scripts\python.exe" "C:\Users\arnyd\AppData\Local\Temp\pip-install-yi1qugxj\numpy_91d77987145f489a95b1a7d97a1b0e0a\numpy\_build_utils/process_src_template.py" "../numpy/core/src/umath/loops_utils.h.src" "--outfile" "numpy/core/libloops_unary_fp_le.dispatch.h_SSE41.a.p/loops_utils.h"
+        OSError: [Errno 28] No space left on device
+
+        During handling of the above exception, another exception occurred:
+
+        Traceback (most recent call last):
+          File "C:\Users\arnyd\AppData\Local\Temp\pip-install-yi1qugxj\numpy_91d77987145f489a95b1a7d97a1b0e0a\numpy\_build_utils/process_src_template.py", line 67, in <module>
+            main()
+            ~~~~^^
+          File "C:\Users\arnyd\AppData\Local\Temp\pip-install-yi1qugxj\numpy_91d77987145f489a95b1a7d97a1b0e0a\numpy\_build_utils/process_src_template.py", line 63, in main
+            process_and_write_file(args.infile, outfile_abs)
+            ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+          File "C:\Users\arnyd\AppData\Local\Temp\pip-install-yi1qugxj\numpy_91d77987145f489a95b1a7d97a1b0e0a\numpy\_build_utils/process_src_template.py", line 33, in process_and_write_file
+            with open(outfile, 'w') as f:
+                 ~~~~^^^^^^^^^^^^^^
+        OSError: [Errno 28] No space left on device
+        [137/503] Generating 'numpy\\core\\libloops_unary_fp_le.dispatch.h_SSE41.a.p\\loops.h'
+        FAILED: [code=1] numpy/core/libloops_unary_fp_le.dispatch.h_SSE41.a.p/loops.h
+        "I:\Tasacion2026\venv\Scripts\python.exe" "C:\Users\arnyd\AppData\Local\Temp\pip-install-yi1qugxj\numpy_91d77987145f489a95b1a7d97a1b0e0a\numpy\_build_utils/process_src_template.py" "../numpy/core/src/umath/loops.h.src" "--outfile" "numpy/core/libloops_unary_fp_le.dispatch.h_SSE41.a.p/loops.h"
+        Traceback (most recent call last):
+          File "C:\Users\arnyd\AppData\Local\Temp\pip-install-yi1qugxj\numpy_91d77987145f489a95b1a7d97a1b0e0a\numpy\_build_utils/process_src_template.py", line 67, in <module>
+            main()
+            ~~~~^^
+          File "C:\Users\arnyd\AppData\Local\Temp\pip-install-yi1qugxj\numpy_91d77987145f489a95b1a7d97a1b0e0a\numpy\_build_utils/process_src_template.py", line 63, in main
+            process_and_write_file(args.infile, outfile_abs)
+            ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+          File "C:\Users\arnyd\AppData\Local\Temp\pip-install-yi1qugxj\numpy_91d77987145f489a95b1a7d97a1b0e0a\numpy\_build_utils/process_src_template.py", line 34, in process_and_write_file
+            f.write(content)
+            ~~~~~~~^^^^^^^^^
+        OSError: [Errno 28] No space left on device
+        [138/503] Generating 'numpy\\core\\libloops_unary_fp_le.dispatch.h_SSE41.a.p\\loops_unary_fp_le.dispatch.c'
+        FAILED: [code=1] numpy/core/libloops_unary_fp_le.dispatch.h_SSE41.a.p/loops_unary_fp_le.dispatch.c
+        "I:\Tasacion2026\venv\Scripts\python.exe" "C:\Users\arnyd\AppData\Local\Temp\pip-install-yi1qugxj\numpy_91d77987145f489a95b1a7d97a1b0e0a\numpy\_build_utils/process_src_template.py" "../numpy/core/src/umath/loops_unary_fp_le.dispatch.c.src" "--outfile" "numpy/core/libloops_unary_fp_le.dispatch.h_SSE41.a.p/loops_unary_fp_le.dispatch.c"
+        Traceback (most recent call last):
+          File "C:\Users\arnyd\AppData\Local\Temp\pip-install-yi1qugxj\numpy_91d77987145f489a95b1a7d97a1b0e0a\numpy\_build_utils/process_src_template.py", line 67, in <module>
+            main()
+            ~~~~^^
+          File "C:\Users\arnyd\AppData\Local\Temp\pip-install-yi1qugxj\numpy_91d77987145f489a95b1a7d97a1b0e0a\numpy\_build_utils/process_src_template.py", line 63, in main
+            process_and_write_file(args.infile, outfile_abs)
+            ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+          File "C:\Users\arnyd\AppData\Local\Temp\pip-install-yi1qugxj\numpy_91d77987145f489a95b1a7d97a1b0e0a\numpy\_build_utils/process_src_template.py", line 33, in process_and_write_file
+            with open(outfile, 'w') as f:
+                 ~~~~^^^^^^^^^^^^^^
+        OSError: [Errno 28] No space left on device: 'C:\\Users\\arnyd\\AppData\\Local\\Temp\\pip-install-yi1qugxj\\numpy_91d77987145f489a95b1a7d97a1b0e0a\\.mesonpy-jzygbclm\\numpy/core/libloops_unary_fp_le.dispatch.h_SSE41.a.p/loops_unary_fp_le.dispatch.c'
+        [139/503] Generating 'numpy\\core\\libloops_unary_fp_le.dispatch.h_baseline.a.p\\loops_unary_fp_le.dispatch.c'
+        FAILED: [code=1] numpy/core/libloops_unary_fp_le.dispatch.h_baseline.a.p/loops_unary_fp_le.dispatch.c
+        "I:\Tasacion2026\venv\Scripts\python.exe" "C:\Users\arnyd\AppData\Local\Temp\pip-install-yi1qugxj\numpy_91d77987145f489a95b1a7d97a1b0e0a\numpy\_build_utils/process_src_template.py" "../numpy/core/src/umath/loops_unary_fp_le.dispatch.c.src" "--outfile" "numpy/core/libloops_unary_fp_le.dispatch.h_baseline.a.p/loops_unary_fp_le.dispatch.c"
+        Traceback (most recent call last):
+          File "C:\Users\arnyd\AppData\Local\Temp\pip-install-yi1qugxj\numpy_91d77987145f489a95b1a7d97a1b0e0a\numpy\_build_utils/process_src_template.py", line 67, in <module>
+            main()
+            ~~~~^^
+          File "C:\Users\arnyd\AppData\Local\Temp\pip-install-yi1qugxj\numpy_91d77987145f489a95b1a7d97a1b0e0a\numpy\_build_utils/process_src_template.py", line 63, in main
+            process_and_write_file(args.infile, outfile_abs)
+            ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+          File "C:\Users\arnyd\AppData\Local\Temp\pip-install-yi1qugxj\numpy_91d77987145f489a95b1a7d97a1b0e0a\numpy\_build_utils/process_src_template.py", line 33, in process_and_write_file
+            with open(outfile, 'w') as f:
+                 ~~~~^^^^^^^^^^^^^^
+        OSError: [Errno 28] No space left on device: 'C:\\Users\\arnyd\\AppData\\Local\\Temp\\pip-install-yi1qugxj\\numpy_91d77987145f489a95b1a7d97a1b0e0a\\.mesonpy-jzygbclm\\numpy/core/libloops_unary_fp_le.dispatch.h_baseline.a.p/loops_unary_fp_le.dispatch.c'
+        ninja: build stopped: subcommand failed.
+        Activating VS 16.11.50
+        INFO: automatically activated MSVC compiler environment
+        INFO: autodetecting backend as ninja
+        INFO: calculating backend command to run: C:\Users\arnyd\AppData\Local\Temp\pip-build-env-aidu7513\normal\Scripts\ninja.EXE
+        [end of output]
+
+        note: This error originates from a subprocess, and is likely not a problem with pip.
+      error: metadata-generation-failed
+
+      Encountered error while generating package metadata.
+
+      numpy
+
+      note: This is an issue with the package mentioned above, not pip.
+      hint: See above for details.
+      [end of output]
+
+  note: This error originates from a subprocess, and is likely not a problem with pip.
+ERROR: Failed to build 'pandas' when installing build dependencies for pandas
+
+==========================================
+   INICIANDO SERVIDOR
+   Accede a: http://localhost:8090
+==========================================
+
+Traceback (most recent call last):
+  File "I:\Tasacion2026\main.py", line 1, in <module>
+    import afecciones.vector_analyzer
+  File "I:\Tasacion2026\afecciones\__init__.py", line 7, in <module>
+    from .vector_analyzer import VectorAnalyzer
+  File "I:\Tasacion2026\afecciones\vector_analyzer.py", line 3, in <module>
+    import pandas as pd
+ModuleNotFoundError: No module named 'pandas'
+Presione una tecla para continuar . . .

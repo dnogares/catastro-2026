@@ -24,6 +24,7 @@ wheels/
 # Project specific
 outputs/
 capas/
+data/
 *.zip
 *.gml
 *.kml
