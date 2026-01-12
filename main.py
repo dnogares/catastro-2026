@@ -115,6 +115,87 @@ async def paso1_analizar(referencia: str = Form(...)):
     Paso 1: Descarga datos catastrales y analiza afecciones
     """
     try:
+
+def generar_csv_tecnico(referencia, urban_data, aff_data, output_dir):
+    """Genera un CSV con todos los datos técnicos del análisis."""
+    import csv
+    from datetime import datetime
+    
+    filepath = output_dir / f"{referencia}_datos_tecnicos.csv"
+    
+    # Estructura base
+    data = {}
+    
+    # 1. Datos Identificativos
+    data["Referencia"] = referencia
+    data["Fecha_Analisis"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    
+    # 2. Datos Catastrales (Area)
+    # Intentar obtener área de urbanismo o afecciones
+    area = 0.0
+    if urban_data and not urban_data.get("error"):
+        area = urban_data.get("area_parcela_m2", 0)
+    if area == 0 and aff_data:
+        area = aff_data.get("area_parcela_m2", aff_data.get("area_total_m2", 0))
+    
+    data["Area_Parcela_m2"] = round(area, 2)
+    
+    # 3. Datos Urbanísticos
+    if urban_data and not urban_data.get("error") and urban_data.get("urbanismo"):
+        # Detalles (suelen ser porcentajes)
+        for k, v in urban_data.get("detalle", {}).items():
+            key_name = f"URB_{k.replace(' ', '_')}_pct"
+            data[key_name] = v
+            # Calcular área aprox
+            data[f"URB_{k.replace(' ', '_')}_m2"] = round((v / 100) * area, 2)
+    
+    # 4. Afecciones Vectoriales
+    if aff_data:
+        data["Afecciones_Total_Max_pct"] = aff_data.get("total", 0)
+        
+        # Detalles (en paso1_analizar guardamos áreas en 'detalle')
+        for k, v in aff_data.get("detalle", {}).items():
+            # k es "Capa - Clase"
+            clean_key = f"AF_{k}".replace(" ", "_").replace("-", "_").replace("__", "_")
+            data[f"{clean_key}_m2"] = v
+            # Calcular porcentaje
+            if area > 0:
+                data[f"{clean_key}_pct"] = round((v / area) * 100, 2)
+            else:
+                data[f"{clean_key}_pct"] = 0.0
+
+    # Escribir CSV (Vertical key-value para legibilidad técnica, o horizontal?)
+    # El usuario pide "un csv con todos los datos". Formato tabla horizontal es estándar.
+    
+    try:
+        with open(filepath, 'w', newline='', encoding='utf-8') as f:
+            writer = csv.writer(f)
+            # Cabecera
+            writer.writerow(data.keys())
+            # Valores
+            writer.writerow(data.values())
+        return str(filepath)
+    except Exception as e:
+        print(f"⚠️ Error generando CSV técnico: {e}")
+        return None
+
+# --- ENDPOINTS ---
+@app.get("/api/health")
+async def health_check():
+    """Endpoint de verificación de salud del servicio"""
+    return {
+        "status": "healthy",
+        "version": "3.1",
+        "outputs_dir": str(OUTPUTS_DIR.exists()),
+        "capas_dir": str(CAPAS_DIR.exists())
+    }
+
+@app.post("/api/v1/analizar-parcela")
+async def paso1_analizar(referencia: str = Form(...)):
+    """
+    Paso 1: Descarga datos catastrales y analiza afecciones
+    """
+    try:
         # Limpiar referencia
         ref_limpia = referencia.replace(' ', '').strip().upper()
         
@@ -210,8 +291,11 @@ async def paso1_analizar(referencia: str = Form(...)):
                 ref=ref_limpia,
                 info_afecciones=res_afecciones
             )
+        
+        # 4. Generar CSV Técnico Consolidado
+        csv_path = generar_csv_tecnico(ref_limpia, result_urban, res_afecciones, ref_dir)
 
-        # 4. Localizar mapa para el frontend
+        # 5. Localizar mapa para el frontend
         mapa_disponible = None
         posibles_mapas = [
             plano_path,
@@ -223,8 +307,8 @@ async def paso1_analizar(referencia: str = Form(...)):
             if mapa.exists():
                 mapa_disponible = f"/outputs/{ref_limpia}/images/{mapa.name}"
                 break
-
-        return {
+        
+        response_data = {
             "referencia": ref_limpia,
             "status": "success",
             "datos_urbanos": result_urban,
@@ -237,6 +321,11 @@ async def paso1_analizar(referencia: str = Form(...)):
                 "pdf_ficha": f"/outputs/{ref_limpia}/pdf/{ref_limpia}_ficha_catastral.pdf"
             }
         }
+        
+        if csv_path:
+            response_data["archivos_generados"]["csv_tecnico"] = f"/outputs/{ref_limpia}/{Path(csv_path).name}"
+            
+        return response_data
 
     except HTTPException:
         raise

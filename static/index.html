@@ -1089,6 +1089,9 @@
                                     ${data.archivos_generados.kml ?
                                 `<a href="${data.archivos_generados.kml}" class="file-link" download>🗺️ Descargar KML</a>`
                                 : ''}
+                                    ${data.archivos_generados.csv_tecnico ?
+                                `<a href="${data.archivos_generados.csv_tecnico}" class="file-link" download style="background: #2b6cb0; color: white;">📊 Descargar CSV Técnico</a>`
+                                : ''}
                                 </div>
                             </div>
                         `;
@@ -1584,8 +1587,7 @@
                                     <strong>Formato:</strong> ${coords[0].length > 6 ? 'UTM' : 'Geográficas'}
                                 </small>
                             </div>
-                        </div>
-                    `;
+                        </div>`;
 
                     layers.parcela.bindPopup(popupContent);
 
@@ -1595,65 +1597,31 @@
                     // Activar checkbox de parcela
                     document.getElementById('layer-parcela').checked = true;
 
-                    console.log(`✅ Parcela ${ref} cargada con perímetro: ${perimetro.toFixed(2)}m`);
+                    console.log(`✅ Parcela ${ref} cargada con perímetro: ${perimetro.toFixed(2)
+                        } m`);
+
+                    // Añadir al mapa y centrar
+                    layers.parcela.addTo(map);
+                    map.fitBounds(layers.parcela.getBounds());
+
+                    // Añadir popup
+                    layers.parcela.bindPopup(`<b>Parcela:</b> ${ref}`);
+                    layers.parcela.openPopup();
                 } else {
-                    throw new Error('No se pudieron extraer coordenadas del GML');
+                    // Si falla el parser simple, intentar obtener GeoJSON del backend
+                    console.log('⚠️ Parser GML simple falló, intentando obtener GeoJSON...');
+                    await cargarGeoJSONParcela(ref);
                 }
 
             } catch (error) {
                 console.error('❌ Error cargando GML:', error);
-                alert('Error cargando la geometría de la parcela');
+                // Fallback a GeoJSON
+                await cargarGeoJSONParcela(ref);
+
             }
+
+
         }
-
-        // Extraer coordenadas de GML (parser mejorado)
-        function extraerCoordenadasGML(gmlText) {
-            const coords = [];
-
-            // Buscar diferentes formatos de coordenadas en GML
-            // 1. posList (formato común)
-            let posListMatch = gmlText.match(/<gml:posList[^>]*>([^<]+)<\/gml:posList>/i);
-
-            // 2. coordinates (formato alternativo)
-            if (!posListMatch) {
-                posListMatch = gmlText.match(/<gml:coordinates[^>]*>([^<]+)<\/gml:coordinates>/i);
-            }
-
-            // 3. SRS para verificar si son UTM
-            const srsMatch = gmlText.match(/srsName[^>]*>([^<]+)<\/srsName>/i) ||
-                gmlText.match(/srs[^=]*=["']([^"']+)["']/i);
-
-            if (posListMatch) {
-                const numbers = posListMatch[1].trim().split(/\s+/).map(parseFloat);
-
-                // Verificar si son coordenadas geográficas o UTM
-                const isUTM = srsMatch && (srsMatch[1].includes('UTM') || srsMatch[1].includes('258') || srsMatch[1].includes('298') || srsMatch[1].includes('326'));
-
-                if (isUTM && numbers.length >= 6) {
-                    // Para UTM, usar conversión aproximada pero mejor
-                    // Nota: En producción usar proj4js o similar
-                    const utmX = numbers[0];
-                    const utmY = numbers[1];
-
-                    // Conversión UTM a Lat/Lng (aproximada para España peninsular)
-                    // Huso 30 para España peninsular
-                    const lat = utmY / 111320 - 0.15;
-                    const lng = (utmX - 500000) / (111320 * Math.cos(40 * Math.PI / 180)) - 3.5;
-
-                    coords.push([lat, lng]);
-                } else {
-                    // Coordenadas geográficas directas
-                    for (let i = 0; i < numbers.length; i += 2) {
-                        if (i + 1 < numbers.length) {
-                            coords.push([numbers[i + 1], numbers[i]]);
-                        }
-                    }
-                }
-            }
-
-            return coords;
-        }
-
         // Toggle visibilidad de capa
         function toggleLayer(layerName) {
             const checkbox = document.getElementById(`layer-${layerName}`);
@@ -1758,7 +1726,7 @@
                 L.marker(midPoint, {
                     icon: L.divIcon({
                         className: 'measurement-label',
-                        html: `${segmentDist.toFixed(1)}m`,
+                        html: `${segmentDist.toFixed(1)} m`,
                         iconSize: [window.innerWidth < 1000 ? 40 : 50, 20],
                         iconAnchor: [25, 10]
                     })
@@ -1766,7 +1734,7 @@
 
                 if (measurementMode === 'distance') {
                     const totalDist = calcularDistanciaTotal(measurementPoints);
-                    mostrarResultadoMedicion(`<b>Distancia Total:</b> ${totalDist.toFixed(2)} m`);
+                    mostrarResultadoMedicion(`< b > Distancia Total:</b > ${totalDist.toFixed(2)} m`);
                 } else if (measurementMode === 'area' && measurementPoints.length >= 3) {
                     // Refrescar polígono de área
                     const poly = L.polygon(measurementPoints, {
@@ -1781,7 +1749,7 @@
                     poly.addTo(measurementLayer);
 
                     const area = calcularArea(measurementPoints);
-                    mostrarResultadoMedicion(`<b>Área estimada:</b> ${area.toFixed(2)} m²`);
+                    mostrarResultadoMedicion(`< b > Área estimada:</b > ${area.toFixed(2)} m²`);
                 }
             }
         }
@@ -1851,15 +1819,15 @@
                     console.log(`✅ Se encontraron ${data.capas.capas_vectoriales.length} capas vectoriales`);
                     let html = '';
                     data.capas.capas_vectoriales.forEach(capa => {
-                        const id = `layer-v-${capa.nombre.replace(/\s+/g, '-')}`;
+                        const id = `layer - v - ${capa.nombre.replace(/\s+/g, '-')} `;
                         html += `
-                            <div class="layer-control-item">
-                                <label>
-                                    <input type="checkbox" id="${id}" onchange="toggleVectorLayer('${capa.archivo}', this.checked, '${capa.ruta}')">
-                                    📁 ${capa.nombre}
-                                </label>
-                            </div>
-                        `;
+                    < div class="layer-control-item" >
+                        <label>
+                            <input type="checkbox" id="${id}" onchange="toggleVectorLayer('${capa.archivo}', this.checked, '${capa.ruta}')">
+                                📁 ${capa.nombre}
+                        </label>
+                            </div >
+                    `;
                     });
                     container.innerHTML = html;
                 } else {
@@ -1879,8 +1847,8 @@
         async function toggleVectorLayer(capaArchivo, checked, capaRuta) {
             if (checked) {
                 try {
-                    console.log(`📡 Solicitando GeoJSON para: ${capaRuta}`);
-                    const response = await fetch(`/api/v1/capas/geojson?ruta=${encodeURIComponent(capaRuta)}`);
+                    console.log(`📡 Solicitando GeoJSON para: ${capaRuta} `);
+                    const response = await fetch(`/ api / v1 / capas / geojson ? ruta = ${encodeURIComponent(capaRuta)} `);
                     if (!response.ok) throw new Error('Error al obtener la capa');
 
                     const data = await response.json();
@@ -1898,7 +1866,7 @@
                             if (feature.properties) {
                                 let popup = '<div style="max-height: 200px; overflow-y: auto;"><strong>Capa: ' + capaArchivo + '</strong><br><hr>';
                                 for (const [k, v] of Object.entries(feature.properties)) {
-                                    popup += `<strong>${k}:</strong> ${v}<br>`;
+                                    popup += `< strong > ${k}:</strong > ${v} <br>`;
                                 }
                                 popup += '</div>';
                                 layer.bindPopup(popup);
