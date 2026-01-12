@@ -412,157 +412,157 @@
         .gis-search input {
             flex: 1;
         }
-    </style>
 
-    .layer-group {
-    background: white;
-    padding: 12px;
-    border-radius: 8px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-    border: 1px solid #eef1ff;
-    }
 
-    .layer-group-header {
-    font-weight: bold;
-    font-size: 0.9em;
-    color: #4a5568;
-    border-bottom: 2px solid #edf2f7;
-    margin-bottom: 10px;
-    padding-bottom: 5px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-    cursor: pointer;
-    }
+        .layer-group {
+            background: white;
+            padding: 12px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            border: 1px solid #eef1ff;
+        }
 
-    .layer-group-header::after {
-    content: '▼';
-    font-size: 0.8em;
-    color: #667eea;
-    transition: transform 0.3s;
-    }
+        .layer-group-header {
+            font-weight: bold;
+            font-size: 0.9em;
+            color: #4a5568;
+            border-bottom: 2px solid #edf2f7;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            cursor: pointer;
+        }
 
-    .layer-group.collapsed .layer-group-header::after {
-    transform: rotate(-90deg);
-    }
+        .layer-group-header::after {
+            content: '▼';
+            font-size: 0.8em;
+            color: #667eea;
+            transition: transform 0.3s;
+        }
 
-    .layer-group-content {
-    overflow: hidden;
-    max-height: 1000px;
-    transition: max-height 0.3s ease-in-out, opacity 0.3s ease-in-out;
-    opacity: 1;
-    }
+        .layer-group.collapsed .layer-group-header::after {
+            transform: rotate(-90deg);
+        }
 
-    .layer-group.collapsed .layer-group-content {
-    max-height: 0;
-    opacity: 0;
-    margin: 0;
-    }
+        .layer-group-content {
+            overflow: hidden;
+            max-height: 1000px;
+            transition: max-height 0.3s ease-in-out, opacity 0.3s ease-in-out;
+            opacity: 1;
+        }
 
-    .layer-controls h3 {
-    color: #667eea;
-    margin-bottom: 15px;
-    grid-column: 1 / -1;
-    }
+        .layer-group.collapsed .layer-group-content {
+            max-height: 0;
+            opacity: 0;
+            margin: 0;
+        }
 
-    .layer-control-item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin: 8px 0;
-    padding: 5px;
-    background: transparent;
-    }
+        .layer-controls h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            grid-column: 1 / -1;
+        }
 
-    .layer-control-item label {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    margin: 0;
-    flex: 1;
-    font-size: 0.85em;
-    color: #2d3748;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    }
+        .layer-control-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 8px 0;
+            padding: 5px;
+            background: transparent;
+        }
 
-    .layer-control-item input[type="checkbox"] {
-    width: 16px;
-    height: 16px;
-    cursor: pointer;
-    }
+        .layer-control-item label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin: 0;
+            flex: 1;
+            font-size: 0.85em;
+            color: #2d3748;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
 
-    .layer-control-item input[type="range"] {
-    width: 60px;
-    height: 4px;
-    cursor: pointer;
-    }
+        .layer-control-item input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
 
-    .opacity-value {
-    min-width: 35px;
-    text-align: right;
-    font-size: 0.75em;
-    color: #718096;
-    font-family: monospace;
-    }
+        .layer-control-item input[type="range"] {
+            width: 60px;
+            height: 4px;
+            cursor: pointer;
+        }
 
-    /* Professional Measurements */
-    .measurement-label {
-    background: rgba(255, 255, 255, 0.95);
-    border: 1px solid #667eea;
-    border-radius: 4px;
-    padding: 2px 6px;
-    font-size: 11px;
-    color: #2d3748;
-    font-weight: 700;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    pointer-events: none;
-    }
+        .opacity-value {
+            min-width: 35px;
+            text-align: right;
+            font-size: 0.75em;
+            color: #718096;
+            font-family: monospace;
+        }
 
-    .map-tools {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 20px;
-    flex-wrap: wrap;
-    }
+        /* Professional Measurements */
+        .measurement-label {
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid #667eea;
+            border-radius: 4px;
+            padding: 2px 6px;
+            font-size: 11px;
+            color: #2d3748;
+            font-weight: 700;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            pointer-events: none;
+        }
 
-    .tool-btn {
-    padding: 10px 20px;
-    background: #48bb78;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.3s;
-    font-size: 0.9em;
-    }
+        .map-tools {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
 
-    .tool-btn:hover {
-    background: #38a169;
-    transform: translateY(-2px);
-    }
+        .tool-btn {
+            padding: 10px 20px;
+            background: #48bb78;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.9em;
+        }
 
-    .tool-btn.active {
-    background: #764ba2;
-    }
+        .tool-btn:hover {
+            background: #38a169;
+            transform: translateY(-2px);
+        }
 
-    .measurement-result {
-    background: white;
-    padding: 10px 15px;
-    border-radius: 8px;
-    margin-top: 10px;
-    display: none;
-    }
+        .tool-btn.active {
+            background: #764ba2;
+        }
 
-    .measurement-result.active {
-    display: block;
-    }
+        .measurement-result {
+            background: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-top: 10px;
+            display: none;
+        }
 
-    .measurement-result strong {
-    color: #667eea;
-    }
+        .measurement-result.active {
+            display: block;
+        }
+
+        .measurement-result strong {
+            color: #667eea;
+        }
     </style>
 </head>
 
@@ -976,13 +976,23 @@
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
 
-            // Activar seleccionado
-            event.target.classList.add('active');
-            document.getElementById('panel-' + tab).classList.add('active');
+            // Buscar el botón correspondiente
+            const btn = document.querySelector(`button[onclick="switchTab('${tab}')"]`);
+            if (btn) btn.classList.add('active');
 
-            // Inicializar mapa si se abre el visor GIS
-            if (tab === 'visor' && !map) {
-                setTimeout(initMap, 100); // Pequeño delay para que el DOM esté listo
+            // Activar panel
+            const panel = document.getElementById('panel-' + tab);
+            if (panel) panel.classList.add('active');
+
+            // Inicializar o actualizar mapa si se abre el visor GIS
+            if (tab === 'visor') {
+                setTimeout(() => {
+                    if (!map) {
+                        initMap();
+                    } else {
+                        map.invalidateSize();
+                    }
+                }, 100);
             }
         }
 
@@ -1046,6 +1056,24 @@
                                     `).join('')}
                                 </ul>
                                 <p style="margin-top: 5px;"><strong>Total afectación:</strong> ${data.afecciones.total.toFixed(1)}%</p>
+                            </div>
+                        `;
+                    }
+
+
+                    if (data.datos_urbanos) {
+                        html += `
+                            <div class="result-item">
+                                <strong>🏙️ Análisis Urbanístico:</strong>
+                                ${data.datos_urbanos.urbanismo ?
+                                `<p style="color: #2b6cb0; font-weight: bold;">✅ Información urbanística recuperada</p>` :
+                                `<p style="color: #718096;">ℹ️ Análisis básico realizado</p>`
+                            }
+                                <div style="margin-top: 10px;">
+                                    <a href="/outputs/${data.referencia}/urbanismo/informe_urbanistico.pdf" target="_blank" class="btn btn-sm" style="background: #ed8936; color: white; text-decoration: none; padding: 5px 10px; border-radius: 4px; font-size: 0.9em;">
+                                        📄 Ver Informe Urbanístico
+                                    </a>
+                                </div>
                             </div>
                         `;
                     }
@@ -1417,8 +1445,8 @@
                 if (response.status === 404) {
                     const confirmProcess = confirm(`La referencia ${ref} no ha sido procesada todavía. Solo se pueden visualizar parcelas que hayan sido analizadas previamente.\n\n¿Quieres ir a la pestaña "Análisis Individual" para procesarla ahora?`);
                     if (confirmProcess) {
-                        showPanel('panel-search');
-                        document.getElementById('referencia-input').value = ref;
+                        switchTab('referencia');
+                        document.getElementById('referencia').value = ref;
                     }
                     return;
                 }

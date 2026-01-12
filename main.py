@@ -81,6 +81,24 @@ async def read_index():
 
 # --- ENDPOINTS ---
 
+
+def get_all_vector_layers(base_dir: Path) -> List[Path]:
+    """Busca recursivamente capas vectoriales en el directorio."""
+    layers = []
+    extensions = {".gpkg", ".geojson", ".shp", ".gml", ".kml", ".json"}
+    
+    if not base_dir.exists():
+        return layers
+        
+    for item in base_dir.rglob("*"):
+        if item.is_file() and item.suffix.lower() in extensions:
+            # Excluir archivos de configuración o auxiliares
+            if "leyenda" in item.name.lower() or "titulo" in item.name.lower() or "cpg" in item.suffix.lower():
+                continue
+            layers.append(item)
+    return layers
+
+# --- ENDPOINTS ---
 @app.get("/api/health")
 async def health_check():
     """Endpoint de verificación de salud del servicio"""
@@ -129,14 +147,59 @@ async def paso1_analizar(referencia: str = Form(...)):
         else:
             result_urban = {"error": "GML no disponible", "urbanismo": False}
 
-        # 2. Análisis de afecciones específico (Capa base)
+        # 2. Análisis de afecciones MULTI-CAPA
         images_dir = ref_dir / "images"
         
-        res_afecciones = analyzer.analizar(
-            parcela_path=gml_path,
-            gpkg_name="afecciones_totales.gpkg", 
-            campo_clasificacion="tipo" 
-        )
+        # Buscar todas las capas disponibles
+        todas_capas = get_all_vector_layers(CAPAS_DIR)
+        print(f"🔍 Analizando parcelas contra {len(todas_capas)} capas encontradas.")
+
+        res_afecciones = {
+            "detalle": {},
+            "total": 0.0,
+            "area_total_m2": 0.0,
+            "afecciones_detectadas": False
+        }
+        
+        max_afeccion = 0.0
+        
+        for capa_path in todas_capas:
+            try:
+                # Analizar capa individual
+                res_capa = analyzer.analizar(
+                    parcela_path=gml_path,
+                    capa_input=capa_path,
+                    campo_clasificacion="tipo" 
+                )
+                
+                # Si hay error o no hay intersección, continuar
+                if "error" in res_capa or not res_capa.get("afecciones_detectadas"):
+                    continue
+                
+                # Actualizar área total (debería ser la misma siempre, tomamos la primera válida)
+                if res_afecciones["area_total_m2"] == 0:
+                    res_afecciones["area_total_m2"] = res_capa.get("area_parcela_m2", 0)
+                
+                # Agregar detalles
+                nombre_capa = capa_path.stem
+                if res_capa.get("afecciones"):
+                    res_afecciones["afecciones_detectadas"] = True
+                    for af in res_capa["afecciones"]:
+                        clave = f"{nombre_capa} - {af.get('clase', 'General')}"
+                        res_afecciones["detalle"][clave] = af.get("area_m2", 0)
+                    
+                    # Trackear máxima afectación encontrada
+                    total_capa = res_capa.get("total_afectado_percent", 0)
+                    if total_capa > max_afeccion:
+                        max_afeccion = total_capa
+                        
+            except Exception as e:
+                print(f"⚠️ Error analizando capa {capa_path.name}: {e}")
+                
+        # Asignar la máxima afectación como 'total' (proxy seguro sin hacer union geométrica compleja en runtime)
+        res_afecciones["total"] = max_afeccion
+        if not res_afecciones["detalle"]:
+            res_afecciones["mensaje"] = "No se detectaron intersecciones con las capas disponibles."
 
         # 3. Generar "Plano Perfecto" para el informe
         plano_path = images_dir / f"{ref_limpia}_plano_perfecto.jpg"
@@ -218,17 +281,62 @@ async def paso2_generar_pdf(req: PdfRequest):
                         mapas_a_incluir.append(str(mapa_file))
                         break  # Solo el primero
 
-        # Análisis de afecciones
+        # Análisis de afecciones MULTI-CAPA
         resultados_afecciones = {}
         if req.incluir_afecciones:
             gml_path = ref_dir / "gml" / f"{ref_limpia}_parcela.gml"
             if gml_path.exists():
                 try:
-                    resultados_afecciones = analyzer.analizar(
-                        gml_path, 
-                        "afecciones_totales.gpkg", 
-                        "tipo"
-                    )
+                    todas_capas = get_all_vector_layers(CAPAS_DIR)
+                    print(f"📄 PDF Afecciones: analizando contra {len(todas_capas)} capas")
+                    
+                    resultados_afecciones = {
+                        "detalle": {},
+                        "total": 0.0, 
+                        "area_total_m2": 0.0,
+                        "area_afectada_m2": 0.0
+                    }
+                    max_afeccion_pct = 0.0
+                    max_afeccion_area = 0.0
+
+                    for capa_path in todas_capas:
+                        try:
+                            # Analizar capa
+                            res_capa = analyzer.analizar(
+                                gml_path, 
+                                capa_path, 
+                                "tipo"
+                            )
+                            
+                            if "error" in res_capa or not res_capa.get("afecciones_detectadas"):
+                                continue
+
+                            # Setear área total de parcela una sola vez
+                            if resultados_afecciones["area_total_m2"] == 0:
+                                resultados_afecciones["area_total_m2"] = res_capa.get("area_parcela_m2", 0)
+
+                            # Agregar detalles
+                            nombre_capa = capa_path.stem
+                            for af in res_capa.get("afecciones", []):
+                                clave = f"{nombre_capa} - {af.get('clase', 'General')}"
+                                # PDF Generator espera porcentajes en 'detalle'
+                                resultados_afecciones["detalle"][clave] = af.get("porcentaje", 0)
+
+                            # Calcular máximos para resumen
+                            total_capa_pct = res_capa.get("total_afectado_percent", 0)
+                            total_capa_area = res_capa.get("total_afectado_m2", 0)
+                            
+                            if total_capa_pct > max_afeccion_pct:
+                                max_afeccion_pct = total_capa_pct
+                                max_afeccion_area = total_capa_area
+
+                        except Exception as e:
+                            print(f"⚠️ Error capa PDF {capa_path.name}: {e}")
+                    
+                    # Asignar máximos (Peor caso)
+                    resultados_afecciones["total"] = max_afeccion_pct
+                    resultados_afecciones["area_afectada_m2"] = max_afeccion_area
+
                 except Exception as e:
                     print(f"⚠️ Error analizando afecciones para PDF: {e}")
                     resultados_afecciones = {}
@@ -652,20 +760,58 @@ async def analizar_afecciones_manual(
             
             resultados_capas = {}
             # Analizar contra cada capa
+            # Analizar contra cada capa
             for capa_name in capas_list:
                 try:
-                    res = analyzer.analizar(
-                        parcela_path=tmp_path,
-                        gpkg_name=capa_name,
-                        campo_clasificacion="tipo"
-                    )
-                    resultados_capas[capa_name] = res
+                    # Si piden "afecciones_totales", analizamos TODO lo que haya en el sistema
+                    if capa_name == "afecciones_totales.gpkg":
+                        todas = get_all_vector_layers(CAPAS_DIR)
+                        res_total = {
+                            "afecciones": [],
+                            "total_afectado_percent": 0.0,
+                            "afecciones_detectadas": False,
+                            "mensaje": f"Análisis completo contra {len(todas)} capas del sistema"
+                        }
+                        max_pct = 0.0
+                        
+                        for c_path in todas:
+                            try:
+                                r = analyzer.analizar(tmp_path, c_path, "tipo")
+                                if r.get("afecciones_detectadas"):
+                                    res_total["afecciones_detectadas"] = True
+                                    # Extender lista de afecciones con el nombre de la capa
+                                    nombre_capa = c_path.stem
+                                    for af in r.get("afecciones", []):
+                                        af["clase"] = f"{nombre_capa} - {af.get('clase', 'General')}"
+                                        res_total["afecciones"].append(af)
+                                    
+                                    # Maximizar porcentaje
+                                    pct = r.get("total_afectado_percent", 0)
+                                    if pct > max_pct:
+                                        max_pct = pct
+                                        res_total["area_afectada_m2"] = r.get("total_afectado_m2") # Aproximado
+                            except Exception:
+                                continue
+                        
+                        res_total["total_afectado_percent"] = max_pct
+                        resultados_capas["Afecciones Totales (System)"] = res_total
+                        
+                    else:
+                        # Análisis de capa específica solicitada explícitamente
+                        res = analyzer.analizar(
+                            parcela_path=tmp_path,
+                            capa_input=capa_name,
+                            campo_clasificacion="tipo"
+                        )
+                        resultados_capas[capa_name] = res
+
                 except Exception as e:
                     resultados_capas[capa_name] = {"error": str(e)}
             
             resultados_por_archivo[file.filename] = resultados_capas
             # Limpiar temporal
-            tmp_path.unlink()
+            if tmp_path.exists():
+                tmp_path.unlink()
         
         return {
             "status": "success",

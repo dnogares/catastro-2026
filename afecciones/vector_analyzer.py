@@ -21,17 +21,21 @@ class VectorAnalyzer:
         self.crs_objetivo = crs_objetivo
         self.config_titulos = self.cargar_config_titulos()
 
-    def analizar(self, parcela_path, gpkg_name, campo_clasificacion="tipo"):
+    def analizar(self, parcela_path, capa_input, campo_clasificacion="tipo"):
         """
-        Analiza una parcela contra una capa GPKG específica.
-        Método requerido por main.py.
+        Analiza una parcela contra una capa específica (GPKG, GeoJSON, SHP, etc.).
+        capa_input puede ser un nombre de archivo en capas_dir o una ruta absoluta.
         """
         try:
             parcela_path = Path(parcela_path)
-            gpkg_path = self.capas_dir / gpkg_name
             
-            if not gpkg_path.exists():
-                return {"error": f"Capa {gpkg_name} no encontrada", "afecciones": []}
+            # Determinar ruta de la capa
+            capa_path = Path(capa_input)
+            if not capa_path.is_absolute():
+                capa_path = self.capas_dir / capa_input
+            
+            if not capa_path.exists():
+                return {"error": f"Capa {capa_path.name} no encontrada", "afecciones": []}
 
             # Cargar geometría parcela
             parcela_gdf = gpd.read_file(parcela_path)
@@ -42,7 +46,7 @@ class VectorAnalyzer:
             area_total = geom_parcela.area
 
             # Cargar capa
-            capa_gdf = gpd.read_file(gpkg_path)
+            capa_gdf = gpd.read_file(capa_path)
             if capa_gdf.crs != self.crs_objetivo:
                 capa_gdf = capa_gdf.to_crs(self.crs_objetivo)
 
