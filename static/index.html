@@ -344,13 +344,63 @@
             color: #856404;
         }
 
-        /* GIS Viewer Styles */
+        /* GIS Viewer Layout - Sidebar Implementation */
+        .visor-split-view {
+            display: flex;
+            gap: 20px;
+            height: 700px;
+            /* Alto fijo para el contenedor principal */
+            margin: 20px 0;
+            position: relative;
+        }
+
         #map {
-            height: 600px;
+            flex: 1;
+            /* El mapa ocupa todo el espacio restante */
+            height: 100% !important;
+            /* Forzar altura del contenedor padre */
             border-radius: 10px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            margin: 20px 0;
+            margin: 0 !important;
             z-index: 1;
+        }
+
+        .visor-sidebar {
+            width: 380px;
+            /* Ancho fijo para la barra lateral */
+            height: 100%;
+            overflow-y: auto;
+            /* Scroll vertical */
+            background: #f8f9ff;
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+            flex-shrink: 0;
+            /* No encoger */
+        }
+
+        /* Ajustes para los controles dentro del sidebar */
+        .layer-controls {
+            background: transparent;
+            padding: 0;
+            margin-top: 0;
+            border-radius: 0;
+            display: flex;
+            flex-direction: column;
+            /* Apilar verticalmente en el sidebar */
+            gap: 15px;
+            box-shadow: none;
+        }
+
+        .layer-controls h3 {
+            margin-top: 0;
+            font-size: 1.2em;
+            position: sticky;
+            top: 0;
+            background: #f8f9ff;
+            z-index: 10;
+            padding: 5px 0;
+            border-bottom: 2px solid #667eea;
         }
 
         .gis-search {
@@ -362,140 +412,157 @@
         .gis-search input {
             flex: 1;
         }
+    </style>
 
-        .layer-controls {
-            background: #f8f9ff;
-            padding: 20px;
-            border-radius: 10px;
-            margin-top: 20px;
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 15px;
-        }
+    .layer-group {
+    background: white;
+    padding: 12px;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    border: 1px solid #eef1ff;
+    }
 
-        .layer-group {
-            background: white;
-            padding: 12px;
-            border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-            border: 1px solid #eef1ff;
-        }
+    .layer-group-header {
+    font-weight: bold;
+    font-size: 0.9em;
+    color: #4a5568;
+    border-bottom: 2px solid #edf2f7;
+    margin-bottom: 10px;
+    padding-bottom: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    cursor: pointer;
+    }
 
-        .layer-group-header {
-            font-weight: bold;
-            font-size: 0.9em;
-            color: #4a5568;
-            border-bottom: 2px solid #edf2f7;
-            margin-bottom: 10px;
-            padding-bottom: 5px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
+    .layer-group-header::after {
+    content: '▼';
+    font-size: 0.8em;
+    color: #667eea;
+    transition: transform 0.3s;
+    }
 
-        .layer-controls h3 {
-            color: #667eea;
-            margin-bottom: 15px;
-            grid-column: 1 / -1;
-        }
+    .layer-group.collapsed .layer-group-header::after {
+    transform: rotate(-90deg);
+    }
 
-        .layer-control-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin: 8px 0;
-            padding: 5px;
-            background: transparent;
-        }
+    .layer-group-content {
+    overflow: hidden;
+    max-height: 1000px;
+    transition: max-height 0.3s ease-in-out, opacity 0.3s ease-in-out;
+    opacity: 1;
+    }
 
-        .layer-control-item label {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            margin: 0;
-            flex: 1;
-            font-size: 0.85em;
-            color: #2d3748;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
+    .layer-group.collapsed .layer-group-content {
+    max-height: 0;
+    opacity: 0;
+    margin: 0;
+    }
 
-        .layer-control-item input[type="checkbox"] {
-            width: 16px;
-            height: 16px;
-            cursor: pointer;
-        }
+    .layer-controls h3 {
+    color: #667eea;
+    margin-bottom: 15px;
+    grid-column: 1 / -1;
+    }
 
-        .layer-control-item input[type="range"] {
-            width: 60px;
-            height: 4px;
-            cursor: pointer;
-        }
+    .layer-control-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 8px 0;
+    padding: 5px;
+    background: transparent;
+    }
 
-        .opacity-value {
-            min-width: 35px;
-            text-align: right;
-            font-size: 0.75em;
-            color: #718096;
-            font-family: monospace;
-        }
+    .layer-control-item label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0;
+    flex: 1;
+    font-size: 0.85em;
+    color: #2d3748;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    }
 
-        /* Professional Measurements */
-        .measurement-label {
-            background: rgba(255, 255, 255, 0.95);
-            border: 1px solid #667eea;
-            border-radius: 4px;
-            padding: 2px 6px;
-            font-size: 11px;
-            color: #2d3748;
-            font-weight: 700;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            pointer-events: none;
-        }
+    .layer-control-item input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    }
 
-        .map-tools {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-        }
+    .layer-control-item input[type="range"] {
+    width: 60px;
+    height: 4px;
+    cursor: pointer;
+    }
 
-        .tool-btn {
-            padding: 10px 20px;
-            background: #48bb78;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.3s;
-            font-size: 0.9em;
-        }
+    .opacity-value {
+    min-width: 35px;
+    text-align: right;
+    font-size: 0.75em;
+    color: #718096;
+    font-family: monospace;
+    }
 
-        .tool-btn:hover {
-            background: #38a169;
-            transform: translateY(-2px);
-        }
+    /* Professional Measurements */
+    .measurement-label {
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid #667eea;
+    border-radius: 4px;
+    padding: 2px 6px;
+    font-size: 11px;
+    color: #2d3748;
+    font-weight: 700;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    pointer-events: none;
+    }
 
-        .tool-btn.active {
-            background: #764ba2;
-        }
+    .map-tools {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    }
 
-        .measurement-result {
-            background: white;
-            padding: 10px 15px;
-            border-radius: 8px;
-            margin-top: 10px;
-            display: none;
-        }
+    .tool-btn {
+    padding: 10px 20px;
+    background: #48bb78;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-size: 0.9em;
+    }
 
-        .measurement-result.active {
-            display: block;
-        }
+    .tool-btn:hover {
+    background: #38a169;
+    transform: translateY(-2px);
+    }
 
-        .measurement-result strong {
-            color: #667eea;
-        }
+    .tool-btn.active {
+    background: #764ba2;
+    }
+
+    .measurement-result {
+    background: white;
+    padding: 10px 15px;
+    border-radius: 8px;
+    margin-top: 10px;
+    display: none;
+    }
+
+    .measurement-result.active {
+    display: block;
+    }
+
+    .measurement-result strong {
+    color: #667eea;
+    }
     </style>
 </head>
 
@@ -656,147 +723,172 @@
                 <strong>Resultado:</strong> <span id="measurement-value"></span>
             </div>
 
-            <!-- Mapa -->
-            <div id="map"></div>
+            <!-- Contenedor Flex para Mapa y Sidebar -->
+            <div class="visor-split-view">
+                <!-- Mapa (Izquierda) -->
+                <div id="map"></div>
 
-            <!-- Controles de capas -->
-            <div class="layer-controls">
-                <h3>🗂️ Gestión de Capas</h3>
+                <!-- Sidebar de Controles (Derecha) -->
+                <div class="visor-sidebar">
+                    <div class="layer-controls">
+                        <h3>🗂️ Gestión de Capas</h3>
 
-                <!-- Capas base -->
-                <div class="layer-group">
-                    <div class="layer-group-header">🗺️ Cartografía Base</div>
-                    <div class="layer-control-item">
-                        <label><input type="checkbox" id="layer-catastro" checked onchange="toggleLayer('catastro')">
-                            Catastro</label>
-                        <input type="range" id="opacity-catastro" min="0" max="100" value="80"
-                            oninput="updateOpacity('catastro', this.value)">
-                        <span class="opacity-value" id="opacity-catastro-value">80%</span>
-                    </div>
-                    <div class="layer-control-item">
-                        <label><input type="checkbox" id="layer-ortofoto" checked onchange="toggleLayer('ortofoto')">
-                            Ortofoto</label>
-                        <input type="range" id="opacity-ortofoto" min="0" max="100" value="70"
-                            oninput="updateOpacity('ortofoto', this.value)">
-                        <span class="opacity-value" id="opacity-ortofoto-value">70%</span>
-                    </div>
-                    <div class="layer-control-item">
-                        <label><input type="checkbox" id="layer-compuesta" onchange="toggleLayer('compuesta')">
-                            Compuesta</label>
-                        <input type="range" id="opacity-compuesta" min="0" max="100" value="90"
-                            oninput="updateOpacity('compuesta', this.value)">
-                        <span class="opacity-value" id="opacity-compuesta-value">90%</span>
-                    </div>
-                    <div class="layer-control-item">
-                        <label><input type="checkbox" id="layer-parcela" onchange="toggleLayer('parcela')">
-                            Vectorial</label>
-                        <input type="range" id="opacity-parcela" min="0" max="100" value="100"
-                            oninput="updateOpacity('parcela', this.value)">
-                        <span class="opacity-value" id="opacity-parcela-value">100%</span>
-                    </div>
-                </div>
+                        <!-- Capas base -->
+                        <div class="layer-group">
+                            <div class="layer-group-header" onclick="this.parentElement.classList.toggle('collapsed')">
+                                🗺️ Cartografía Base</div>
+                            <div class="layer-group-content">
+                                <div class="layer-control-item">
+                                    <label><input type="checkbox" id="layer-catastro" checked
+                                            onchange="toggleLayer('catastro')">
+                                        Catastro</label>
+                                    <input type="range" id="opacity-catastro" min="0" max="100" value="80"
+                                        oninput="updateOpacity('catastro', this.value)">
+                                    <span class="opacity-value" id="opacity-catastro-value">80%</span>
+                                </div>
+                                <div class="layer-control-item">
+                                    <label><input type="checkbox" id="layer-ortofoto" checked
+                                            onchange="toggleLayer('ortofoto')">
+                                        Ortofoto</label>
+                                    <input type="range" id="opacity-ortofoto" min="0" max="100" value="70"
+                                        oninput="updateOpacity('ortofoto', this.value)">
+                                    <span class="opacity-value" id="opacity-ortofoto-value">70%</span>
+                                </div>
+                                <div class="layer-control-item">
+                                    <label><input type="checkbox" id="layer-compuesta"
+                                            onchange="toggleLayer('compuesta')">
+                                        Compuesta</label>
+                                    <input type="range" id="opacity-compuesta" min="0" max="100" value="90"
+                                        oninput="updateOpacity('compuesta', this.value)">
+                                    <span class="opacity-value" id="opacity-compuesta-value">90%</span>
+                                </div>
+                                <div class="layer-control-item">
+                                    <label><input type="checkbox" id="layer-parcela" onchange="toggleLayer('parcela')">
+                                        Vectorial</label>
+                                    <input type="range" id="opacity-parcela" min="0" max="100" value="100"
+                                        oninput="updateOpacity('parcela', this.value)">
+                                    <span class="opacity-value" id="opacity-parcela-value">100%</span>
+                                </div>
+                            </div>
+                        </div>
 
-                <!-- Riesgos Hídricos -->
-                <div class="layer-group">
-                    <div class="layer-group-header">🌊 Riesgos Hídricos</div>
-                    <div class="layer-control-item">
-                        <label><input type="checkbox" id="layer-inundabilidad_10"
-                                onchange="toggleLayer('inundabilidad_10')"> T10 (10a)</label>
-                        <input type="range" min="0" max="100" value="60"
-                            oninput="updateOpacity('inundabilidad_10', this.value)">
-                        <span class="opacity-value" id="opacity-inundabilidad_10-value">60%</span>
-                    </div>
-                    <div class="layer-control-item">
-                        <label><input type="checkbox" id="layer-inundabilidad_100"
-                                onchange="toggleLayer('inundabilidad_100')"> T100 (100a)</label>
-                        <input type="range" min="0" max="100" value="60"
-                            oninput="updateOpacity('inundabilidad_100', this.value)">
-                        <span class="opacity-value" id="opacity-inundabilidad_100-value">60%</span>
-                    </div>
-                    <div class="layer-control-item">
-                        <label><input type="checkbox" id="layer-inundabilidad_500"
-                                onchange="toggleLayer('inundabilidad_500')"> T500 (500a)</label>
-                        <input type="range" min="0" max="100" value="60"
-                            oninput="updateOpacity('inundabilidad_500', this.value)">
-                        <span class="opacity-value" id="opacity-inundabilidad_500-value">60%</span>
-                    </div>
-                </div>
+                        <!-- Riesgos Hídricos -->
+                        <div class="layer-group">
+                            <div class="layer-group-header" onclick="this.parentElement.classList.toggle('collapsed')">
+                                🌊 Riesgos Hídricos</div>
+                            <div class="layer-group-content">
+                                <div class="layer-control-item">
+                                    <label><input type="checkbox" id="layer-inundabilidad_10"
+                                            onchange="toggleLayer('inundabilidad_10')"> T10 (10a)</label>
+                                    <input type="range" min="0" max="100" value="60"
+                                        oninput="updateOpacity('inundabilidad_10', this.value)">
+                                    <span class="opacity-value" id="opacity-inundabilidad_10-value">60%</span>
+                                </div>
+                                <div class="layer-control-item">
+                                    <label><input type="checkbox" id="layer-inundabilidad_100"
+                                            onchange="toggleLayer('inundabilidad_100')"> T100 (100a)</label>
+                                    <input type="range" min="0" max="100" value="60"
+                                        oninput="updateOpacity('inundabilidad_100', this.value)">
+                                    <span class="opacity-value" id="opacity-inundabilidad_100-value">60%</span>
+                                </div>
+                                <div class="layer-control-item">
+                                    <label><input type="checkbox" id="layer-inundabilidad_500"
+                                            onchange="toggleLayer('inundabilidad_500')"> T500 (500a)</label>
+                                    <input type="range" min="0" max="100" value="60"
+                                        oninput="updateOpacity('inundabilidad_500', this.value)">
+                                    <span class="opacity-value" id="opacity-inundabilidad_500-value">60%</span>
+                                </div>
+                            </div>
+                        </div>
 
-                <!-- Biodiversidad -->
-                <div class="layer-group">
-                    <div class="layer-group-header">🌿 Medio Ambiente</div>
-                    <div class="layer-control-item">
-                        <label><input type="checkbox" id="layer-red_natura" onchange="toggleLayer('red_natura')"> Red
-                            Natura</label>
-                        <input type="range" min="0" max="100" value="60"
-                            oninput="updateOpacity('red_natura', this.value)">
-                        <span class="opacity-value" id="opacity-red_natura-value">60%</span>
-                    </div>
-                    <div class="layer-control-item">
-                        <label><input type="checkbox" id="layer-espacios_protegidos"
-                                onchange="toggleLayer('espacios_protegidos')"> Esp. Prot.</label>
-                        <input type="range" min="0" max="100" value="60"
-                            oninput="updateOpacity('espacios_protegidos', this.value)">
-                        <span class="opacity-value" id="opacity-espacios_protegidos-value">60%</span>
-                    </div>
-                    <div class="layer-control-item">
-                        <label><input type="checkbox" id="layer-vias_pecuarias"
-                                onchange="toggleLayer('vias_pecuarias')"> Vías Pecua.</label>
-                        <input type="range" min="0" max="100" value="60"
-                            oninput="updateOpacity('vias_pecuarias', this.value)">
-                        <span class="opacity-value" id="opacity-vias_pecuarias-value">60%</span>
-                    </div>
-                </div>
+                        <!-- Biodiversidad -->
+                        <div class="layer-group">
+                            <div class="layer-group-header" onclick="this.parentElement.classList.toggle('collapsed')">
+                                🌿 Medio Ambiente</div>
+                            <div class="layer-group-content">
+                                <div class="layer-control-item">
+                                    <label><input type="checkbox" id="layer-red_natura"
+                                            onchange="toggleLayer('red_natura')"> Red
+                                        Natura</label>
+                                    <input type="range" min="0" max="100" value="60"
+                                        oninput="updateOpacity('red_natura', this.value)">
+                                    <span class="opacity-value" id="opacity-red_natura-value">60%</span>
+                                </div>
+                                <div class="layer-control-item">
+                                    <label><input type="checkbox" id="layer-espacios_protegidos"
+                                            onchange="toggleLayer('espacios_protegidos')"> Esp. Prot.</label>
+                                    <input type="range" min="0" max="100" value="60"
+                                        oninput="updateOpacity('espacios_protegidos', this.value)">
+                                    <span class="opacity-value" id="opacity-espacios_protegidos-value">60%</span>
+                                </div>
+                                <div class="layer-control-item">
+                                    <label><input type="checkbox" id="layer-vias_pecuarias"
+                                            onchange="toggleLayer('vias_pecuarias')"> Vías Pecua.</label>
+                                    <input type="range" min="0" max="100" value="60"
+                                        oninput="updateOpacity('vias_pecuarias', this.value)">
+                                    <span class="opacity-value" id="opacity-vias_pecuarias-value">60%</span>
+                                </div>
+                            </div>
+                        </div>
 
-                <!-- Montes y Riesgos -->
-                <div class="layer-group">
-                    <div class="layer-group-header">🌲 Forestal y Riesgos</div>
-                    <div class="layer-control-item">
-                        <label><input type="checkbox" id="layer-montes_up" onchange="toggleLayer('montes_up')"> Montes
-                            UP</label>
-                        <input type="range" min="0" max="100" value="60"
-                            oninput="updateOpacity('montes_up', this.value)">
-                        <span class="opacity-value" id="opacity-montes_up-value">60%</span>
+                        <!-- Montes y Riesgos -->
+                        <div class="layer-group">
+                            <div class="layer-group-header" onclick="this.parentElement.classList.toggle('collapsed')">
+                                🌲 Forestal y Riesgos</div>
+                            <div class="layer-group-content">
+                                <div class="layer-control-item">
+                                    <label><input type="checkbox" id="layer-montes_up"
+                                            onchange="toggleLayer('montes_up')"> Montes
+                                        UP</label>
+                                    <input type="range" min="0" max="100" value="60"
+                                        oninput="updateOpacity('montes_up', this.value)">
+                                    <span class="opacity-value" id="opacity-montes_up-value">60%</span>
+                                </div>
+                                <div class="layer-control-item">
+                                    <label><input type="checkbox" id="layer-montes_titularidad"
+                                            onchange="toggleLayer('montes_titularidad')"> Propiedad</label>
+                                    <input type="range" min="0" max="100" value="60"
+                                        oninput="updateOpacity('montes_titularidad', this.value)">
+                                    <span class="opacity-value" id="opacity-montes_titularidad-value">60%</span>
+                                </div>
+                                <div class="layer-control-item">
+                                    <label><input type="checkbox" id="layer-mapa_forestal"
+                                            onchange="toggleLayer('mapa_forestal')">
+                                        MFE</label>
+                                    <input type="range" min="0" max="100" value="60"
+                                        oninput="updateOpacity('mapa_forestal', this.value)">
+                                    <span class="opacity-value" id="opacity-mapa_forestal-value">60%</span>
+                                </div>
+                                <div class="layer-control-item">
+                                    <label><input type="checkbox" id="layer-erosion_laminar"
+                                            onchange="toggleLayer('erosion_laminar')"> Erosión</label>
+                                    <input type="range" min="0" max="100" value="60"
+                                        oninput="updateOpacity('erosion_laminar', this.value)">
+                                    <span class="opacity-value" id="opacity-erosion_laminar-value">60%</span>
+                                </div>
+                                <div class="layer-control-item">
+                                    <label><input type="checkbox" id="layer-incendios"
+                                            onchange="toggleLayer('incendios')">
+                                        Incendios</label>
+                                    <input type="range" min="0" max="100" value="60"
+                                        oninput="updateOpacity('incendios', this.value)">
+                                    <span class="opacity-value" id="opacity-incendios-value">60%</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="layer-control-item">
-                        <label><input type="checkbox" id="layer-montes_titularidad"
-                                onchange="toggleLayer('montes_titularidad')"> Propiedad</label>
-                        <input type="range" min="0" max="100" value="60"
-                            oninput="updateOpacity('montes_titularidad', this.value)">
-                        <span class="opacity-value" id="opacity-montes_titularidad-value">60%</span>
-                    </div>
-                    <div class="layer-control-item">
-                        <label><input type="checkbox" id="layer-mapa_forestal" onchange="toggleLayer('mapa_forestal')">
-                            MFE</label>
-                        <input type="range" min="0" max="100" value="60"
-                            oninput="updateOpacity('mapa_forestal', this.value)">
-                        <span class="opacity-value" id="opacity-mapa_forestal-value">60%</span>
-                    </div>
-                    <div class="layer-control-item">
-                        <label><input type="checkbox" id="layer-erosion_laminar"
-                                onchange="toggleLayer('erosion_laminar')"> Erosión</label>
-                        <input type="range" min="0" max="100" value="60"
-                            oninput="updateOpacity('erosion_laminar', this.value)">
-                        <span class="opacity-value" id="opacity-erosion_laminar-value">60%</span>
-                    </div>
-                    <div class="layer-control-item">
-                        <label><input type="checkbox" id="layer-incendios" onchange="toggleLayer('incendios')">
-                            Incendios</label>
-                        <input type="range" min="0" max="100" value="60"
-                            oninput="updateOpacity('incendios', this.value)">
-                        <span class="opacity-value" id="opacity-incendios-value">60%</span>
-                    </div>
-                </div>
-            </div>
 
-            <div id="capas-generadas-lista" style="margin-top: 20px; border-top: 1px solid #eee; padding-top: 10px;">
-                <!-- Se rellena dinámicamente con mapas generados -->
-            </div>
+                    <div id="capas-generadas-lista"
+                        style="margin-top: 20px; border-top: 1px solid #ddd; padding-top: 10px;">
+                        <!-- Se rellena dinámicamente con mapas generados -->
+                    </div>
 
-            <div style="margin-top: 20px; border-top: 1px solid #eee; padding-top: 10px;">
-                <h3>📂 Capas Vectoriales (Volumen)</h3>
-                <div id="capas-vectoriales-lista">
-                    <p style="color: #888;">Cargando capas...</p>
+                    <div style="margin-top: 20px; border-top: 1px solid #ddd; padding-top: 10px;">
+                        <h3 style="color: #667eea; margin-bottom: 10px;">📂 Capas Vectoriales</h3>
+                        <div id="capas-vectoriales-lista">
+                            <p style="color: #888;">Cargando capas...</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
