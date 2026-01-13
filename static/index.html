@@ -25,131 +25,242 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+            background: #0f0f23;
+            background-image: 
+                radial-gradient(circle at 20% 30%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 70%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
+                linear-gradient(180deg, #0f0f23 0%, #1a1a2e 100%);
+            background-attachment: fixed;
             min-height: 100vh;
-            padding: 20px;
+            padding: 24px;
+            position: relative;
+            overflow-x: hidden;
+            color: #e2e8f0;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(139, 92, 246, 0.08) 0%, transparent 40%);
+            pointer-events: none;
+            z-index: 0;
         }
 
         .container {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
+            position: relative;
+            z-index: 1;
         }
 
         .header {
-            background: white;
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-            margin-bottom: 30px;
+            background: rgba(26, 26, 46, 0.6);
+            backdrop-filter: blur(24px) saturate(180%);
+            -webkit-backdrop-filter: blur(24px) saturate(180%);
+            padding: 48px 40px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 
+                0 8px 32px rgba(0, 0, 0, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            margin-bottom: 32px;
             text-align: center;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .header:hover {
+            border-color: rgba(255, 255, 255, 0.12);
+            box-shadow: 
+                0 12px 48px rgba(0, 0, 0, 0.5),
+                inset 0 1px 0 rgba(255, 255, 255, 0.08);
         }
 
         .header h1 {
-            color: #667eea;
-            font-size: 2.5em;
-            margin-bottom: 10px;
+            background: linear-gradient(135deg, #818cf8 0%, #a78bfa 50%, #c084fc 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 3em;
+            font-weight: 700;
+            margin-bottom: 12px;
+            letter-spacing: -0.03em;
         }
 
         .header p {
-            color: #666;
+            color: rgba(226, 232, 240, 0.7);
             font-size: 1.1em;
+            font-weight: 400;
+            letter-spacing: 0.01em;
         }
 
         .tabs {
             display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
+            gap: 8px;
+            margin-bottom: 28px;
+            background: rgba(26, 26, 46, 0.4);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            padding: 6px;
+            border-radius: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
         }
 
         .tab {
             flex: 1;
-            padding: 15px;
-            background: white;
+            padding: 14px 20px;
+            background: transparent;
             border: none;
             border-radius: 10px;
             cursor: pointer;
-            font-size: 1em;
-            font-weight: bold;
-            transition: all 0.3s;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            font-size: 0.9em;
+            font-weight: 600;
+            color: rgba(226, 232, 240, 0.6);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
         }
 
         .tab:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+            color: rgba(226, 232, 240, 0.9);
+            background: rgba(255, 255, 255, 0.05);
         }
 
         .tab.active {
-            background: #667eea;
-            color: white;
+            background: rgba(129, 140, 248, 0.15);
+            color: #c7d2fe;
+            box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+        }
+
+        .tab.active::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #818cf8, transparent);
         }
 
         .panel {
             display: none;
-            background: white;
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-            animation: fadeIn 0.3s;
+            background: rgba(26, 26, 46, 0.6);
+            backdrop-filter: blur(24px) saturate(180%);
+            -webkit-backdrop-filter: blur(24px) saturate(180%);
+            padding: 40px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 
+                0 8px 32px rgba(0, 0, 0, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .panel.active {
             display: block;
         }
 
+        .panel h2 {
+            color: #e2e8f0;
+            font-size: 1.75em;
+            font-weight: 700;
+            margin-bottom: 8px;
+            letter-spacing: -0.02em;
+        }
+
+        .panel p {
+            color: rgba(226, 232, 240, 0.7);
+            line-height: 1.7;
+            margin-bottom: 24px;
+        }
+
         @keyframes fadeIn {
             from {
                 opacity: 0;
-                transform: translateY(10px);
+                transform: translateY(20px) scale(0.98);
             }
 
             to {
                 opacity: 1;
-                transform: translateY(0);
+                transform: translateY(0) scale(1);
             }
         }
 
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 24px;
         }
 
         label {
             display: block;
-            font-weight: bold;
-            margin-bottom: 8px;
-            color: #333;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: rgba(226, 232, 240, 0.9);
+            font-size: 0.9em;
+            letter-spacing: 0.01em;
+            text-transform: uppercase;
+            font-size: 0.85em;
         }
 
         input[type="text"],
         textarea {
             width: 100%;
-            padding: 12px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
+            padding: 14px 18px;
+            background: rgba(15, 15, 35, 0.6);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
             font-size: 1em;
-            transition: border 0.3s;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            color: #e2e8f0;
+            box-shadow: 
+                0 2px 8px rgba(0, 0, 0, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.03);
         }
 
         input[type="text"]:focus,
         textarea:focus {
             outline: none;
-            border-color: #667eea;
+            border-color: rgba(129, 140, 248, 0.5);
+            background: rgba(15, 15, 35, 0.8);
+            box-shadow: 
+                0 4px 16px rgba(99, 102, 241, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.05),
+                0 0 0 3px rgba(129, 140, 248, 0.1);
+        }
+
+        input[type="text"]::placeholder,
+        textarea::placeholder {
+            color: rgba(226, 232, 240, 0.4);
         }
 
         .file-upload {
-            border: 3px dashed #667eea;
-            border-radius: 8px;
-            padding: 30px;
+            border: 2px dashed rgba(129, 140, 248, 0.3);
+            border-radius: 12px;
+            padding: 36px 28px;
             text-align: center;
             cursor: pointer;
-            transition: all 0.3s;
-            background: #f8f9ff;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: rgba(15, 15, 35, 0.4);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.2);
+            color: rgba(226, 232, 240, 0.7);
         }
 
         .file-upload:hover {
-            background: #eef1ff;
-            border-color: #764ba2;
+            background: rgba(15, 15, 35, 0.6);
+            border-color: rgba(129, 140, 248, 0.5);
+            transform: translateY(-1px);
+            box-shadow: 
+                inset 0 2px 8px rgba(0, 0, 0, 0.3),
+                0 4px 12px rgba(99, 102, 241, 0.2);
         }
 
         .file-upload input {
@@ -157,36 +268,59 @@
         }
 
         .btn {
-            padding: 15px 30px;
-            background: #667eea;
-            color: white;
+            padding: 14px 28px;
+            background: #6366f1;
+            color: #ffffff;
             border: none;
             border-radius: 8px;
-            font-size: 1.1em;
-            font-weight: bold;
+            font-size: 0.95em;
+            font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s;
-            box-shadow: 0 4px 6px rgba(102, 126, 234, 0.3);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 
+                0 2px 8px rgba(99, 102, 241, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            letter-spacing: 0.02em;
+            text-transform: uppercase;
+            font-size: 0.85em;
+            position: relative;
         }
 
         .btn:hover {
-            background: #764ba2;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 12px rgba(102, 126, 234, 0.4);
+            background: #818cf8;
+            transform: translateY(-1px);
+            box-shadow: 
+                0 4px 12px rgba(99, 102, 241, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.15);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+            box-shadow: 
+                0 2px 4px rgba(99, 102, 241, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
         }
 
         .btn:disabled {
-            background: #ccc;
+            background: rgba(71, 85, 105, 0.5);
+            color: rgba(226, 232, 240, 0.4);
             cursor: not-allowed;
             transform: none;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
         }
 
         .btn-secondary {
-            background: #48bb78;
+            background: #10b981;
+            box-shadow: 
+                0 2px 8px rgba(16, 185, 129, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
         }
 
         .btn-secondary:hover {
-            background: #38a169;
+            background: #34d399;
+            box-shadow: 
+                0 4px 12px rgba(16, 185, 129, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.15);
         }
 
         .loading {
@@ -200,13 +334,18 @@
         }
 
         .spinner {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #667eea;
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-top: 4px solid #818cf8;
             border-radius: 50%;
             width: 50px;
             height: 50px;
             animation: spin 1s linear infinite;
-            margin: 0 auto 15px;
+            margin: 0 auto 20px;
+            box-shadow: 0 4px 16px rgba(99, 102, 241, 0.3);
+        }
+
+        .loading p {
+            color: rgba(226, 232, 240, 0.7);
         }
 
         @keyframes spin {
@@ -221,42 +360,72 @@
 
         .results {
             display: none;
-            margin-top: 30px;
-            padding: 20px;
-            background: #f8f9ff;
-            border-radius: 10px;
-            border-left: 5px solid #667eea;
+            margin-top: 32px;
+            padding: 28px;
+            background: rgba(26, 26, 46, 0.6);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-left: 3px solid #818cf8;
+            box-shadow: 
+                0 8px 32px rgba(0, 0, 0, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.05);
         }
 
         .results.active {
             display: block;
+            animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .results h3 {
-            color: #667eea;
-            margin-bottom: 15px;
+            color: #c7d2fe;
+            margin-bottom: 20px;
+            font-weight: 700;
+            font-size: 1.3em;
+            letter-spacing: -0.01em;
         }
 
         .result-item {
-            background: white;
-            padding: 15px;
-            margin: 10px 0;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            background: rgba(15, 15, 35, 0.5);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            padding: 20px 24px;
+            margin: 12px 0;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            box-shadow: 
+                0 2px 8px rgba(0, 0, 0, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.03);
+            transition: all 0.3s ease;
+        }
+
+        .result-item:hover {
+            transform: translateY(-1px);
+            border-color: rgba(255, 255, 255, 0.1);
+            box-shadow: 
+                0 4px 16px rgba(0, 0, 0, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.05);
         }
 
         .result-item strong {
-            color: #667eea;
+            color: #c7d2fe;
+            font-weight: 600;
+        }
+
+        .result-item p {
+            color: rgba(226, 232, 240, 0.8);
+            margin: 8px 0;
         }
 
         .success {
-            color: #48bb78;
-            font-weight: bold;
+            color: #34d399;
+            font-weight: 600;
         }
 
         .error {
-            color: #f56565;
-            font-weight: bold;
+            color: #f87171;
+            font-weight: 600;
         }
 
         .file-list {
@@ -265,18 +434,30 @@
 
         .file-link {
             display: inline-block;
-            padding: 8px 15px;
-            background: #667eea;
-            color: white;
+            padding: 10px 20px;
+            background: rgba(99, 102, 241, 0.2);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            color: #c7d2fe;
             text-decoration: none;
-            border-radius: 5px;
-            margin: 5px;
-            transition: all 0.3s;
+            border-radius: 8px;
+            margin: 6px;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(129, 140, 248, 0.3);
+            box-shadow: 
+                0 2px 8px rgba(0, 0, 0, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            font-weight: 500;
+            font-size: 0.9em;
         }
 
         .file-link:hover {
-            background: #764ba2;
-            transform: scale(1.05);
+            background: rgba(99, 102, 241, 0.3);
+            border-color: rgba(129, 140, 248, 0.5);
+            transform: translateY(-1px);
+            box-shadow: 
+                0 4px 12px rgba(99, 102, 241, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.08);
         }
 
         .checkbox-group {
@@ -289,8 +470,9 @@
             display: flex;
             align-items: center;
             gap: 8px;
-            font-weight: normal;
+            font-weight: 500;
             cursor: pointer;
+            color: rgba(226, 232, 240, 0.9);
         }
 
         .checkbox-group input[type="checkbox"] {
@@ -307,41 +489,84 @@
         }
 
         .stat-card {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
+            background: rgba(15, 15, 35, 0.5);
+            backdrop-filter: blur(15px) saturate(180%);
+            -webkit-backdrop-filter: blur(15px) saturate(180%);
+            padding: 24px;
+            border-radius: 14px;
             text-align: center;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 
+                0 4px 16px rgba(0, 0, 0, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.03);
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            border-color: rgba(255, 255, 255, 0.12);
+            box-shadow: 
+                0 8px 24px rgba(0, 0, 0, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.05);
         }
 
         .stat-number {
             font-size: 2.5em;
-            font-weight: bold;
-            color: #667eea;
+            font-weight: 700;
+            color: #c7d2fe;
+            background: linear-gradient(135deg, #818cf8 0%, #a78bfa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
         .stat-label {
-            color: #666;
-            margin-top: 5px;
+            color: rgba(226, 232, 240, 0.6);
+            margin-top: 8px;
+            font-weight: 500;
+            font-size: 0.9em;
         }
 
         .preview-image {
-            max-width: 100%;
-            border-radius: 10px;
-            margin-top: 15px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            max-width: 200px;
+            max-height: 150px;
+            width: auto;
+            height: auto;
+            border-radius: 8px;
+            margin-top: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .preview-image:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+            border-color: rgba(129, 140, 248, 0.4);
         }
 
         .info-box {
-            background: #fff3cd;
-            border-left: 4px solid #ffc107;
-            padding: 15px;
-            margin: 15px 0;
-            border-radius: 5px;
+            background: rgba(245, 158, 11, 0.1);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-left: 3px solid rgba(245, 158, 11, 0.6);
+            padding: 18px 20px;
+            margin: 20px 0;
+            border-radius: 12px;
+            border: 1px solid rgba(245, 158, 11, 0.2);
+            box-shadow: 
+                0 2px 8px rgba(0, 0, 0, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.03);
         }
 
         .info-box strong {
-            color: #856404;
+            color: #fbbf24;
+            font-weight: 600;
+        }
+
+        .info-box {
+            color: rgba(226, 232, 240, 0.8);
         }
 
         /* GIS Viewer Layout - Sidebar Implementation */
@@ -356,27 +581,31 @@
 
         #map {
             flex: 1;
-            /* El mapa ocupa todo el espacio restante */
             height: 100% !important;
-            /* Forzar altura del contenedor padre */
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 
+                0 8px 32px rgba(0, 0, 0, 0.5),
+                inset 0 1px 0 rgba(255, 255, 255, 0.05);
             margin: 0 !important;
             z-index: 1;
+            overflow: hidden;
         }
 
         .visor-sidebar {
             width: 380px;
-            /* Ancho fijo para la barra lateral */
             height: 100%;
             overflow-y: auto;
-            /* Scroll vertical */
-            background: #f8f9ff;
-            border-radius: 10px;
-            padding: 15px;
-            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+            background: rgba(26, 26, 46, 0.6);
+            backdrop-filter: blur(24px) saturate(180%);
+            -webkit-backdrop-filter: blur(24px) saturate(180%);
+            border-radius: 16px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 
+                0 8px 32px rgba(0, 0, 0, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.05);
             flex-shrink: 0;
-            /* No encoger */
         }
 
         /* Ajustes para los controles dentro del sidebar */
@@ -397,10 +626,14 @@
             font-size: 1.2em;
             position: sticky;
             top: 0;
-            background: #f8f9ff;
+            background: rgba(26, 26, 46, 0.9);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
             z-index: 10;
-            padding: 5px 0;
-            border-bottom: 2px solid #667eea;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            color: #c7d2fe;
+            font-weight: 700;
         }
 
         .gis-search {
@@ -415,20 +648,33 @@
 
 
         .layer-group {
-            background: white;
-            padding: 12px;
-            border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-            border: 1px solid #eef1ff;
+            background: rgba(15, 15, 35, 0.5);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            padding: 14px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 
+                0 2px 8px rgba(0, 0, 0, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.03);
+            transition: all 0.3s ease;
+        }
+
+        .layer-group:hover {
+            background: rgba(15, 15, 35, 0.7);
+            border-color: rgba(255, 255, 255, 0.12);
+            box-shadow: 
+                0 4px 12px rgba(0, 0, 0, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.05);
         }
 
         .layer-group-header {
-            font-weight: bold;
-            font-size: 0.9em;
-            color: #4a5568;
-            border-bottom: 2px solid #edf2f7;
+            font-weight: 600;
+            font-size: 0.85em;
+            color: rgba(226, 232, 240, 0.9);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
             margin-bottom: 10px;
-            padding-bottom: 5px;
+            padding-bottom: 8px;
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -438,8 +684,8 @@
 
         .layer-group-header::after {
             content: '▼';
-            font-size: 0.8em;
-            color: #667eea;
+            font-size: 0.7em;
+            color: #818cf8;
             transition: transform 0.3s;
         }
 
@@ -460,8 +706,7 @@
             margin: 0;
         }
 
-        .layer-controls h3 {
-            color: #667eea;
+        .layer-controls h3:not(:first-of-type) {
             margin-bottom: 15px;
             grid-column: 1 / -1;
         }
@@ -482,7 +727,7 @@
             margin: 0;
             flex: 1;
             font-size: 0.85em;
-            color: #2d3748;
+            color: rgba(226, 232, 240, 0.8);
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -504,7 +749,7 @@
             min-width: 35px;
             text-align: right;
             font-size: 0.75em;
-            color: #718096;
+            color: rgba(226, 232, 240, 0.6);
             font-family: monospace;
         }
 
@@ -515,7 +760,7 @@
             border-radius: 4px;
             padding: 2px 6px;
             font-size: 11px;
-            color: #2d3748;
+            color: rgba(226, 232, 240, 0.8);
             font-weight: 700;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             pointer-events: none;
@@ -530,38 +775,62 @@
 
         .tool-btn {
             padding: 10px 20px;
-            background: #48bb78;
-            color: white;
-            border: none;
+            background: rgba(16, 185, 129, 0.2);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            color: #34d399;
+            border: 1px solid rgba(16, 185, 129, 0.3);
             border-radius: 8px;
             cursor: pointer;
-            transition: all 0.3s;
-            font-size: 0.9em;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            font-size: 0.85em;
+            font-weight: 600;
+            box-shadow: 
+                0 2px 8px rgba(0, 0, 0, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.05);
         }
 
         .tool-btn:hover {
-            background: #38a169;
-            transform: translateY(-2px);
+            background: rgba(16, 185, 129, 0.3);
+            border-color: rgba(16, 185, 129, 0.5);
+            transform: translateY(-1px);
+            box-shadow: 
+                0 4px 12px rgba(16, 185, 129, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.08);
         }
 
         .tool-btn.active {
-            background: #764ba2;
+            background: rgba(99, 102, 241, 0.3);
+            color: #c7d2fe;
+            border-color: rgba(129, 140, 248, 0.5);
+            box-shadow: 
+                0 4px 12px rgba(99, 102, 241, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.08);
         }
 
         .measurement-result {
-            background: white;
-            padding: 10px 15px;
-            border-radius: 8px;
-            margin-top: 10px;
+            background: rgba(15, 15, 35, 0.6);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            padding: 14px 18px;
+            border-radius: 12px;
+            margin-top: 12px;
             display: none;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 
+                0 4px 16px rgba(0, 0, 0, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.03);
+            color: rgba(226, 232, 240, 0.8);
         }
 
         .measurement-result.active {
             display: block;
+            animation: fadeIn 0.3s ease;
         }
 
         .measurement-result strong {
-            color: #667eea;
+            color: #c7d2fe;
+            font-weight: 600;
         }
 
         /* Toggle Switch Design */
@@ -586,7 +855,7 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background-color: #ccc;
+            background-color: rgba(71, 85, 105, 0.5);
             transition: .4s;
             border-radius: 34px;
         }
@@ -598,17 +867,17 @@
             width: 16px;
             left: 2px;
             bottom: 2px;
-            background-color: white;
+            background-color: #e2e8f0;
             transition: .4s;
             border-radius: 50%;
         }
 
         input:checked+.slider {
-            background-color: #667eea;
+            background-color: #6366f1;
         }
 
         input:focus+.slider {
-            box-shadow: 0 0 1px #667eea;
+            box-shadow: 0 0 1px #818cf8;
         }
 
         input:checked+.slider:before {
@@ -617,13 +886,19 @@
 
         /* Map Coordinates Control */
         .leaflet-control-coordinates {
-            background: rgba(255, 255, 255, 0.9);
-            padding: 5px 10px;
-            border-radius: 4px;
-            font-family: monospace;
+            background: rgba(15, 15, 35, 0.85);
+            backdrop-filter: blur(12px) saturate(180%);
+            -webkit-backdrop-filter: blur(12px) saturate(180%);
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
             font-size: 11px;
-            box-shadow: 0 1px 5px rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 
+                0 4px 16px rgba(0, 0, 0, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.05);
             cursor: pointer;
+            color: rgba(226, 232, 240, 0.9);
         }
 
         /* Responsive Split View */
@@ -1118,7 +1393,11 @@
                         html += `
                             <div class="result-item">
                                 <strong>🗺️ Vista de Parcela:</strong>
-                                <img src="${data.url_mapa_web}" class="preview-image" alt="Mapa">
+                                <div style="margin-top: 8px;">
+                                    <a href="${data.url_mapa_web}" target="_blank" title="Haz clic para ver imagen completa">
+                                        <img src="${data.url_mapa_web}" class="preview-image" alt="Vista previa de parcela">
+                                    </a>
+                                </div>
                             </div>
                         `;
                     }
@@ -1146,11 +1425,6 @@
                                 `<p style="color: #2b6cb0; font-weight: bold;">✅ Información urbanística recuperada</p>` :
                                 `<p style="color: #718096;">ℹ️ Análisis básico realizado</p>`
                             }
-                                <div style="margin-top: 10px;">
-                                    <a href="/outputs/${data.referencia}/urbanismo/informe_urbanistico.pdf" target="_blank" class="btn btn-sm" style="background: #ed8936; color: white; text-decoration: none; padding: 5px 10px; border-radius: 4px; font-size: 0.9em;">
-                                        📄 Ver Informe Urbanístico
-                                    </a>
-                                </div>
                             </div>
                         `;
                     }
@@ -1162,6 +1436,9 @@
                                 <div class="file-list">
                                     ${data.archivos_generados.zip ?
                                 `<a href="${data.archivos_generados.zip}" class="file-link" download>📦 Descargar ZIP Completo</a>`
+                                : ''}
+                                    ${data.archivos_generados.pdf_urbanistico ?
+                                `<a href="${data.archivos_generados.pdf_urbanistico}" class="file-link" target="_blank" style="background: #ed8936;">📄 Ver Informe Urbanístico</a>`
                                 : ''}
                                     ${data.archivos_generados.kml ?
                                 `<a href="${data.archivos_generados.kml}" class="file-link" download>🗺️ Descargar KML</a>`

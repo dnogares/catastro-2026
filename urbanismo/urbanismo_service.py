@@ -48,59 +48,133 @@ class UrbanismoService:
     # --- Métodos de CapasService para usar GPKG local ---
     def listar_capas(self) -> List[Dict]:
         """
-        Lista las capas disponibles en el GPKG consolidado
+        Lista las capas disponibles en el directorio CAPAS_DIR.
+        Busca archivos .geojson, .shp y .gml (excluyendo .gpkg).
         """
         try:
             from config.paths import CAPAS_DIR
-            capas_consolidadas = CAPAS_DIR / "capas_consolidadas_20260112_173239.gpkg"
-            
-            if not capas_consolidadas.exists():
-                logger.warning(f"No se encuentra el GPKG consolidado: {capas_consolidadas}")
-                return []
-            
-            # Listar capas del GPKG
-            import fiona
+
             capas_disponibles = []
             
-            for layer_name in fiona.listlayers(capas_consolidadas):
-                capas_disponibles.append({
-                    "nombre": layer_name,
-                    "tipo": "vectorial",
-                    "ruta": str(capas_consolidadas)
-                })
+            # Extensiones a buscar (excluyendo .gpkg)
+            extensiones = {".geojson", ".shp", ".gml"}
             
-            logger.info(f"Capas encontradas en GPKG: {[c['nombre'] for c in capas_disponibles]}")
+            # Buscar archivos vectoriales en CAPAS_DIR (solo raíz)
+            for extension in extensiones:
+                for file_path in CAPAS_DIR.glob(f"*{extension}"):
+                    # Excluir archivos auxiliares y de configuración
+                    if (file_path.suffix.lower() in extensiones and 
+                        not any(suffix in file_path.name.lower() for suffix in ['.cpg', '.dbf', '.prj', '.shx', '.qix', '.qmd', '.gfs'])):
+                        
+                        # Usar el nombre del archivo sin extensión como nombre de capa
+                        nombre_capa = file_path.stem
+                        
+                        capas_disponibles.append({
+                            "nombre": nombre_capa,
+                            "tipo": "vectorial",
+                            "ruta_completa": str(file_path),
+                            "archivo": file_path.name,
+                            "extension": file_path.suffix.lower()
+                        })
+
+            logger.info(f"Capas encontradas en CAPAS_DIR (sin GPKG): {[c['nombre'] for c in capas_disponibles]}")
             return capas_disponibles
             
         except Exception as e:
-            logger.error(f"Error listando capas del GPKG: {e}")
+            logger.error(f"Error listando capas del CAPAS_DIR: {e}")
             return []
-    
-    def cargar_capa(self, nombre_capa: str):
+
+    def descargar_capa(self, nombre_capa: str, url_descarga: str) -> Optional[Path]:
         """
-        Carga una capa específica del GPKG consolidado
+        Descarga una capa vectorial de una URL y la guarda en CAPAS_DIR.
         """
         try:
             from config.paths import CAPAS_DIR
-            capas_consolidadas = CAPAS_DIR / "capas_consolidadas_20260112_173239.gpkg"
+            import requests
             
-            if not capas_consolidadas.exists():
-                logger.error(f"No se encuentra el GPKG consolidado: {capas_consolidadas}")
-                return None
+            # Crear subdirectorio para capas descargadas si no existe
+            download_dir = CAPAS_DIR / "descargadas"
+            download_dir.mkdir(parents=True, exist_ok=True)
             
-            import geopandas as gpd
-            capa_gdf = gpd.read_file(capas_consolidadas, layer=nombre_capa)
+            # Determinar nombre de archivo local (ej. nombre_capa.gpkg o basado en URL)
+            # Esto puede ser más sofisticado para manejar diferentes tipos de descarga
+            local_file_name = f"{nombre_capa}.gpkg" # Asumiendo GPKG, ajustar si es necesario
+            local_path = download_dir / local_file_name
+
+            logger.info(f"Descargando capa '{nombre_capa}' desde {url_descarga} a {local_path}")
             
-            # Asegurar CRS WGS84
-            if capa_gdf.crs and capa_gdf.crs != "EPSG:4326":
-                capa_gdf = capa_gdf.to_crs("EPSG:4326")
+            response = requests.get(url_descarga, stream=True)
+            response.raise_for_status() # Lanzar excepción para errores HTTP
+
+            with open(local_path, 'wb') as f:
+                for chunk in response.iter_content(chunk_size=8192):
+                    f.write(chunk)
             
-            logger.info(f"Capa '{nombre_capa}' cargada: {len(capa_gdf)} geometrías")
-            return capa_gdf
-            
+            logger.info(f"Capa '{nombre_capa}' descargada exitosamente a {local_path}")
+            return local_path
+
         except Exception as e:
-            logger.error(f"Error cargando capa '{nombre_capa}': {e}")
+            logger.error(f"Error descargando capa '{nombre_capa}' desde {url_descarga}: {e}")
             return None
+
+    def obtener_o_descargar_capa(self, nombre_capa: str, url_descarga: Optional[str] = None, layer: Optional[str] = None):
+        """
+        Intenta cargar una capa localmente desde GeoJSON, SHP o GML.
+        """
+        from config.paths import CAPAS_DIR
+        import geopandas as gpd
+
+        # 1. Intentar cargar la capa localmente desde diferentes formatos
+        extensiones = {".geojson", ".shp", ".gml"}
+        
+        for extension in extensiones:
+            for file_path in CAPAS_DIR.glob(f"*{extension}"):
+                if file_path.stem == nombre_capa:
+                    try:
+                        logger.info(f"Capa '{nombre_capa}' encontrada localmente en {file_path.name}. Cargando...")
+                        
+                        # Para SHP, necesitamos especificar que no hay layer name
+                        if extension == ".shp":
+                            capa_gdf = gpd.read_file(file_path)
+                        else:
+                            capa_gdf = gpd.read_file(file_path)
+                        
+                        # Reproyectar a CRS objetivo si es necesario
+                        if capa_gdf.crs and capa_gdf.crs != "EPSG:25830":
+                            capa_gdf = capa_gdf.to_crs("EPSG:25830")
+                        
+                        return capa_gdf
+                        
+                    except Exception as e:
+                        logger.warning(f"Error al intentar cargar '{nombre_capa}' de {file_path.name}: {e}")
+
+        # 2. Si no se encuentra localmente y se proporciona URL, intentar descargar
+        if url_descarga:
+            logger.info(f"Capa '{nombre_capa}' no encontrada localmente. Intentando descargar de {url_descarga}...")
+            local_path = self.descargar_capa(nombre_capa, url_descarga)
+            if local_path:
+                try:
+                    logger.info(f"Capa '{nombre_capa}' descargada. Cargando desde {local_path}...")
+                    capa_gdf = gpd.read_file(local_path)
+                    if capa_gdf.crs and capa_gdf.crs != "EPSG:25830":
+                        capa_gdf = capa_gdf.to_crs("EPSG:25830")
+                    return capa_gdf
+                except Exception as e:
+                    logger.error(f"Error cargando capa '{nombre_capa}' después de descargar: {e}")
+                    return None
+            else:
+                logger.error(f"No se pudo descargar la capa '{nombre_capa}'.")
+                return None
+        
+        logger.error(f"Capa '{nombre_capa}' no encontrada localmente y no se proporcionó URL de descarga.")
+        return None
+
+    def cargar_capa(self, nombre_capa: str):
+        """
+        Método alias para compatibilidad con AnalizadorUrbanistico.
+        Carga una capa localmente.
+        """
+        return self.obtener_o_descargar_capa(nombre_capa)
 
     def analizar_parcela(self, parcela_path: str, referencia: str) -> Dict[str, any]:
         """
@@ -296,12 +370,25 @@ class UrbanismoService:
         """
         mapas = []
         
-        # Buscar en directorio de urbanismo
-        urbanismo_dir = self.output_base_dir / "urbanismo"
+        # Buscar en el directorio de la referencia (donde realmente se guardan los mapas)
+        ref_dir = self.output_base_dir / referencia
         
-        for carpeta in urbanismo_dir.glob(f"{referencia}_*"):
-            mapa_files = list(carpeta.glob("*_mapa.png"))
+        if ref_dir.exists():
+            # Buscar archivos de mapa en el directorio de la referencia
+            mapa_files = list(ref_dir.glob("*_mapa.png"))
             mapas.extend([str(m) for m in mapa_files])
+            
+            # También buscar otros archivos de imagen que puedan ser mapas
+            otros_mapas = list(ref_dir.glob("*.png"))
+            mapas.extend([str(m) for m in otros_mapas if "mapa" in m.name.lower()])
+        
+        # Si no hay mapas en el directorio de referencia, buscar en subdirectorios con timestamp
+        if not mapas:
+            urbanismo_dir = self.output_base_dir / "urbanismo"
+            if urbanismo_dir.exists():
+                for carpeta in urbanismo_dir.glob(f"{referencia}_*"):
+                    mapa_files = list(carpeta.glob("*_mapa.png"))
+                    mapas.extend([str(m) for m in mapa_files])
         
         return sorted(mapas)
 

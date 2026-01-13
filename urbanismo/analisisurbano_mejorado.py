@@ -170,7 +170,7 @@ class AnalisisUrbano:
     
     def _cargar_capa_gpkg_local(self, typename: str) -> gpd.GeoDataFrame:
         """
-        Carga una capa desde el GPKG consolidado local
+        Carga una capa desde los archivos disponibles en CAPAS_DIR (GeoJSON, SHP, GML)
         
         Args:
             typename: Nombre de la capa (formato: "SIT_USU_PLA_URB_CARM:nombre_capa")
@@ -185,21 +185,30 @@ class AnalisisUrbano:
             else:
                 layer_name = typename
             
-            # Ruta al GPKG consolidado
+            # Buscar en CAPAS_DIR sin usar GPKG consolidado
             from config.paths import CAPAS_DIR
-            gpkg_path = CAPAS_DIR / "capas_consolidadas_20260112_173239.gpkg"
             
-            if not gpkg_path.exists():
-                logger.error(f"No se encuentra el GPKG consolidado: {gpkg_path}")
+            # Extensiones a buscar
+            extensiones = [".geojson", ".shp", ".gml"]
+            capa_encontrada = None
+            
+            for ext in extensiones:
+                candidate_path = CAPAS_DIR / f"{layer_name}{ext}"
+                if candidate_path.exists():
+                    capa_encontrada = candidate_path
+                    break
+            
+            if not capa_encontrada:
+                logger.warning(f"No se encuentra la capa {layer_name} en CAPAS_DIR")
                 # Devolver GeoDataFrame vacío para que continúe el proceso
                 return gpd.GeoDataFrame()
             
-            logger.info(f"Cargando capa desde GPKG local: {layer_name}")
-            gdf = gpd.read_file(gpkg_path, layer=layer_name)
+            logger.info(f"Cargando capa desde archivo local: {capa_encontrada.name}")
+            gdf = gpd.read_file(capa_encontrada)
             
             if gdf.empty:
-                logger.warning(f"La capa GPKG está vacía: {layer_name}")
-                return gdf
+                logger.warning(f"La capa está vacía: {layer_name}")
+                return gpd.GeoDataFrame()
             
             # Estandarizar nombres de columnas a minúsculas
             gdf.columns = [c.lower() for c in gdf.columns]
@@ -207,11 +216,11 @@ class AnalisisUrbano:
             # Reproyectar a EPSG:25830 para cálculos de área precisos
             gdf = gdf.to_crs(epsg=25830)
             
-            logger.info(f"Capa '{layer_name}' cargada desde GPKG: {len(gdf)} geometrías")
+            logger.info(f"Capa '{layer_name}' cargada: {len(gdf)} geometrías")
             return gdf
             
         except Exception as e:
-            logger.error(f"Error cargando capa GPKG {typename}: {e}")
+            logger.error(f"Error cargando capa {typename}: {e}")
             # Devolver GeoDataFrame vacío para que continúe el proceso
             return gpd.GeoDataFrame()
 
@@ -534,6 +543,148 @@ class AnalisisUrbano:
         except Exception as e:
             logger.error(f"Error procesando parcela {referencia}: {e}")
             raise
+
+    def analizar(self, gml_path: str, referencia: str) -> Dict[str, any]:
+        """
+        Analiza una parcela usando las capas de planeamiento disponibles
+        
+        Args:
+            gml_path: Ruta al archivo GML de la parcela
+            referencia: Referencia catastral
+            
+        Returns:
+            Diccionario con resultados del análisis
+        """
+        try:
+            # Cargar parcela
+            gdf_parcela = gpd.read_file(gml_path)
+            if gdf_parcela.empty:
+                return self._resultados_vacios(referencia, "Parcela vacía")
+            
+            # Reproyectar a EPSG:25830
+            if gdf_parcela.crs:
+                gdf_parcela = gdf_parcela.to_crs(epsg=25830)
+            else:
+                gdf_parcela = gdf_parcela.set_crs(epsg=25830)
+            
+            # Calcular área de la parcela
+            area_parcela_m2 = gdf_parcela.geometry.area.sum()
+            
+            # Inicializar resultados
+            resultados = {
+                "referencia": referencia,
+                "area_parcela_m2": area_parcela_m2,
+                "urbanismo": True,
+                "detalle": {},
+                "analisis_avanzado": {
+                    "superficie_parcela": {
+                        "valor": round(area_parcela_m2, 2),
+                        "unidad": "m²",
+                        "valor_ha": round(area_parcela_m2 / 10000, 4)
+                    },
+                    "zonas_afectadas": [],
+                    "parametros_urbanisticos": {},
+                    "afecciones_detectadas": [],
+                    "recomendaciones": []
+                }
+            }
+            
+            # Buscar capas de planeamiento disponibles
+            from config.paths import CAPAS_DIR
+            
+            # Capas que podrían contener información urbanística
+            capas_urbanisticas = []
+            extensiones = [".geojson", ".shp", ".gml"]
+            
+            # Buscar capas con nombres que sugieren planeamiento
+            for ext in extensiones:
+                for file_path in CAPAS_DIR.glob(f"*{ext}"):
+                    nombre = file_path.stem.lower()
+                    # Palabras clave que indican capas urbanísticas
+                    if any(palabra in nombre for palabra in [
+                        "planeamiento", "urbanismo", "suelo", "clasificacion", 
+                        "plu", "pgou", "urbanizable", "rustico", "urbano"
+                    ]):
+                        capas_urbanisticas.append(file_path)
+            
+            if not capas_urbanisticas:
+                logger.warning("No se encontraron capas de planeamiento urbanístico")
+                resultados["mensaje"] = "No hay capas de planeamiento disponibles"
+                return resultados
+            
+            # Analizar contra cada capa urbanística encontrada
+            for capa_path in capas_urbanisticas:
+                try:
+                    logger.info(f"Analizando contra capa urbanística: {capa_path.name}")
+                    
+                    # Cargar capa
+                    gdf_capa = gpd.read_file(capa_path)
+                    
+                    if gdf_capa.empty:
+                        continue
+                    
+                    # Reproyectar
+                    if gdf_capa.crs:
+                        gdf_capa = gdf_capa.to_crs(epsg=25830)
+                    else:
+                        gdf_capa = gdf_capa.set_crs(epsg=25830)
+                    
+                    # Calcular porcentajes
+                    areas_m2, porcentajes = self.calcular_porcentajes(gdf_parcela, gdf_capa)
+                    
+                    if areas_m2:
+                        # Agregar a resultados
+                        for tipo, area in areas_m2.items():
+                            clave = f"{capa_path.stem} - {tipo}"
+                            resultados["detalle"][clave] = porcentajes.get(tipo, 0)
+                        
+                        # Agregar zona afectada
+                        resultados["analisis_avanzado"]["zonas_afectadas"].append({
+                            "capa": capa_path.stem,
+                            "elementos": len(gdf_capa),
+                            "tipos_encontrados": list(areas_m2.keys())
+                        })
+                        
+                        logger.info(f"Análisis completado para {capa_path.name}: {len(areas_m2)} tipos")
+                    
+                except Exception as e:
+                    logger.warning(f"Error analizando capa {capa_path.name}: {e}")
+                    continue
+            
+            # Calcular parámetros urbanísticos genéricos
+            if resultados["detalle"]:
+                superficie_ha = area_parcela_m2 / 10000
+                if superficie_ha > 0:
+                    resultados["analisis_avanzado"]["parametros_urbanisticos"] = {
+                        "coeficiente_ocupacion": {
+                            "valor": 0.5,
+                            "nota": "50% (valor genérico)"
+                        },
+                        "edificabilidad": {
+                            "valor": round(superficie_ha * 1.5, 2),
+                            "nota": "1.5 m²/m² (valor genérico)"
+                        },
+                        "altura_maxima": {
+                            "valor": 12,
+                            "nota": "12 metros (valor genérico)"
+                        }
+                    }
+            
+            # Generar recomendaciones
+            if resultados["detalle"]:
+                resultados["analisis_avanzado"]["recomendaciones"] = [
+                    "Consultar el Plan General de Ordenación Urbana vigente.",
+                    "Verificar correspondencia con el registro de la propiedad.",
+                    "Confirmar parámetros con el ayuntamiento.",
+                    "Este análisis tiene carácter informativo."
+                ]
+            
+            logger.info(f"Análisis urbanístico completado para {referencia}")
+            return resultados
+            
+        except Exception as e:
+            logger.error(f"Error en análisis urbanístico: {e}")
+            return self._resultados_vacios(referencia, str(e))
 
     def _guardar_resultados_textuales(self, txt_path: Path, csv_path: Path, 
                                    referencia: str, timestamp: str,

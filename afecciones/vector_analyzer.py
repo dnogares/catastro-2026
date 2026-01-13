@@ -16,10 +16,11 @@ from mpl_toolkits.axes_grid1.anchored_artists import AnchoredSizeBar
 from pathlib import Path
 
 class VectorAnalyzer:
-    def __init__(self, capas_dir="capas", crs_objetivo="EPSG:25830"):
+    def __init__(self, capas_dir="capas", crs_objetivo="EPSG:25830", urbanismo_service=None):
         self.capas_dir = Path(capas_dir)
         self.crs_objetivo = crs_objetivo
         self.config_titulos = self.cargar_config_titulos()
+        self.urbanismo_service = urbanismo_service
 
     def analizar(self, parcela_path, capa_input, campo_clasificacion="tipo", layer=None):
         """
@@ -40,14 +41,6 @@ class VectorAnalyzer:
             
             parcela_path = Path(parcela_path)
             
-            # Determinar ruta de la capa
-            capa_path = Path(capa_input)
-            if not capa_path.is_absolute():
-                capa_path = self.capas_dir / capa_input
-            
-            if not capa_path.exists():
-                return {"error": f"Capa {capa_path.name} no encontrada", "afecciones": []}
-
             # Cargar geometría parcela
             parcela_gdf = gpd.read_file(parcela_path)
             if parcela_gdf.crs != self.crs_objetivo:
@@ -56,36 +49,33 @@ class VectorAnalyzer:
             geom_parcela = parcela_gdf.union_all()
             area_total = geom_parcela.area
 
-            # Cargar capa con manejo de múltiples capas y límites de tamaño
-            try:
-                # Configurar límite de tamaño para GeoJSON (en MB)
-                os.environ['OGR_GEOJSON_MAX_OBJ_SIZE'] = '50'  # 50 MB
+            # Cargar la capa usando el servicio de urbanismo o directamente
+            capa_gdf = None
+            if self.urbanismo_service:
+                capa_gdf = self.urbanismo_service.obtener_o_descargar_capa(capa_input, layer=layer)
+                if capa_gdf is None:
+                    return {"error": f"Capa {capa_input} no encontrada o no pudo ser descargada", "afecciones": []}
+            else:
+                # Método directo: buscar por nombre de archivo
+                capa_path = None
+                if not Path(capa_input).is_absolute():
+                    # Buscar en el directorio de capas
+                    extensiones = {".geojson", ".shp", ".gml"}
+                    for ext in extensiones:
+                        candidate_path = self.capas_dir / f"{capa_input}{ext}"
+                        if candidate_path.exists():
+                            capa_path = candidate_path
+                            break
                 
-                if layer:
-                    # Si se especifica una capa, usarla directamente
+                if not capa_path or not capa_path.exists():
+                    return {"error": f"Capa {capa_input} no encontrada", "afecciones": []}
+                
+                # Cargar capa directamente
+                os.environ['OGR_GEOJSON_MAX_OBJ_SIZE'] = '50'  # 50 MB
+                if layer and capa_path.suffix.lower() == '.gpkg':
                     capa_gdf = gpd.read_file(capa_path, layer=layer)
                 else:
-                    # Intentar leer la primera capa
                     capa_gdf = gpd.read_file(capa_path)
-                    
-            except Exception as e:
-                # Si falla por tamaño o complejidad, intentar con la primera capa
-                if "too complex/large" in str(e) or "max_obj_size" in str(e):
-                    print(f"⚠️ Archivo {capa_path.name} demasiado grande, intentando con primera capa...")
-                    try:
-                        # Listar capas disponibles
-                        import fiona
-                        layers = fiona.listlayers(capa_path)
-                        if layers:
-                            print(f"📋 Capas disponibles: {layers[:3]}...")  # Mostrar primeras 3
-                            # Usar la primera capa
-                            capa_gdf = gpd.read_file(capa_path, layer=layers[0])
-                        else:
-                            return {"error": f"No se encontraron capas en {capa_path.name}", "afecciones": []}
-                    except Exception as e2:
-                        return {"error": f"No se pudo leer {capa_path.name}: {str(e2)}", "afecciones": []}
-                else:
-                    return {"error": f"Error leyendo capa {capa_path.name}: {str(e)}", "afecciones": []}
             
             if capa_gdf.crs != self.crs_objetivo:
                 capa_gdf = capa_gdf.to_crs(self.crs_objetivo)
@@ -140,9 +130,11 @@ class VectorAnalyzer:
     # Configuración y Utilidades
     # ------------------------------------------------------------
     def cargar_config_titulos(self, csv_filename="titulos.csv"):
-        # Asumimos que titulos.csv está en capas/wms/ o en la raíz de capas?
-        # Manteniendo compatibilidad con estructura anterior: capas/wms/
-        csv_path = self.capas_dir / "wms" / csv_filename
+        # Cargar config_titulos desde la raíz de CAPAS_DIR
+        csv_path = self.capas_dir / csv_filename
+        if not csv_path.exists():
+            # Fallback a la estructura anterior si no se encuentra en la raíz
+            csv_path = self.capas_dir / "wms" / csv_filename
         
         config = {}
         if csv_path.exists():
@@ -187,7 +179,11 @@ class VectorAnalyzer:
     # Gestión de Leyendas y Estilos
     # ------------------------------------------------------------
     def get_legend_styling(self, capa_nombre):
-        leyenda_csv_path = self.capas_dir / "wms" / f"leyenda_{capa_nombre.lower()}.csv"
+        # Buscar el archivo de leyenda en la raíz de CAPAS_DIR primero
+        leyenda_csv_path = self.capas_dir / f"leyenda_{capa_nombre.lower()}.csv"
+        if not leyenda_csv_path.exists():
+            # Fallback a la estructura anterior si no se encuentra en la raíz
+            leyenda_csv_path = self.capas_dir / "wms" / f"leyenda_{capa_nombre.lower()}.csv"
         styling = {'unique': True, 'color': "blue", 'field': None, 'labels': {}, 'colors': {}} 
         
         if leyenda_csv_path.exists():
@@ -213,7 +209,11 @@ class VectorAnalyzer:
         return styling
 
     def aplicar_leyenda(self, ax, capa):
-        leyenda_csv_path = self.capas_dir / "wms" / f"leyenda_{capa['nombre'].lower()}.csv"
+        # Buscar el archivo de leyenda en la raíz de CAPAS_DIR primero
+        leyenda_csv_path = self.capas_dir / f"leyenda_{capa['nombre'].lower()}.csv"
+        if not leyenda_csv_path.exists():
+            # Fallback a la estructura anterior si no se encuentra en la raíz
+            leyenda_csv_path = self.capas_dir / "wms" / f"leyenda_{capa['nombre'].lower()}.csv"
         if leyenda_csv_path.exists():
             try:
                 df = pd.read_csv(leyenda_csv_path, encoding="utf-8")
@@ -248,11 +248,7 @@ class VectorAnalyzer:
             "texto_posterior": "", "font": "Arial", "color": "black", "size": 14
         })
 
-        if "gpkg" in capa and capa["gpkg"]:
-            ruta_gpkg = os.path.join("capas", "gpkg", os.path.basename(capa["gpkg"]))
-            nombre_bonito = self.nombre_bonito_gpkg(ruta_gpkg)
-        else:
-            nombre_bonito = capa.get("nombre", "Capa desconocida")
+        nombre_bonito = capa.get("nombre", "Capa desconocida")
 
         texto_titulo = f"{conf['texto_previo']}{nombre_bonito}{conf['texto_posterior']}"
         
@@ -296,7 +292,7 @@ class VectorAnalyzer:
                     # Llamar al metodo analizar
                     res = self.analizar(
                         parcela_path=archivo_parcela,
-                        gpkg_name=os.path.basename(capa_cfg["gpkg"]) # Suponiendo que gpkg_name basta si está en capas_dir
+                        capa_input=capa_cfg["nombre"] # Ahora se espera el nombre de la capa
                     )
                     
                     if res.get("afecciones_detectadas"):

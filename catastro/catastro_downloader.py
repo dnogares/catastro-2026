@@ -256,11 +256,22 @@ class CatastroDownloader:
         try:
             response = requests.get(url, timeout=30)
                 
-            if response.status_code == 200 and response.headers.get("Content-Type", "").startswith("application/pdf"):
-                with open(filename, "wb") as f:
-                    f.write(response.content)
-                print(f"  ✓ PDF oficial descargado: {filename}")
-                return True
+            if response.status_code == 200:
+                # Verificar si hay contenido (incluso si no es PDF)
+                if len(response.content) > 0:
+                    with open(filename, "wb") as f:
+                        f.write(response.content)
+                    
+                    # Verificar el tipo de contenido para informar
+                    content_type = response.headers.get("Content-Type", "")
+                    if content_type.startswith("application/pdf"):
+                        print(f"  ✓ PDF oficial descargado: {filename}")
+                    else:
+                        print(f"  ✓ Archivo oficial descargado (tipo: {content_type}): {filename}")
+                    return True
+                else:
+                    print(f"  ✗ PDF oficial vacío (Status {response.status_code})")
+                    return False
             else:
                 print(f"  ✗ PDF oficial falló (Status {response.status_code})")
                 return False
